@@ -91,9 +91,13 @@ contract DOApp is Ownable {
     function addOrUpdateDCAConfig(DCAConfig calldata _config) external  {
     }
 
+    function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) returns (uint256 balanceA, uint256 balanceB) {
+        return  (balanceTokenA[_pairId][msg.sender],  balanceTokenA[_pairId][msg.sender]);
+    }
+
+
     /*
     function disableDCAConfig() external  {
-
     }
     */
 
@@ -112,9 +116,6 @@ contract DOApp is Ownable {
         OTCTransaction();
 
         //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
-   }
-
-   function calculateDCA() internal {
    }
 
    function OTCTransaction() internal {
