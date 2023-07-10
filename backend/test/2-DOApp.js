@@ -39,7 +39,7 @@ describe("DOApp", function () {
   });
 
 
-  describe("Token Pair Management", function () {
+  describe("Token Pair Managmeent", function () {
     it("Should add a token Pair", async function () {
       const {dOApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} = await loadFixture(deployDOAppFixture);
       //console.log("tokenA : ", tokenA.address);
