@@ -35,7 +35,7 @@ describe("MockERC20", function () {
       expect(balance).to.equal(INITIAL_SUPPLY)
     })
 
-    it("Should have correct inital balance ", async function () {
+    it("Should mint a specified amount for a specified wallet ", async function () {
       const { tokenA, owner, account1 } = await loadFixture(deployMockERC20Fixture)
       let balance = await tokenA.balanceOf(account1.address)
       expect(balance).to.equal(0)

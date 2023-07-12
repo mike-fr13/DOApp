@@ -3,6 +3,8 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+//@TODO check si c'est utile 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract DOApp is Ownable {
 
@@ -61,38 +63,72 @@ contract DOApp is Ownable {
     }
 
     function addTokenPair(address _tokenAddressA, address _tokenAddressB, address _chainLinkPriceFetcher) external onlyOwner() returns (uint256){
+        // @TODO utiliser des constantes d'erreurs
         require (_tokenAddressA != address(0),"tokenA address must be defined");
         require (_tokenAddressB != address(0),"tokenB address must be defined");
         // @TODO check interface
         require (_chainLinkPriceFetcher != address(0),"Chain Link Price Fetcher must be defined");
+        //@TODO order token pair before hash
         uint hash = (uint256)(keccak256(abi.encodePacked(_tokenAddressA,_tokenAddressB)));
-        require (tokenPairs[hash].TokenAddressA  == address(0), "token Pair Allready Defined");
+        require (tokenPairs[hash].TokenAddressA  == address(0), "Token Pair Allready Defined");
         tokenPairs[hash] = TokenPair(_tokenAddressA, _tokenAddressB, _chainLinkPriceFetcher, false);
         emit TokenPAirAdded(hash, _tokenAddressA, _tokenAddressB, _chainLinkPriceFetcher);
         return(hash);
     }
 
     function depositTokenA(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
-        require(_amount > 0, "Amount should be > 0");
+        require(_amount > 0, "Deposit amount should be > 0");
         TokenPair memory lPair = tokenPairs[_pairId];
-        IERC20(lPair.TokenAddressA).transferFrom(msg.sender, address(this), _amount);
+        //@TODO check tranfer vs transfer from
+        bool result = IERC20(lPair.TokenAddressA).transferFrom(msg.sender, address(this), _amount);
+        if (!result) {
+            revert("Error during deposit");
+        }
         balanceTokenA[_pairId][msg.sender] += _amount;
         emit TokenDeposit(msg.sender, _pairId, lPair.TokenAddressA, _amount, block.timestamp);
     }
 
     function withdrawTokenA(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
-        require(_amount > 0, "Amount should be > 0");
+        require(_amount > 0, "Withdraw amount should be > 0");
+        // @TODO add a require if amount > account balance 
         TokenPair memory lPair = tokenPairs[_pairId];
         balanceTokenA[_pairId][msg.sender] -= _amount;
-        IERC20(lPair.TokenAddressA).transfer(msg.sender, _amount);
+        bool result = IERC20(lPair.TokenAddressA).transfer(msg.sender, _amount);
+        if (!result) {
+            revert("Error during withdrawal");
+        }        
         emit TokenWithdrawal(msg.sender, _pairId, lPair.TokenAddressA, _amount, block.timestamp);
     }
+
+    function depositTokenB(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
+        require(_amount > 0, "Deposit amount should be > 0");
+        TokenPair memory lPair = tokenPairs[_pairId];
+        bool result = IERC20(lPair.TokenAddressB).transferFrom(msg.sender, address(this), _amount);
+        if (!result) {
+            revert("Error during deposit");
+        }        
+        balanceTokenA[_pairId][msg.sender] += _amount;
+        emit TokenDeposit(msg.sender, _pairId, lPair.TokenAddressB, balanceTokenA[_pairId][msg.sender], block.timestamp);
+    }
+
+    function withdrawTokenB(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
+        require(_amount > 0, "Withdraw amount should be > 0");
+        // @TODO add a require if amount > account balance 
+        TokenPair memory lPair = tokenPairs[_pairId];
+        balanceTokenB[_pairId][msg.sender] -= _amount;
+        bool result = IERC20(lPair.TokenAddressB).transfer(msg.sender, _amount);
+        if (!result) {
+            revert("Error during withdrawal");
+        }        
+        emit TokenWithdrawal(msg.sender, _pairId, lPair.TokenAddressB, balanceTokenB[_pairId][msg.sender], block.timestamp);
+    }
+
 
     function addOrUpdateDCAConfig(DCAConfig calldata _config) external  {
     }
 
     function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) returns (uint256 balanceA, uint256 balanceB) {
-        return  (balanceTokenA[_pairId][msg.sender],  balanceTokenA[_pairId][msg.sender]);
+        return  (balanceTokenA[_pairId][msg.sender],  balanceTokenB[_pairId][msg.sender]);
     }
 
 
