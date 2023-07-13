@@ -90,7 +90,7 @@ contract DOApp is Ownable {
 
     function withdrawTokenA(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
         require(_amount > 0, "Withdraw amount should be > 0");
-        // @TODO add a require if amount > account balance 
+        require( _amount <= balanceTokenA[_pairId][msg.sender], "Amount to withdraw should be < your account balance");
         TokenPair memory lPair = tokenPairs[_pairId];
         balanceTokenA[_pairId][msg.sender] -= _amount;
         bool result = IERC20(lPair.TokenAddressA).transfer(msg.sender, _amount);
@@ -107,13 +107,13 @@ contract DOApp is Ownable {
         if (!result) {
             revert("Error during deposit");
         }        
-        balanceTokenA[_pairId][msg.sender] += _amount;
-        emit TokenDeposit(msg.sender, _pairId, lPair.TokenAddressB, balanceTokenA[_pairId][msg.sender], block.timestamp);
+        balanceTokenB[_pairId][msg.sender] += _amount;
+        emit TokenDeposit(msg.sender, _pairId, lPair.TokenAddressB, balanceTokenB[_pairId][msg.sender], block.timestamp);
     }
 
     function withdrawTokenB(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
         require(_amount > 0, "Withdraw amount should be > 0");
-        // @TODO add a require if amount > account balance 
+        require( _amount <= balanceTokenB[_pairId][msg.sender], "Amount to withdraw should be < your account balance");
         TokenPair memory lPair = tokenPairs[_pairId];
         balanceTokenB[_pairId][msg.sender] -= _amount;
         bool result = IERC20(lPair.TokenAddressB).transfer(msg.sender, _amount);
@@ -127,6 +127,7 @@ contract DOApp is Ownable {
     function addOrUpdateDCAConfig(DCAConfig calldata _config) external  {
     }
 
+    
     function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) returns (uint256 balanceA, uint256 balanceB) {
         return  (balanceTokenA[_pairId][msg.sender],  balanceTokenB[_pairId][msg.sender]);
     }
