@@ -12,28 +12,29 @@ contract DOApp is Ownable {
      *  @Dev This structure contains configuration for a specific pair of token 
      */
     struct TokenPair {
-        address TokenAddressA;
-        uint16 TokenASegmentSize;
-        uint8 TokenADecimalNumber;
-        address TokenAddressB;
-        uint TokenBSegmentSize;
-        uint8 TokenBDecimalNumber;
-        address ChainlinkPriceFetcher;
+        address tokenAddressA;
+        uint16 tokenASegmentSize;
+        uint8 tokenADecimalNumber;
+        address tokenAddressB;
+        uint tokenBSegmentSize;
+        uint8 tokenBDecimalNumber;
+        address chainlinkPriceFetcher;
         bool enabled;
     }
 
     struct DCAConfig {
-        bool inputDCAEnable;
+        bool isInDCAEnable;
         uint minIN;
         uint maxIN;
         uint amountIN;
         uint scalingFactorIN;
 
-        bool outputDCAEnable;
+        bool isOutDCAEnable;
         uint minOUT;
         uint maxOUT;
         uint amountOUT;
         uint scalingFactorOUT;
+        uint creationDate;
     }
 
     // User address => staked amount
@@ -43,14 +44,14 @@ contract DOApp is Ownable {
     // tokenPairs contains all available token pairs for DCA
     mapping(uint256 => TokenPair) public tokenPairs;
 
-    //deposit lock penality  time
+    //deposit lock penalty  time
     uint constant public lockTime = 10 days;
 
-    //maximum penality for an early withdraw in % ()
+    //maximum penalty for an early withdraw in % ()
     uint constant public maxEarlyWithdrawPenality = 10 ;
 
     modifier tokenPairExists(uint _pairID) {
-        require(tokenPairs[_pairID].TokenAddressA != address(0) ,"Token Pair not Found");
+        require(tokenPairs[_pairID].tokenAddressA != address(0) ,"Token Pair not Found");
         _;
     }
 
@@ -92,7 +93,7 @@ contract DOApp is Ownable {
         }
         
         uint hash = (uint256)(keccak256(abi.encodePacked(_tokenAddressA,_tokenAddressB)));
-        require (tokenPairs[hash].TokenAddressA  == address(0), "Token Pair Allready Defined");
+        require (tokenPairs[hash].tokenAddressA  == address(0), "Token Pair Allready Defined");
         tokenPairs[hash] = TokenPair(_tokenAddressA, _tokenASegmentSize,_tokenADecimalNumber,
                                      _tokenAddressB, _tokenBSegmentSize,_tokenBDecimalNumber,
                                      _chainLinkPriceFetcher, false);
@@ -111,10 +112,10 @@ contract DOApp is Ownable {
         require(_amount > 0, "Deposit amount should be > 0");
         TokenPair memory lPair = tokenPairs[_pairId];
 
-        (IERC20(lPair.TokenAddressA)).safeTransferFrom(msg.sender, address(this), _amount);
+        (IERC20(lPair.tokenAddressA)).safeTransferFrom(msg.sender, address(this), _amount);
 
         balanceTokenA[_pairId][msg.sender] += _amount;
-        emit TokenDeposit(msg.sender, _pairId, lPair.TokenAddressA, _amount, block.timestamp);
+        emit TokenDeposit(msg.sender, _pairId, lPair.tokenAddressA, _amount, block.timestamp);
     }
 
     /**
@@ -130,9 +131,9 @@ contract DOApp is Ownable {
         TokenPair memory lPair = tokenPairs[_pairId];
 
         balanceTokenA[_pairId][msg.sender] -= _amount;
-        IERC20(lPair.TokenAddressA).safeTransfer(msg.sender, _amount);
+        IERC20(lPair.tokenAddressA).safeTransfer(msg.sender, _amount);
 
-        emit TokenWithdrawal(msg.sender, _pairId, lPair.TokenAddressA, _amount, block.timestamp);
+        emit TokenWithdrawal(msg.sender, _pairId, lPair.tokenAddressA, _amount, block.timestamp);
     }
 
     /**
@@ -146,10 +147,10 @@ contract DOApp is Ownable {
         require(_amount > 0, "Deposit amount should be > 0");
         TokenPair memory lPair = tokenPairs[_pairId];
 
-        IERC20(lPair.TokenAddressB).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(lPair.tokenAddressB).safeTransferFrom(msg.sender, address(this), _amount);
         balanceTokenB[_pairId][msg.sender] += _amount;
         
-        emit TokenDeposit(msg.sender, _pairId, lPair.TokenAddressB, _amount, block.timestamp);
+        emit TokenDeposit(msg.sender, _pairId, lPair.tokenAddressB, _amount, block.timestamp);
     }
 
     /**
@@ -165,17 +166,12 @@ contract DOApp is Ownable {
         TokenPair memory lPair = tokenPairs[_pairId];
 
         balanceTokenB[_pairId][msg.sender] -= _amount;
-        IERC20(lPair.TokenAddressB).safeTransfer(msg.sender, _amount);
+        IERC20(lPair.tokenAddressB).safeTransfer(msg.sender, _amount);
                 
-        emit TokenWithdrawal(msg.sender, _pairId, lPair.TokenAddressB, _amount, block.timestamp);
+        emit TokenWithdrawal(msg.sender, _pairId, lPair.tokenAddressB, _amount, block.timestamp);
     }
 
-    /*
-    function addOrUpdateDCAConfig(DCAConfig calldata _config) external  {
-    }
-    */
-
-    
+  
     /**
      * @notice  get the user token balance for a specific token pair
      * @param   _pairId  the pair ID : a keccak256 hash
@@ -187,7 +183,40 @@ contract DOApp is Ownable {
         return  (balanceTokenA[_pairId][msg.sender],  balanceTokenB[_pairId][msg.sender]);
     }
 
-    function deleteDCAConfig() external  {
+
+    /**
+     * @notice  Add a new DCA configuration pour a specific pairID
+     * @dev     .
+     * @param   _pairId The token pair ID for this DCA configuration
+     * @param   _inDCAEnable  Enable or disable DCA buy configuration
+     * @param   _minIN  minimum price for Token A to buy DCA 
+     * @param   _maxIN  minimum price for Token A to buy DCA 
+     * @param   _amountIN  standard amount to buy DCA
+     * @param   _scalingFactorIN  multiplicator factor to buy DCA 
+     * @param   _outDCAEnable  Enable or disable DCA sell configuration
+     * @param   _minOUT minimum price for Token B  to sell DCA
+     * @param   _maxOUT  maximum price for Token B to sell DCA
+     * @param   _amountOUT standard amount to sell DCA
+     * @param   _scalingFactorOUT  multiplicator factor to sell DCA
+     * @return  DCAConfigId  the DCA config ID
+     * @dev if token A price is min then amount to buy will be (_amountIn * _scalingFactorIN)
+     */
+    function addDCAConfig( 
+        uint _pairId,
+        bool _inDCAEnable, uint _minIN, uint _maxIN, uint _amountIN, uint _scalingFactorIN,
+        bool _outDCAEnable, uint _minOUT, uint _maxOUT, uint _amountOUT, uint _scalingFactorOUT
+    ) external returns (uint DCAConfigId) {
+
+    }
+
+
+    /**
+     * @notice  .
+     * @dev     .
+     * @param   _dcaConfigId  .
+     */
+    function deleteDCAConfig(uint _dcaConfigId) external  {
+        
     }
 
     function computeDCA () private {
