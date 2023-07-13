@@ -2,6 +2,7 @@ require("@nomicfoundation/hardhat-toolbox")
 require("dotenv").config()
 require("@nomiclabs/hardhat-etherscan")
 require('solidity-coverage');
+require("hardhat-gas-reporter");
 
 const PK_ACCOUNT0 = process.env.PK_ACCOUNT0 || ""
 const INFURA_GOERLI_URL = process.env.INFURA_GOERLI_URL || ""
@@ -44,5 +45,10 @@ module.exports = {
     apiKey: {
       sepolia: ETHERSCAN
     }
+  },
+  gasReporter: {
+    enabled: true,
+    currency: 'USD',
+    gasPrice: 21
   }
 };
