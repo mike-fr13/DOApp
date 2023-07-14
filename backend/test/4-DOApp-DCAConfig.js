@@ -185,13 +185,13 @@ describe('DOApp Contract - DCA configuration tests', function () {
             //console.log("segment : ", i)
             const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(0)))
 
-            rapport = (((i.sub(Constant.DCA_CONFIG_1_MIN)).mul(Constant.MULT_FACTOR))
-            .div(Constant.DCA_CONFIG_1_MAX.sub(Constant.DCA_CONFIG_1_MIN)))
+            rapport = (((i.sub(Constant.DCA_CONFIG_2_MIN)).mul(Constant.MULT_FACTOR))
+            .div(Constant.DCA_CONFIG_2_MAX.sub(Constant.DCA_CONFIG_2_MIN)))
 
             localComputedAmount =  
-            (Constant.DCA_CONFIG_1_AMOUNT.mul( 
+            (Constant.DCA_CONFIG_2_AMOUNT.mul( 
               Constant.MULT_FACTOR.add(
-                (Constant.DCA_CONFIG_1_SCALING_FACTOR.sub(BigNumber.from(1)))
+                (Constant.DCA_CONFIG_2_SCALING_FACTOR.sub(BigNumber.from(1)))
                   .mul(rapport)
                 )
               )
