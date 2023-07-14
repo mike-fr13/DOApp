@@ -25,8 +25,8 @@ async function deploy_AddATokenPair_Fixture() {
   = await loadFixture(deployDOApp_Fixture);
   
   //add a token pair
-  await doApp.addTokenPair(tokenA.address, Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-                            tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+  await doApp.addTokenPair(tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+                            tokenB.address, 
                             mockChainLinkAggregatorV3.address)
 
   let eventFilter = doApp.filters.TokenPAirAdded()

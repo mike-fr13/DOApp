@@ -26,8 +26,8 @@ describe('DOApp Contract tests', function () {
         const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, account1} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.connect(account1).addTokenPair(
-          tokenA.address, Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address, 
           mockChainLinkAggregatorV3.address))
           .to.revertedWith("Ownable: caller is not the owner")
       });
@@ -35,8 +35,8 @@ describe('DOApp Contract tests', function () {
         const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.addTokenPair(
-          Constant.ADDRESS_0,  Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          Constant.ADDRESS_0,  Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address, 
           mockChainLinkAggregatorV3.address))
           .to.be.revertedWith('tokenA address must be defined')
       })
@@ -45,8 +45,8 @@ describe('DOApp Contract tests', function () {
         const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.addTokenPair(
-          tokenA.address,Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          Constant.ADDRESS_0, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          Constant.ADDRESS_0, 
           mockChainLinkAggregatorV3.address))
           .to.be.revertedWith('tokenB address must be defined')
       })
@@ -54,8 +54,8 @@ describe('DOApp Contract tests', function () {
         const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.addTokenPair(
-          tokenA.address,Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address,Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address,
           Constant.ADDRESS_0))
           .to.be.revertedWith('Chain Link Price Fetcher must be defined')
       })
@@ -66,8 +66,8 @@ describe('DOApp Contract tests', function () {
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
         await expect(doApp.addTokenPair(
-          tokenA.address,Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address,Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address,
           mockChainLinkAggregatorV3.address))
           .to.emit(doApp,'TokenPAirAdded').withArgs(anyValue, tokenA.address, tokenB.address, mockChainLinkAggregatorV3.address)
       })
@@ -78,8 +78,8 @@ describe('DOApp Contract tests', function () {
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
         await (doApp.addTokenPair(
-          tokenA.address,Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address,Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address,
           mockChainLinkAggregatorV3.address))
 
         let eventFilter = doApp.filters.TokenPAirAdded()
@@ -88,11 +88,9 @@ describe('DOApp Contract tests', function () {
         let tokenPair = await doApp.tokenPairs(hashOfPair)
         //console.log(tokenPair)
         expect (tokenPair.tokenAddressA).to.equal(tokenA.address)
-        expect (tokenPair.tokenASegmentSize).to.equal(Constant.TOCKENA_SEGMENT_SIZE)
-        expect (tokenPair.tokenADecimalNumber).to.equal(Constant.TOCKENA_DECIMAL_NUMBER)
+        expect (tokenPair.tokenPairSegmentSize).to.equal(Constant.TOCKEN_PAIR_SEGMENT_SIZE)
+        expect (tokenPair.tokenPairDecimalNumber).to.equal(Constant.TOCKEN_PAIR_DECIMAL_NUMBER)
         expect (tokenPair.tokenAddressB).to.equal(tokenB.address)
-        expect (tokenPair.tokenBSegmentSize).to.equal(Constant.TOCKENB_SEGMENT_SIZE)
-        expect (tokenPair.tokenBDecimalNumber).to.equal(Constant.TOCKENB_DECIMAL_NUMBER)
         expect (tokenPair.chainlinkPriceFetcher).to.equal(mockChainLinkAggregatorV3.address)
         expect (tokenPair.enabled).to.be.false
       })
@@ -101,12 +99,12 @@ describe('DOApp Contract tests', function () {
         const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await (doApp.addTokenPair(
-          tokenA.address, Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address, 
           mockChainLinkAggregatorV3.address))
         await expect(doApp.addTokenPair(
-          tokenA.address, Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address, 
           mockChainLinkAggregatorV3.address))
         .to.revertedWith("Token Pair Allready Defined")
       })
@@ -115,12 +113,12 @@ describe('DOApp Contract tests', function () {
         const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await (doApp.addTokenPair(
-          tokenA.address, Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
-          tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address, 
           mockChainLinkAggregatorV3.address))
         await expect(doApp.addTokenPair(
-          tokenB.address, Constant.TOCKENB_SEGMENT_SIZE, Constant.TOCKENB_DECIMAL_NUMBER,
-          tokenA.address, Constant.TOCKENA_SEGMENT_SIZE, Constant.TOCKENA_DECIMAL_NUMBER,
+          tokenB.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address, 
           mockChainLinkAggregatorV3.address))
         .to.revertedWith("Token Pair Allready Defined")
       })
