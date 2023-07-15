@@ -57,7 +57,7 @@ contract DOApp is Ownable {
     mapping(uint256 => TokenPair) public tokenPairs;
 
     //tokePair Segments DCA configuration 
-    mapping (uint pairID => mapping (uint segmentStart => SegmentDCAEntry[])) public dcaSegmentsMap;
+    mapping (uint pairID => mapping (uint segmentStart => SegmentDCAEntry[][2])) public dcaSegmentsMap;
 
     //deposit lock penalty  time
     uint constant public lockTime = 10 days;
@@ -256,16 +256,25 @@ contract DOApp is Ownable {
     }
 
     function createSegments(
-        DCAConfig memory dcaConfig,
+        DCAConfig memory _dcaConfig,
         uint24 _segmentNumber,
         uint16 _pairSegmentSize ) internal {
         
-        uint pairID = dcaConfig.pairID;
+        uint pairID = _dcaConfig.pairID;
 
         for (uint16 i=0; i< _segmentNumber; i++) {
-            uint24 segmentStart = dcaConfig.min + i*_pairSegmentSize;
-            SegmentDCAEntry memory entry = SegmentDCAEntry (msg.sender, getDCAAmount(pairID, dcaConfig, segmentStart), 0);
-            dcaSegmentsMap[pairID][segmentStart].push(entry);
+            uint24 segmentStart = _dcaConfig.min + i*_pairSegmentSize;
+            SegmentDCAEntry memory entry = SegmentDCAEntry (msg.sender, getDCAAmount(pairID, _dcaConfig, segmentStart), 0);
+             if (_dcaConfig.isSwapTookenAForTokenB) {
+                SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][0];
+                currentArray.push(entry);
+                dcaSegmentsMap[pairID][segmentStart][0] = currentArray;
+             }
+             else {
+                SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][1];
+                currentArray.push(entry);
+                dcaSegmentsMap[pairID][segmentStart][1] = currentArray;
+             }
                 
         }
     }
