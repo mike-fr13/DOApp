@@ -54,7 +54,7 @@ contract MockChainLinkAggregatorV3 is  AggregatorV3Interface{
         return localPriceFeed.description();
     }
     else {
-        return("local Mock");
+        return("Local Mock");
     }
   }
 
@@ -112,7 +112,7 @@ contract MockChainLinkAggregatorV3 is  AggregatorV3Interface{
    */
   function setPrice(int256 _price)external {
     iAnswer = _price;
-    ++iRoundId;
+    iRoundId++;
     iStartedAt= block.timestamp;
     iUpdatedAt = block.timestamp;
   }
