@@ -65,11 +65,20 @@ describe('DOApp Contract tests', function () {
           = await loadFixture(Fixture.deployDOApp_Fixture);
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
+        //console.log("mockChainLinkAggregatorV3 : ", mockChainLinkAggregatorV3.address);
         await expect(doApp.addTokenPair(
           tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           mockChainLinkAggregatorV3.address))
+          //.to.emit(doApp,'TokenPAirAdded').withArgs(anyValue,anyValue, anyValue, anyValue)
           .to.emit(doApp,'TokenPAirAdded').withArgs(anyValue, tokenA.address, tokenB.address, mockChainLinkAggregatorV3.address)
+        /*    
+        let eventFilter = doApp.filters.TokenPAirAdded()
+        let events = await doApp.queryFilter(eventFilter, 'latest')
+        let hashOfPair = events[0].args[0]
+        let tokenPair = await doApp.tokenPairs(hashOfPair)
+        console.log(tokenPair)
+        */
       })
 
       it('Should be able to get an added tokenPair', async function () {

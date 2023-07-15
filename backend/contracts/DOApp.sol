@@ -92,7 +92,7 @@ contract DOApp is Ownable {
      * @return  uint256  the pair ID : a keccak256 hash
      * @dev     Only the contract owner can add a pair.
      * @dev     _tokenAddressA, _tokenAddressB and _chainLinkPriceFetcher should not be null.
-     * @dev     We order _tokenAddressA and _tokenAddressB to create the new Pair to avoid the same pair with inverted token
+     * @dev     We check if the pair is not already existing with inverse order and revert if it is
      */
     function addTokenPair(
         address _tokenAddressA, 
@@ -108,13 +108,11 @@ contract DOApp is Ownable {
         // @TODO check interface
         require (_chainLinkPriceFetcher != address(0),"Chain Link Price Fetcher must be defined");
         
-        //sort the token address
-        if (_tokenAddressA > _tokenAddressB) {
-            (_tokenAddressA, _tokenAddressB) = (_tokenAddressB, _tokenAddressA);
-        }
-        
         uint hash = (uint256)(keccak256(abi.encodePacked(_tokenAddressA,_tokenAddressB)));
+        uint hash2 = (uint256)(keccak256(abi.encodePacked(_tokenAddressB,_tokenAddressA)));
         require (tokenPairs[hash].tokenAddressA  == address(0), "Token Pair Allready Defined");
+        require (tokenPairs[hash2].tokenAddressA  == address(0), "Token Pair Allready Defined");
+
         tokenPairs[hash] = TokenPair(
             false, 
             _tokenAddressA, 
