@@ -35,6 +35,21 @@ module.exports = Object.freeze({
     DCA_CONFIG_2_AMOUNT : new BigNumber.from(100),
     DCA_CONFIG_2_SCALING_FACTOR : new BigNumber.from(3),
 
+    //ex  WETH/USDC => swap USDC for WETH
+    DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
+    DCA_CONFIG_3_MIN : new BigNumber.from(1250),
+    DCA_CONFIG_3_MAX : new BigNumber.from(1750),
+    DCA_CONFIG_3_AMOUNT : new BigNumber.from(10),
+    DCA_CONFIG_3_SCALING_FACTOR : new BigNumber.from(5),
+
+    //ex  WETH/USDC => swap WETH fo USDC
+    DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
+    DCA_CONFIG_4_MIN : new BigNumber.from(2250),
+    DCA_CONFIG_4_MAX : new BigNumber.from(3250),
+    DCA_CONFIG_4_AMOUNT : new BigNumber.from(5),
+    DCA_CONFIG_4_SCALING_FACTOR : new BigNumber.from(10),
+
+
     // mult factor for arithmetics
     MULT_FACTOR : BigNumber.from(1000)
 
