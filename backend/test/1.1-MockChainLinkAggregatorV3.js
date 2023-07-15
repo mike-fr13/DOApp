@@ -6,7 +6,7 @@ const  ADDRESS_1 = '0x0000000000000000000000000000000000000001';
 
 
 describe("MockChainLinkAggregatorV3", function () {
-  /*
+  
   async function deployMockChainLinkAggregatorV3_localFixture() {
     const [owner, account1, account2, account3, account4] = await ethers.getSigners()
     const MockChainLink = await ethers.getContractFactory("MockChainLinkAggregatorV3")
@@ -31,5 +31,5 @@ describe("MockChainLinkAggregatorV3", function () {
     })
     
   })
-*/
+
 })
