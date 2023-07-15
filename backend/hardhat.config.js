@@ -3,6 +3,7 @@ require("dotenv").config()
 require("@nomiclabs/hardhat-etherscan")
 require('solidity-coverage');
 require("hardhat-gas-reporter");
+require('hardhat-docgen');
 
 const PK_ACCOUNT0 = process.env.PK_ACCOUNT0 || ""
 const INFURA_GOERLI_URL = process.env.INFURA_GOERLI_URL || ""
