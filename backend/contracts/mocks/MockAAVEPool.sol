@@ -23,7 +23,7 @@ contract MockAavePool is IPool {
 //        userTokensBalance[_asset][address(address(_to))] -= _amount;
  
         // withdraw asset from current contract
-        IERC20(_asset).safeTransfer(msg.sender, _amount);
+        IERC20(_asset).safeTransfer(_to, _amount);
         return (_amount);
     }
 
