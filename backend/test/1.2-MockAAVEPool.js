@@ -46,7 +46,7 @@ describe("MockAavePool tests", function () {
 
     describe("withdraw() tests", function () {
       it("Should withdraw token to the pool", async function () {
-        const { mockAavePool, tokenA, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        const { mockAavePool,owner,  tokenA, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
 
         // check balance and allowance before test
         expect(await tokenA.balanceOf(mockAavePool.address)).to.equal(0)
@@ -66,7 +66,7 @@ describe("MockAavePool tests", function () {
         expect(await tokenA.balanceOf(mockAavePool.address)).to.equal(Constant.TOKENA_DEPOSIT_AMOUNT)
 
         //withdraw token from pool
-        await mockAavePool.connect(account1).withdraw( tokenA.address, Constant.TOKENA_WITHDRAW_AMOUNT, account1.address)
+        await mockAavePool.connect(owner).withdraw( tokenA.address, Constant.TOKENA_WITHDRAW_AMOUNT, account1.address)
 
         //check balance
         expect(await tokenA.balanceOf(mockAavePool.address)).to.equal(Constant.TOKENA_DEPOSIT_AMOUNT.sub(Constant.TOKENA_WITHDRAW_AMOUNT))
