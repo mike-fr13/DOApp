@@ -4,6 +4,8 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 
 contract DOApp is Ownable {
     using SafeERC20 for IERC20;
@@ -27,6 +29,8 @@ contract DOApp is Ownable {
         //160
         address chainlinkPriceFetcher;
 
+        //160
+        IPoolAddressesProvider aavePoolAddressesProvider;
     }
 
     struct DCAConfig {
@@ -99,7 +103,8 @@ contract DOApp is Ownable {
         uint16 _tokenPairSegmentSize,
         uint8 _tokenPairDecimalNumber,  
         address _tokenAddressB, 
-        address _chainLinkPriceFetcher) external onlyOwner() returns (uint256){
+        address _chainLinkPriceFetcher,
+        address _aavePoolAddressesProvider) external onlyOwner() returns (uint256){
 
         // @TODO utiliser des constantes d'erreurs
         require (_tokenAddressA != address(0),"tokenA address must be defined");
@@ -107,6 +112,10 @@ contract DOApp is Ownable {
 
         // @TODO check interface
         require (_chainLinkPriceFetcher != address(0),"Chain Link Price Fetcher must be defined");
+
+        //@TODO check interface
+        //TODO bonus : maange token without aave stacking
+        require (_aavePoolAddressesProvider != address(0),"AAVE PoolAddressesProvider must be defined");
         
         uint hash = (uint256)(keccak256(abi.encodePacked(_tokenAddressA,_tokenAddressB)));
         uint hash2 = (uint256)(keccak256(abi.encodePacked(_tokenAddressB,_tokenAddressA)));
@@ -119,7 +128,8 @@ contract DOApp is Ownable {
             _tokenPairSegmentSize,
             _tokenPairDecimalNumber,
             _tokenAddressB, 
-            _chainLinkPriceFetcher);
+            _chainLinkPriceFetcher,
+            IPoolAddressesProvider(_aavePoolAddressesProvider));
         emit TokenPAirAdded(hash, _tokenAddressA, _tokenAddressB, _chainLinkPriceFetcher);
         return(hash);
     }
@@ -332,8 +342,15 @@ contract DOApp is Ownable {
    function swap() internal {
    }
 
-   function stackTokenA() internal {
-   }
+
+   function stackTokenA(uint amount) internal {
+    //function supply(address pool, address token) public {
+        /*
+        IPool pool = 
+        IPool(pool).supply(token, amount, msg.sender, 0);
+        */
+     }
+   
 
    function stackTokenB() internal {
    }

@@ -23,45 +23,59 @@ describe('DOApp Contract tests', function () {
     describe("addTokenPair() tests", function () {
 
       it("Should revert if caller is not a owner", async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, account1} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, account1} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.connect(account1).addTokenPair(
           tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
           .to.revertedWith("Ownable: caller is not the owner")
       });
       it('Should revert when trying to add a pair with a null tokenA address', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.addTokenPair(
           Constant.ADDRESS_0,  Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
           .to.be.revertedWith('tokenA address must be defined')
       })
 
       it('Should revert when trying to add a pair with a null tokenB address', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.addTokenPair(
           tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           Constant.ADDRESS_0, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
           .to.be.revertedWith('tokenB address must be defined')
       })
       it('Should revert when trying to add a pair with a null ChainLinkAggregatorV3 address', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(doApp.addTokenPair(
           tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
-          Constant.ADDRESS_0))
+          Constant.ADDRESS_0,
+          mockAAVEPoolAddressesProvider.address))
           .to.be.revertedWith('Chain Link Price Fetcher must be defined')
+      })
+      it('Should revert when trying to add a pair with a null AAVEPoolAddressesProvider address', async function () {
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
+          = await loadFixture(Fixture.deployDOApp_Fixture);
+        await expect(doApp.addTokenPair(
+          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address,
+          mockChainLinkAggregatorV3.address,
+          Constant.ADDRESS_0))
+          .to.be.revertedWith('AAVE PoolAddressesProvider must be defined')
       })
 
       it('Should add a token Pair and emit TokenPAirAdded event', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
@@ -69,7 +83,8 @@ describe('DOApp Contract tests', function () {
         await expect(doApp.addTokenPair(
           tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
           //.to.emit(doApp,'TokenPAirAdded').withArgs(anyValue,anyValue, anyValue, anyValue)
           .to.emit(doApp,'TokenPAirAdded').withArgs(anyValue, tokenA.address, tokenB.address, mockChainLinkAggregatorV3.address)
         /*    
@@ -82,14 +97,15 @@ describe('DOApp Contract tests', function () {
       })
 
       it('Should be able to get an added tokenPair', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
         await (doApp.addTokenPair(
           tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
 
         let eventFilter = doApp.filters.TokenPAirAdded()
         let events = await doApp.queryFilter(eventFilter, 'latest')
@@ -105,30 +121,34 @@ describe('DOApp Contract tests', function () {
       })
 
       it('Should revert when trying to add the same tokenPair', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await (doApp.addTokenPair(
           tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
         await expect(doApp.addTokenPair(
           tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
         .to.revertedWith("Token Pair Allready Defined")
       })
 
       it('Should revert when trying to add the same tokenPair with a revert order', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await (doApp.addTokenPair(
           tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
         await expect(doApp.addTokenPair(
           tokenB.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenA.address, 
-          mockChainLinkAggregatorV3.address))
+          mockChainLinkAggregatorV3.address,
+          mockAAVEPoolAddressesProvider.address))
         .to.revertedWith("Token Pair Allready Defined")
       })
     })

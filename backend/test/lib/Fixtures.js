@@ -12,22 +12,27 @@ async function deployDOApp_Fixture () {
   const TokenB = await ethers.getContractFactory('MockERC20');
   const tokenB = await TokenB.deploy(Constant.MCKB_NAME,Constant.MCKB_SYMBOL,Constant.TOKEN_INITIAL_SUPPLY);
 
+  //@TODO DEPLOY IPoolAddressesProvider
+  const MockAAVEPoolAddressesProvider = await ethers.getContractFactory('MockAAVEPoolAddressesProvider');
+  const mockAAVEPoolAddressesProvider = await MockAAVEPoolAddressesProvider.deploy();
+
   const MockChainLinkAggregatorV3 = await ethers.getContractFactory('MockChainLinkAggregatorV3');
   const mockChainLinkAggregatorV3 = await MockChainLinkAggregatorV3.deploy(Constant.ADDRESS_0,true);
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4 };
+  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4};
 }
 
 // deploy contracts and add a token Pair
 async function deploy_AddATokenPair_Fixture() {
   //deploy contracts
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
   = await loadFixture(deployDOApp_Fixture);
   
   //add a token pair
   await doApp.addTokenPair(tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
                             tokenB.address, 
-                            mockChainLinkAggregatorV3.address)
+                            mockChainLinkAggregatorV3.address,
+                            mockAAVEPoolAddressesProvider.address)
 
   let eventFilter = doApp.filters.TokenPAirAdded()
   let events = await doApp.queryFilter(eventFilter, 'latest')
