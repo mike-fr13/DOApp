@@ -6,6 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
+import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
+import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+
 
 contract DOApp is Ownable {
     using SafeERC20 for IERC20;
@@ -13,6 +16,8 @@ contract DOApp is Ownable {
     uint16 constant DCA_CONFIG_MAX_SEGMENT = 1000;
     uint16 constant MULT_FACTOR = 1000;
     uint8 constant BALANCE_INDEX_DECIMAL_NUMBER = 20;
+    uint24 public constant UNISWAP_FEE_TIERS = 3000;
+    bool isProductionMode = false;
 
     /**
      *  @Dev This structure contains configuration for a specific pair of token 
@@ -30,10 +35,13 @@ contract DOApp is Ownable {
         address chainlinkPriceFetcher;
 
         //160 + 8 + 16 + 8 =192
-        IPoolAddressesProvider aavePoolAddressesProvider;
+        address aavePoolAddressesProvider;
         bool enabled;
         uint16 tokenPairSegmentSize;
         uint8 tokenPairDecimalNumber;
+
+        //160
+        address swapRouter;
     }
 
     struct DCAConfig {
@@ -90,7 +98,8 @@ contract DOApp is Ownable {
         uint16 _tokenPairSegmentSize, 
         uint8 _tokenPairDecimalNumber,
         address _chainLinkPriceFetcher, 
-        IPoolAddressesProvider _aavePoolAddressesProvider
+        address _aavePoolAddressesProvider,
+        address _uniswapV3SwapRouter
         );
 
     event TokenDeposit(
@@ -127,7 +136,8 @@ contract DOApp is Ownable {
 
     error DCAConfigError(string _errorMessage);
     
-    constructor() Ownable() payable {
+    constructor(bool _isProductionMode) Ownable() payable {
+        isProductionMode = _isProductionMode;
     }
 
     receive() external payable {
@@ -149,7 +159,8 @@ contract DOApp is Ownable {
         uint8 _tokenPairDecimalNumber,  
         address _tokenAddressB, 
         address _chainLinkPriceFetcher,
-        address _aavePoolAddressesProvider) external onlyOwner() returns (uint256){
+        address _aavePoolAddressesProvider,
+        address _uniswapV3SwapRouter) external onlyOwner() returns (uint256){
 
         // @TODO utiliser des constantes d'erreurs
         require (_tokenAddressA != address(0),"tokenA address must be defined");
@@ -158,10 +169,12 @@ contract DOApp is Ownable {
         // @TODO check interface
         require (_chainLinkPriceFetcher != address(0),"Chain Link Price Fetcher must be defined");
 
-        //@TODO check interface
-        //TODO bonus : maange token without aave stacking
+        // @TODO check interface
         require (_aavePoolAddressesProvider != address(0),"AAVE PoolAddressesProvider must be defined");
-        
+
+        // @TODO check interface
+        require (_uniswapV3SwapRouter != address(0),"Uniswap ISwapRouter must be defined");
+
         uint hash = (uint256)(keccak256(abi.encodePacked(_tokenAddressA,_tokenAddressB)));
         uint hash2 = (uint256)(keccak256(abi.encodePacked(_tokenAddressB,_tokenAddressA)));
         require (tokenPairs[hash].tokenAddressA  == address(0), "Token Pair Allready Defined");
@@ -173,10 +186,11 @@ contract DOApp is Ownable {
             _tokenAddressB, 
             uint96(1),
             _chainLinkPriceFetcher,
-            IPoolAddressesProvider(_aavePoolAddressesProvider),
+            _aavePoolAddressesProvider,
             false, 
             _tokenPairSegmentSize,
-            _tokenPairDecimalNumber
+            _tokenPairDecimalNumber,
+            _uniswapV3SwapRouter
             );
 
         emit TokenPAirAdded(
@@ -186,7 +200,8 @@ contract DOApp is Ownable {
             _tokenPairSegmentSize,
             _tokenPairDecimalNumber,
             _chainLinkPriceFetcher,
-            IPoolAddressesProvider(_aavePoolAddressesProvider)
+            _aavePoolAddressesProvider,
+            _uniswapV3SwapRouter
             );
 
         return(hash);
@@ -207,7 +222,7 @@ contract DOApp is Ownable {
         IERC20(lPair.tokenAddressA).safeTransferFrom(msg.sender, address(this), _amount);
 
         // deposit token to aave lending pool
-        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
         IERC20(lPair.tokenAddressA).safeIncreaseAllowance(address(aavePool), _amount);
         aavePool.supply(lPair.tokenAddressA, _amount, address(this), 0);
 
@@ -235,7 +250,7 @@ contract DOApp is Ownable {
         tokenPairUserBalances[_pairId][msg.sender].balanceA -= _amount;
 
         // withdraw token from aave lending pool
-        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
 
         //get aTokenA address
         address aTokenA = aavePool.getReserveData(lPair.tokenAddressA).aTokenAddress;
@@ -267,7 +282,7 @@ contract DOApp is Ownable {
         IERC20(lPair.tokenAddressB).safeTransferFrom(msg.sender, address(this), _amount);
 
         // deposit token to aave lending pool
-        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
         IERC20(lPair.tokenAddressB).safeIncreaseAllowance(address(aavePool), _amount);
         aavePool.supply(lPair.tokenAddressB, _amount, address(this), 0);
 
@@ -295,7 +310,7 @@ contract DOApp is Ownable {
         tokenPairUserBalances[_pairId][msg.sender].balanceB -= _amount;
 
         // withdraw token from aave lending pool
-        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
 
         //get aTokenA address
         address aTokenB = aavePool.getReserveData(lPair.tokenAddressB).aTokenAddress;
@@ -360,7 +375,7 @@ contract DOApp is Ownable {
         DCAConfig memory dcaConfig = DCAConfig(_pairId,_isBuyTokenASellTokenB, _min, _max, _amount, _scalingFactor, uint32(block.timestamp));
         createSegments(dcaConfig, _segmentNumber, tokenPair.tokenPairSegmentSize);
 
-        uint configId = getDCAConfigHash(_pairId);
+        configId = getDCAConfigHash(_pairId);
         emit DCAConfigCreation(msg.sender,_pairId, configId);
         return (configId);
     }
@@ -385,7 +400,7 @@ contract DOApp is Ownable {
 
         for (uint16 i=0; i< _segmentNumber; i++) {
             uint24 segmentStart = _dcaConfig.min + i*_pairSegmentSize;
-            SegmentDCAEntry memory entry = SegmentDCAEntry (msg.sender, getDCAAmount(pairID, _dcaConfig, segmentStart), 0);
+            SegmentDCAEntry memory entry = SegmentDCAEntry (msg.sender, getDCAAmount(_dcaConfig, segmentStart), 0);
              if (_dcaConfig.isSwapTookenAForTokenB) {
                 SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][0];
                 currentArray.push(entry);
@@ -400,7 +415,7 @@ contract DOApp is Ownable {
         }
     }
 
-    function getDCAAmount(uint _pairId, DCAConfig memory _dcaConfig, uint24 _segmentStart) pure internal returns (uint16 dcaAmount) {
+    function getDCAAmount( DCAConfig memory _dcaConfig, uint24 _segmentStart) pure internal returns (uint16 dcaAmount) {
             //@TODO  compute using scalinfFactor
             uint24 min = _dcaConfig.min;
             uint24 max = _dcaConfig.max;
@@ -456,9 +471,51 @@ contract DOApp is Ownable {
    function OTCTransaction() internal {
    }
 
-   function swap() internal {
-   }
+   function swap(uint _pairId, uint256 _amountIn, bool _isSwapTokenAtoB) internal returns (uint256 amountOut) {
 
+        TokenPair memory lPair = tokenPairs[_pairId];
+        address tokenSource;
+        address tokenDest;
+
+        if (_isSwapTokenAtoB) {
+            tokenSource = lPair.tokenAddressA;
+            tokenDest = lPair.tokenAddressB;
+        }
+        else {
+            tokenSource = lPair.tokenAddressB;
+            tokenDest = lPair.tokenAddressA;
+        }
+
+        // Transfer the specified amount of WETH9 to this contract.
+        //TransferHelper.safeTransferFrom(tokenSource, msg.sender, address(this), amountIn);
+        // Approve the router to spend WETH9.
+        TransferHelper.safeApprove(tokenSource, address(lPair.swapRouter), _amountIn);
+
+        // Note: we should explicitly set slippage limits
+        uint256 minOut = /* Calculate min output */ 0;
+        uint160 priceLimit = /* Calculate price limit */ 0;
+
+        if (isProductionMode && minOut==0 && priceLimit ==0 ) {
+            revert("In prodution mode, you should explicitly set slippage limits for uniswap swap");
+        }
+
+        // Create the params that will be used to execute the swap
+        ISwapRouter.ExactInputSingleParams memory params =
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: tokenSource,
+                tokenOut: tokenDest,
+                fee: UNISWAP_FEE_TIERS,
+                recipient:address(this),
+                deadline: block.timestamp + 15,
+                amountIn: _amountIn,
+                amountOutMinimum: minOut,
+                sqrtPriceLimitX96: priceLimit
+            });
+
+        // The call to `exactInputSingle` executes the swap.
+        amountOut = ISwapRouter(lPair.swapRouter).exactInputSingle(params);
+        return amountOut;
+    }
 
    function stackTokenA(uint amount) internal {
     //function supply(address pool, address token) public {

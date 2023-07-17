@@ -6,7 +6,7 @@ async function deployDOApp_Fixture () {
 
   // deploy DOApp main contract
   const DOApp = await ethers.getContractFactory('DOApp');
-  const doApp = await DOApp.deploy();
+  const doApp = await DOApp.deploy(false);
 
   // create an ERC20 Mock : tockenA
   const TokenA = await ethers.getContractFactory('MockERC20');
@@ -31,20 +31,29 @@ async function deployDOApp_Fixture () {
   const MockChainLinkAggregatorV3 = await ethers.getContractFactory('MockChainLinkAggregatorV3');
   const mockChainLinkAggregatorV3 = await MockChainLinkAggregatorV3.deploy(Constant.ADDRESS_0,true);
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider,mockAavePool, owner, account1, account2, account3, account4};
+  //create ChainLinkAgggregatorV3  mock
+  const MockUniswapISwapRouter = await ethers.getContractFactory('MockUniswapISwapRouter');
+  const mockUniswapISwapRouter = await MockUniswapISwapRouter.deploy();
+
+
+  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider,mockAavePool,mockUniswapISwapRouter, owner, account1, account2, account3, account4};
 }
 
 // deploy contracts and add a token Pair
 async function deploy_AddATokenPair_Fixture() {
   //deploy contracts
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
+  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
   = await loadFixture(deployDOApp_Fixture);
   
   //add a token pair
-  await doApp.addTokenPair(tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
-                            tokenB.address, 
-                            mockChainLinkAggregatorV3.address,
-                            mockAAVEPoolAddressesProvider.address)
+  await doApp.addTokenPair(
+    tokenA.address, 
+    Constant.TOCKEN_PAIR_SEGMENT_SIZE, 
+    Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+    tokenB.address, 
+    mockChainLinkAggregatorV3.address,
+    mockAAVEPoolAddressesProvider.address,
+    mockUniswapISwapRouter.address)
 
   let eventFilter = doApp.filters.TokenPAirAdded()
   let events = await doApp.queryFilter(eventFilter, 'latest')
