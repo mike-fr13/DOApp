@@ -85,8 +85,15 @@ describe('DOApp Contract tests', function () {
           tokenB.address,
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address))
-          //.to.emit(doApp,'TokenPAirAdded').withArgs(anyValue,anyValue, anyValue, anyValue)
-          .to.emit(doApp,'TokenPAirAdded').withArgs(anyValue, tokenA.address, tokenB.address, mockChainLinkAggregatorV3.address)
+          .to.emit(doApp,'TokenPAirAdded').withArgs(
+            anyValue, 
+            tokenA.address, 
+            tokenB.address, 
+            Constant.TOCKEN_PAIR_SEGMENT_SIZE, 
+            Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+            mockChainLinkAggregatorV3.address,
+            mockAAVEPoolAddressesProvider.address)
+
         /*    
         let eventFilter = doApp.filters.TokenPAirAdded()
         let events = await doApp.queryFilter(eventFilter, 'latest')
@@ -97,12 +104,15 @@ describe('DOApp Contract tests', function () {
       })
 
       it('Should be able to get an added tokenPair', async function () {
-        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4} 
+        const {doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider,mockAavePool, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
+        console.log("mockAAVEPoolAddressesProvider : ",mockAAVEPoolAddressesProvider.address)
         await (doApp.addTokenPair(
-          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address,
+          Constant.TOCKEN_PAIR_SEGMENT_SIZE, 
+          Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address))
@@ -113,10 +123,21 @@ describe('DOApp Contract tests', function () {
         let tokenPair = await doApp.tokenPairs(hashOfPair)
         //console.log(tokenPair)
         expect (tokenPair.tokenAddressA).to.equal(tokenA.address)
+        expect (tokenPair.indexBalanceTokenA).to.equal(1)
+        expect (tokenPair.tokenAddressB).to.equal(tokenB.address)
+        expect (tokenPair.indexBalanceTokenB).to.equal(1)
+        expect (tokenPair.chainlinkPriceFetcher).to.equal(mockChainLinkAggregatorV3.address)
+        expect (tokenPair.aavePoolAddressesProvider).to.equal(mockAAVEPoolAddressesProvider.address)
         expect (tokenPair.tokenPairSegmentSize).to.equal(Constant.TOCKEN_PAIR_SEGMENT_SIZE)
         expect (tokenPair.tokenPairDecimalNumber).to.equal(Constant.TOCKEN_PAIR_DECIMAL_NUMBER)
-        expect (tokenPair.tokenAddressB).to.equal(tokenB.address)
-        expect (tokenPair.chainlinkPriceFetcher).to.equal(mockChainLinkAggregatorV3.address)
+
+        console.log("tokenPair.aavePoolAddressesProvider : ", tokenPair.aavePoolAddressesProvider)
+        MockAAVEPoolAddressesProvider = await ethers.getContractFactory('MockAAVEPoolAddressesProvider');
+        poolImpl = MockAAVEPoolAddressesProvider.attach(tokenPair.aavePoolAddressesProvider)
+        console.log("poolImpl.address : ", poolImpl.address)
+        expect (await poolImpl.getPool()).to.equal(mockAavePool.address)
+
+        expect (await mockAAVEPoolAddressesProvider.getPool()).to.equal(mockAavePool.address)
         expect (tokenPair.enabled).to.be.false
       })
 

@@ -65,8 +65,25 @@ describe("MockAavePool tests", function () {
         expect( await tokenA.allowance(account1.address, mockAavePool.address)).to.equal( 0)
         expect(await tokenA.balanceOf(mockAavePool.address)).to.equal(Constant.TOKENA_DEPOSIT_AMOUNT)
 
+        //get Atoken
+        reserveData = await(mockAavePool.getReserveData(tokenA.address))
+        //console.log("await(mockAavePool.getReserveData(tokenA.address)) :" , reserveData);
+        aTokenAddress = reserveData.aTokenAddress
+        //console.log("reserveData.aTokenAddress :" , aTokenAddress);
+
+        MockERC20ATokenA = await ethers.getContractFactory('MockERC20');
+        mockERC20ATokenA = MockERC20ATokenA.attach(aTokenAddress)
+        console.log("mockERC20ATokenA.address : ", mockERC20ATokenA.address)
+        
+        console.log("MockATockenA account1 balance: ", await(mockERC20ATokenA.balanceOf(account1.address)))
+        //console.log("allowance account1 => : mockAavePool", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
+        await(mockERC20ATokenA.connect(account1).approve(mockAavePool.address,Constant.TOKENA_WITHDRAW_AMOUNT))
+        console.log("allowance account1 => mockAavePool : ", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
+
+        console.log("tokentoATokenMapping : ", await(mockAavePool.tokentoATokenMapping(tokenA.address)))
+ 
         //withdraw token from pool
-        await mockAavePool.connect(owner).withdraw( tokenA.address, Constant.TOKENA_WITHDRAW_AMOUNT, account1.address)
+        await mockAavePool.connect(account1).withdraw( tokenA.address, Constant.TOKENA_WITHDRAW_AMOUNT, account1.address)
 
         //check balance
         expect(await tokenA.balanceOf(mockAavePool.address)).to.equal(Constant.TOKENA_DEPOSIT_AMOUNT.sub(Constant.TOKENA_WITHDRAW_AMOUNT))
@@ -102,7 +119,6 @@ describe("MockAavePool tests", function () {
    // await expect (mockAavePool.getUserConfiguration()).to.revertedWith("Not implemented for Mock")
       await expect (mockAavePool.getReserveNormalizedIncome(Constant.ADDRESS_0)).to.revertedWith("Not implemented for Mock")
       await expect (mockAavePool.getReserveNormalizedVariableDebt(Constant.ADDRESS_0) ).to.revertedWith("Not implemented for Mock")
-      await expect (mockAavePool.getReserveData(Constant.ADDRESS_0)).to.revertedWith("Not implemented for Mock")
       await expect (mockAavePool.finalizeTransfer(Constant.ADDRESS_0, Constant.ADDRESS_0, Constant.ADDRESS_0,0,0,0)).to.revertedWith("Not implemented for Mock")
       await expect (mockAavePool.getReservesList()).to.revertedWith("Not implemented for Mock")
       await expect (mockAavePool.getReserveAddressById(0)).to.revertedWith("Not implemented for Mock")
