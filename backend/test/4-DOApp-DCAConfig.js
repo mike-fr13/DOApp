@@ -113,7 +113,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(0),BigNumber.from(0)))
+            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_1_DELAY,
+                BigNumber.from(0),
+                BigNumber.from(0)
+              )
+            )
             //console.log(owner, amount, lastSwapTime)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_1_AMOUNT)
@@ -135,7 +143,14 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(1),BigNumber.from(0)))
+            const [owner,amount, lastSwapTime] = await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_2_DELAY,
+                BigNumber.from(1),
+                BigNumber.from(0)
+                )
             //console.log(owner, amount, lastSwapTime)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_2_AMOUNT)
@@ -143,7 +158,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           }
       })
 
-      it('Should add a valid segment entry for each segment interval on success (swap Token A for Token B)', async function () {
+      it('Should add a valid segment entry with scaling factor for each segment interval on success (swap Token A for Token B)', async function () {
         const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await doApp.connect(account1).addDCAConfig(
           pairId,
@@ -157,7 +172,13 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(0),BigNumber.from(0)))
+            const [owner,amount, lastSwapTime] = await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_1_DELAY,
+                BigNumber.from(0),
+                BigNumber.from(0))
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_1_MAX.sub(Constant.DCA_CONFIG_1_MIN)))
@@ -179,7 +200,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           }
       })
 
-      it('Should add a valid segment entry for each segment interval on success (swap Token B for Token A)', async function () {
+      it('Should add a valid segment entry with scaling factor for each segment interval on success (swap Token B for Token A)', async function () {
         const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await doApp.connect(account1).addDCAConfig(
           pairId,
@@ -193,7 +214,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(1),BigNumber.from(0)))
+            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_2_DELAY,
+                BigNumber.from(1),
+                BigNumber.from(0)
+                )
+              )
 
             rapport = (((i.sub(Constant.DCA_CONFIG_2_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_2_MAX.sub(Constant.DCA_CONFIG_2_MIN)))
@@ -239,7 +268,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(0),BigNumber.from(0)))
+            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_3_DELAY,
+                BigNumber.from(0),
+                BigNumber.from(0)
+              )
+            )
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_1_MAX.sub(Constant.DCA_CONFIG_1_MIN)))
@@ -270,7 +307,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 // we have only 1 segment entry (config 3)
                 index = 0;
             }
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(0),BigNumber.from(index)))
+            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_3_DELAY,
+                BigNumber.from(0),
+                BigNumber.from(index)
+              )
+            )
 
             rapport = (((Constant.DCA_CONFIG_3_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_3_MAX.sub(Constant.DCA_CONFIG_3_MIN)))
@@ -328,7 +373,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 // we have only 1 segment entry (config 4)
                 index = 0;
             }
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1).dcaSegmentsMap(pairId, BigNumber.from(i),BigNumber.from(1),BigNumber.from(index)))
+            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
+              .dcaSegmentsMap(
+                pairId, 
+                BigNumber.from(i),
+                Constant.DCA_CONFIG_4_DELAY,
+                BigNumber.from(1),
+                BigNumber.from(index)
+              )
+            )
 
             rapport = (((i.sub(Constant.DCA_CONFIG_4_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_4_MAX.sub(Constant.DCA_CONFIG_4_MIN)))

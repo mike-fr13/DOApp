@@ -92,11 +92,15 @@ contract DOApp is Ownable {
     mapping(uint256 => TokenPair) public tokenPairs;
 
     //tokenPair Segments DCA configuration 
-    mapping (uint pairID => mapping (uint segmentStart => SegmentDCAEntry[][2])) public dcaSegmentsMap;
-
+    // pairID => segment Start price => DCADelay (1h, 1 day, 1 week)  => DCA entry ([0] token A => B [1] token B => A)
+    mapping (uint pairID => mapping (uint segmentStart => mapping(DCADelayEnum => SegmentDCAEntry[][2]))) public dcaSegmentsMap;
 
     //maximum penalty for an early withdraw in % ()
-    uint constant public maxEarlyWithdrawPenality = 10 ;
+    //uint constant public maxEarlyWithdrawPenality = 10;
+    // eraly withdraw delay (10 days for example : 10*24*3600)
+    //uint constant public EarlyWithdrawInterval = 864000;
+    // @TODO manage penalty on early withdraw 
+    // but time flies when you do don't know what you're doing :)
 
     // check if a token Pair already exists
     modifier tokenPairExists(uint _pairID) {
@@ -431,14 +435,14 @@ contract DOApp is Ownable {
             uint24 segmentStart = _dcaConfig.min + i*_pairSegmentSize;
             SegmentDCAEntry memory entry = SegmentDCAEntry (msg.sender, getDCAAmount(_dcaConfig, segmentStart), 0);
              if (_dcaConfig.isSwapTookenAForTokenB) {
-                SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][0];
+                SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0];
                 currentArray.push(entry);
-                dcaSegmentsMap[pairID][segmentStart][0] = currentArray;
+                dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0] = currentArray;
              }
              else {
-                SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][1];
+                SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1];
                 currentArray.push(entry);
-                dcaSegmentsMap[pairID][segmentStart][1] = currentArray;
+                dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1] = currentArray;
              }
         }
     }
