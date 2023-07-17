@@ -3,23 +3,35 @@ const Constant = require("./Constants.js")
 
 async function deployDOApp_Fixture () {
   const [owner, account1, account2, account3, account4] = await ethers.getSigners();
+
+  // deploy DOApp main contract
   const DOApp = await ethers.getContractFactory('DOApp');
   const doApp = await DOApp.deploy();
 
+  // create an ERC20 Mock : tockenA
   const TokenA = await ethers.getContractFactory('MockERC20');
   const tokenA = await TokenA.deploy(Constant.MCKA_NAME,Constant.MCKA_SYMBOL,Constant.TOKEN_INITIAL_SUPPLY);
 
+  // create an ERC20 Mock : tockenB
   const TokenB = await ethers.getContractFactory('MockERC20');
   const tokenB = await TokenB.deploy(Constant.MCKB_NAME,Constant.MCKB_SYMBOL,Constant.TOKEN_INITIAL_SUPPLY);
 
-  //@TODO DEPLOY IPoolAddressesProvider
+  // create AAVEPoolAddressProvider Mock
   const MockAAVEPoolAddressesProvider = await ethers.getContractFactory('MockAAVEPoolAddressesProvider');
   const mockAAVEPoolAddressesProvider = await MockAAVEPoolAddressesProvider.deploy();
 
+  // create AAVEPool Mock
+  const MockAavePool = await ethers.getContractFactory('MockAavePool');
+  const mockAavePool = await MockAavePool.deploy();
+
+  //set AAVEPool Mock as Pool implementation 
+  await mockAAVEPoolAddressesProvider.setPoolImpl(mockAavePool.address);
+
+  //create ChainLinkAgggregatorV3  mock
   const MockChainLinkAggregatorV3 = await ethers.getContractFactory('MockChainLinkAggregatorV3');
   const mockChainLinkAggregatorV3 = await MockChainLinkAggregatorV3.deploy(Constant.ADDRESS_0,true);
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, owner, account1, account2, account3, account4};
+  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider,mockAavePool, owner, account1, account2, account3, account4};
 }
 
 // deploy contracts and add a token Pair
