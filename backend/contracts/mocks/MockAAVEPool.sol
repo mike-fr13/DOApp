@@ -15,11 +15,7 @@ contract MockAavePool is IPool {
 
     mapping (address => address) public tokentoATokenMapping;
 
-    event ATokenCreated(address aToken, string name);
-    event ATokenMinted(address aToken, address owner, uint amount);
-    event ATokenBurn(address aToken, address owner, uint amount);
-
-    
+ 
     /**
      * @notice  Mock function to simulate AAVE pool supply function
      * @dev     .
@@ -29,8 +25,12 @@ contract MockAavePool is IPool {
      */
     function supply(address _asset, uint256 _amount, address _onBehalfOf, uint16 ) external {
 
-      address aTokenAddress  = tokentoATokenMapping[_asset] ;
+      require (_asset != address(0), "Asset address provided should not be zero address");
+      require (_amount > 0, "Amount to supply should be > 0");
+      require (_onBehalfOf != address(0), "Address to use on behalf of should not be zero address");
 
+      address aTokenAddress  = tokentoATokenMapping[_asset] ;
+      
       // If token was never supplied
       if (aTokenAddress == address(0)) {
           string memory assetName = string(abi.encodePacked("AMock", IERC20Metadata(_asset).name()));
@@ -38,18 +38,13 @@ contract MockAavePool is IPool {
           // Create an AToken
           aTokenAddress = address(new MockERC20(assetName, symbol, 0));
           tokentoATokenMapping[_asset] = aTokenAddress;
-
-          emit ATokenCreated(aTokenAddress, assetName);
       }
 
       // supply asset to current contract
       (IERC20(_asset)).safeTransferFrom(_onBehalfOf, address(this), _amount);
 
-      // supply AToken to msg.sender
+      // supply AToken to _onBehalfOf
       MockERC20(aTokenAddress).mint(_onBehalfOf, _amount);
-
-      emit ATokenMinted(aTokenAddress, _onBehalfOf, _amount);
-
     }
 
     /**
@@ -63,6 +58,12 @@ contract MockAavePool is IPool {
     function withdraw(address _asset, uint256 _amount, address _to) external returns (uint256){
 //        userTokensBalance[_asset][address(address(_to))] -= _amount;
  
+      require (_asset != address(0), "Asset address provided should not be zero address");
+      require (_amount > 0, "Amount to supply should be > 0");
+      require (_to != address(0), "Target address should not be zero address");
+
+
+
       address aTokenAddress  = tokentoATokenMapping[_asset] ;
 
       // If token was never supplied
@@ -76,8 +77,6 @@ contract MockAavePool is IPool {
       
       //burn AToken
       ERC20Burnable(aTokenAddress).burnFrom(msg.sender,_amount);
-      emit ATokenBurn(aTokenAddress, msg.sender, _amount);
-
 
       // withdraw asset from current contract
       IERC20(_asset).safeTransfer(_to, _amount);
@@ -134,267 +133,267 @@ contract MockAavePool is IPool {
 //-----------------------------------------------------
 
   function mintUnbacked(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint16 referralCode
-  ) external{
+    address ,
+    uint256 ,
+    address ,
+    uint16 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function backUnbacked(address asset, uint256 amount, uint256 fee) external returns (uint256){
+  function backUnbacked(address , uint256 , uint256 ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
   function supplyWithPermit(
-    address asset,
-    uint256 amount,
-    address onBehalfOf,
-    uint16 referralCode,
-    uint256 deadline,
-    uint8 permitV,
-    bytes32 permitR,
-    bytes32 permitS
-  ) external{
+    address ,
+    uint256 ,
+    address ,
+    uint16 ,
+    uint256 ,
+    uint8 ,
+    bytes32 ,
+    bytes32 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
 
   function borrow(
-    address asset,
-    uint256 amount,
-    uint256 interestRateMode,
-    uint16 referralCode,
-    address onBehalfOf
-  ) external{
+    address ,
+    uint256 ,
+    uint256 ,
+    uint16 ,
+   address 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
   function repay(
-    address asset,
-    uint256 amount,
-    uint256 interestRateMode,
-    address onBehalfOf
-  ) external returns (uint256){
+    address ,
+    uint256 ,
+    uint256 ,
+    address 
+  ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
   function repayWithPermit(
-    address asset,
-    uint256 amount,
-    uint256 interestRateMode,
-    address onBehalfOf,
-    uint256 deadline,
-    uint8 permitV,
-    bytes32 permitR,
-    bytes32 permitS
-  ) external returns (uint256){
+    address ,
+    uint256 ,
+    uint256 ,
+    address ,
+    uint256 ,
+    uint8 ,
+    bytes32 ,
+    bytes32 
+  ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
   function repayWithATokens(
-    address asset,
-    uint256 amount,
-    uint256 interestRateMode
-  ) external returns (uint256){
+    address ,
+    uint256 ,
+    uint256 
+  ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
-  function swapBorrowRateMode(address asset, uint256 interestRateMode) external{
+  function swapBorrowRateMode(address , uint256 ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function rebalanceStableBorrowRate(address asset, address user) external{
+  function rebalanceStableBorrowRate(address , address ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function setUserUseReserveAsCollateral(address asset, bool useAsCollateral) external{
+  function setUserUseReserveAsCollateral(address , bool ) pure external{
     revert("Not implemented for Mock");
   }
 
   function liquidationCall(
-    address collateralAsset,
-    address debtAsset,
-    address user,
-    uint256 debtToCover,
-    bool receiveAToken
-  ) external{
+    address ,
+    address ,
+    address ,
+    uint256 ,
+    bool 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
   function flashLoan(
-    address receiverAddress,
-    address[] calldata assets,
-    uint256[] calldata amounts,
-    uint256[] calldata interestRateModes,
-    address onBehalfOf,
-    bytes calldata params,
-    uint16 referralCode
-  ) external{
+    address ,
+    address[] calldata ,
+    uint256[] calldata ,
+    uint256[] calldata ,
+    address ,
+    bytes calldata ,
+    uint16 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
   function flashLoanSimple(
-    address receiverAddress,
-    address asset,
-    uint256 amount,
-    bytes calldata params,
-    uint16 referralCode
-  ) external{
+    address ,
+    address ,
+    uint256 ,
+    bytes calldata ,
+    uint16 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
   function getUserAccountData(
-    address user
+    address 
   )
-    external
-    view
+    pure external
+    
     returns (
-      uint256 totalCollateralBase,
-      uint256 totalDebtBase,
-      uint256 availableBorrowsBase,
-      uint256 currentLiquidationThreshold,
-      uint256 ltv,
-      uint256 healthFactor
+      uint256 ,
+      uint256 ,
+      uint256 ,
+      uint256 ,
+      uint256 ,
+      uint256 
     ){
     revert("Not implemented for Mock");
   }
 
   function initReserve(
-    address asset,
-    address aTokenAddress,
-    address stableDebtAddress,
-    address variableDebtAddress,
-    address interestRateStrategyAddress
-  ) external{
+    address ,
+    address ,
+    address ,
+    address ,
+    address 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function dropReserve(address asset) external{
+  function dropReserve(address ) pure external{
     revert("Not implemented for Mock");
   }
 
   function setReserveInterestRateStrategyAddress(
-    address asset,
-    address rateStrategyAddress
-  ) external{
+    address ,
+    address 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
   function setConfiguration(
-    address asset,
-    DataTypes.ReserveConfigurationMap calldata configuration
-  ) external{
+    address ,
+    DataTypes.ReserveConfigurationMap calldata 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
   function getConfiguration(
-    address asset
-  ) external view returns (DataTypes.ReserveConfigurationMap memory){
+    address 
+  ) pure external returns (DataTypes.ReserveConfigurationMap memory){
     revert("Not implemented for Mock");
   }
 
   function getUserConfiguration(
-    address user
-  ) external view returns (DataTypes.UserConfigurationMap memory){
+    address 
+  ) pure external returns (DataTypes.UserConfigurationMap memory){
     revert("Not implemented for Mock");
   }
 
-  function getReserveNormalizedIncome(address asset) external view returns (uint256){
+  function getReserveNormalizedIncome(address ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
-  function getReserveNormalizedVariableDebt(address asset) external view returns (uint256){
+  function getReserveNormalizedVariableDebt(address ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 /*
-  function getReserveData(address asset) external view returns (DataTypes.ReserveData memory){
+  function getReserveData(address asset) pure external view returns (DataTypes.ReserveData memory){
     revert("Not implemented for Mock");
   }
 */
   function finalizeTransfer(
-    address asset,
-    address from,
-    address to,
-    uint256 amount,
-    uint256 balanceFromBefore,
-    uint256 balanceToBefore
-  ) external{
+    address ,
+    address ,
+    address ,
+    uint256 ,
+    uint256 ,
+    uint256 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function getReservesList() external view returns (address[] memory){
+  function getReservesList() pure external returns (address[] memory){
     revert("Not implemented for Mock");
   }
 
-  function getReserveAddressById(uint16 id) external view returns (address){
+  function getReserveAddressById(uint16 ) pure external returns (address){
     revert("Not implemented for Mock");
   }
 
-  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider){
+  function ADDRESSES_PROVIDER() pure external returns (IPoolAddressesProvider){
     revert("Not implemented for Mock");
   }
 
-  function updateBridgeProtocolFee(uint256 bridgeProtocolFee) external{
+  function updateBridgeProtocolFee(uint256 ) pure external{
     revert("Not implemented for Mock");
   }
 
   function updateFlashloanPremiums(
-    uint128 flashLoanPremiumTotal,
-    uint128 flashLoanPremiumToProtocol
-  ) external{
+    uint128 ,
+    uint128 
+  ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function configureEModeCategory(uint8 id, DataTypes.EModeCategory memory config) external{
+  function configureEModeCategory(uint8 , DataTypes.EModeCategory memory ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function getEModeCategoryData(uint8 id) external view returns (DataTypes.EModeCategory memory){
+  function getEModeCategoryData(uint8 ) pure external returns (DataTypes.EModeCategory memory){
     revert("Not implemented for Mock");
   }
 
-  function setUserEMode(uint8 categoryId) external{
+  function setUserEMode(uint8 ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function getUserEMode(address user) external view returns (uint256){
+  function getUserEMode(address ) pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
-  function resetIsolationModeTotalDebt(address asset) external{
+  function resetIsolationModeTotalDebt(address ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function MAX_STABLE_RATE_BORROW_SIZE_PERCENT() external view returns (uint256){
+  function MAX_STABLE_RATE_BORROW_SIZE_PERCENT() pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
-  function FLASHLOAN_PREMIUM_TOTAL() external view returns (uint128){
+  function FLASHLOAN_PREMIUM_TOTAL() pure external returns (uint128){
     revert("Not implemented for Mock");
   }
 
-  function BRIDGE_PROTOCOL_FEE() external view returns (uint256){
+  function BRIDGE_PROTOCOL_FEE() pure external returns (uint256){
     revert("Not implemented for Mock");
   }
 
-  function FLASHLOAN_PREMIUM_TO_PROTOCOL() external view returns (uint128){
+  function FLASHLOAN_PREMIUM_TO_PROTOCOL() pure external returns (uint128){
     revert("Not implemented for Mock");
   }
 
-  function MAX_NUMBER_RESERVES() external view returns (uint16){
+  function MAX_NUMBER_RESERVES() pure external returns (uint16){
     revert("Not implemented for Mock");
   }
 
-  function mintToTreasury(address[] calldata assets) external{
+  function mintToTreasury(address[] calldata ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function rescueTokens(address token, address to, uint256 amount) external{
+  function rescueTokens(address , address , uint256 ) pure external{
     revert("Not implemented for Mock");
   }
 
-  function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external{
+  function deposit(address , uint256 , address , uint16 ) pure external{
     revert("Not implemented for Mock");
   }
 
