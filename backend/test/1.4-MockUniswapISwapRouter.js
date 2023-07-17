@@ -42,20 +42,20 @@ describe("MockUniswapISwapRouter", function () {
 
 
       // Approve the router to spend WETH9.
-      console.log("account1 tockenA balance : ", await(tokenA.balanceOf(account1.address)))
-      console.log("account1 tockenB balance : ", await(tokenB.balanceOf(account1.address)))
-      console.log("allowance account1 => mockUniswapISwapRouter : ", await(tokenA.allowance(account1.address,mockUniswapISwapRouter.address)))
+      //console.log("account1 tockenA balance : ", await(tokenA.balanceOf(account1.address)))
+      //console.log("account1 tockenB balance : ", await(tokenB.balanceOf(account1.address)))
+      //console.log("allowance account1 => mockUniswapISwapRouter : ", await(tokenA.allowance(account1.address,mockUniswapISwapRouter.address)))
 
       await(tokenA.connect(account1).approve(mockUniswapISwapRouter.address,Constant.TOKENA_WITHDRAW_AMOUNT))
 
-      console.log("allowance account1 => mockUniswapISwapRouter : ", await(tokenA.allowance(account1.address,mockUniswapISwapRouter.address)))
+      //console.log("allowance account1 => mockUniswapISwapRouter : ", await(tokenA.allowance(account1.address,mockUniswapISwapRouter.address)))
 
       amountOut = await mockUniswapISwapRouter.exactInputSingle(exactInputSingleParams)
 
-      console.log("account1 tockenA balance : ", await(tokenA.balanceOf(account1.address)))
+      //console.log("account1 tockenA balance : ", await(tokenA.balanceOf(account1.address)))
       
       tokenBbalance = await(tokenB.balanceOf(account1.address));
-      console.log("account1 tockenB balance : ", tokenBbalance)
+      //console.log("account1 tockenB balance : ", tokenBbalance)
 
       theoricalAmount = 
         Constant.TOKENA_WITHDRAW_AMOUNT.mul(
@@ -66,7 +66,7 @@ describe("MockUniswapISwapRouter", function () {
           )
         .div(BigNumber.from(1000000))
 
-      console.log(" theoricalAmount : ", theoricalAmount)
+      //console.log(" theoricalAmount : ", theoricalAmount)
       expect (tokenBbalance).to.equal(theoricalAmount);
 
     })

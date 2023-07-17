@@ -73,14 +73,14 @@ describe("MockAavePool tests", function () {
 
         MockERC20ATokenA = await ethers.getContractFactory('MockERC20');
         mockERC20ATokenA = MockERC20ATokenA.attach(aTokenAddress)
-        console.log("mockERC20ATokenA.address : ", mockERC20ATokenA.address)
+        //console.log("mockERC20ATokenA.address : ", mockERC20ATokenA.address)
         
-        console.log("MockATockenA account1 balance: ", await(mockERC20ATokenA.balanceOf(account1.address)))
+        //console.log("MockATockenA account1 balance: ", await(mockERC20ATokenA.balanceOf(account1.address)))
         //console.log("allowance account1 => : mockAavePool", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
         await(mockERC20ATokenA.connect(account1).approve(mockAavePool.address,Constant.TOKENA_WITHDRAW_AMOUNT))
-        console.log("allowance account1 => mockAavePool : ", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
+        //console.log("allowance account1 => mockAavePool : ", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
 
-        console.log("tokentoATokenMapping : ", await(mockAavePool.tokentoATokenMapping(tokenA.address)))
+        //console.log("tokentoATokenMapping : ", await(mockAavePool.tokentoATokenMapping(tokenA.address)))
  
         //withdraw token from pool
         await mockAavePool.connect(account1).withdraw( tokenA.address, Constant.TOKENA_WITHDRAW_AMOUNT, account1.address)

@@ -127,7 +127,7 @@ describe('DOApp Contract tests', function () {
           = await loadFixture(Fixture.deployDOApp_Fixture);
         //console.log("tokenA : ", tokenA.address);
         //console.log("tokenB : ", tokenB.address);
-        console.log("mockAAVEPoolAddressesProvider : ",mockAAVEPoolAddressesProvider.address)
+        //console.log("mockAAVEPoolAddressesProvider : ",mockAAVEPoolAddressesProvider.address)
         await (doApp.addTokenPair(
           tokenA.address,
           Constant.TOCKEN_PAIR_SEGMENT_SIZE, 
@@ -151,10 +151,10 @@ describe('DOApp Contract tests', function () {
         expect (tokenPair.tokenPairSegmentSize).to.equal(Constant.TOCKEN_PAIR_SEGMENT_SIZE)
         expect (tokenPair.tokenPairDecimalNumber).to.equal(Constant.TOCKEN_PAIR_DECIMAL_NUMBER)
 
-        console.log("tokenPair.aavePoolAddressesProvider : ", tokenPair.aavePoolAddressesProvider)
+        //console.log("tokenPair.aavePoolAddressesProvider : ", tokenPair.aavePoolAddressesProvider)
         MockAAVEPoolAddressesProvider = await ethers.getContractFactory('MockAAVEPoolAddressesProvider');
         poolImpl = MockAAVEPoolAddressesProvider.attach(tokenPair.aavePoolAddressesProvider)
-        console.log("poolImpl.address : ", poolImpl.address)
+        //console.log("poolImpl.address : ", poolImpl.address)
         expect (await poolImpl.getPool()).to.equal(mockAavePool.address)
 
         expect (await mockAAVEPoolAddressesProvider.getPool()).to.equal(mockAavePool.address)
