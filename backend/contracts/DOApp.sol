@@ -4,20 +4,14 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
-import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 
 
 contract DOApp is Ownable {
     using SafeERC20 for IERC20;
-
-    uint16 constant DCA_CONFIG_MAX_SEGMENT = 1000;
-    uint16 constant MULT_FACTOR = 1000;
-    uint8 constant BALANCE_INDEX_DECIMAL_NUMBER = 20;
-    uint24 public constant UNISWAP_FEE_TIERS = 3000;
-    bool isProductionMode = false;
 
     /**
      *  @Dev This structure contains configuration for a specific pair of token 
@@ -55,6 +49,7 @@ contract DOApp is Ownable {
         uint16 amount;
         uint8 scalingFactor;
         uint32 creationDate;
+        DCADelayEnum dcaDelay;
     }
 
     struct SegmentDCAEntry {
@@ -65,11 +60,30 @@ contract DOApp is Ownable {
     }
 
     struct TokenPairUserBalance {
+        //256 * 4
         uint balanceA;
         uint indexA;
         uint balanceB;
         uint indexB;
     }
+
+        /// @notice workflow status list for the voting process
+    enum  DCADelayEnum {
+        Hourly,
+        Daily,
+        Weekly
+    }
+
+    uint16 constant DCA_CONFIG_MAX_SEGMENT = 1000;
+    uint16 constant MULT_FACTOR = 1000;
+    uint8 constant BALANCE_INDEX_DECIMAL_NUMBER = 20;
+    uint24 constant UNISWAP_FEE_TIERS = 3000;
+    //deposit lock penalty  time
+    uint constant public lockTime = 10 days;
+
+    // boolean to check if production mode
+    // we use it to verify som uniswap settings (min output token swap and swap price estimation)
+    bool isProductionMode = false;
 
     // pairID => User address => staked amount
     mapping(uint => mapping(address => TokenPairUserBalance)) tokenPairUserBalances;
@@ -80,12 +94,11 @@ contract DOApp is Ownable {
     //tokenPair Segments DCA configuration 
     mapping (uint pairID => mapping (uint segmentStart => SegmentDCAEntry[][2])) public dcaSegmentsMap;
 
-    //deposit lock penalty  time
-    uint constant public lockTime = 10 days;
 
     //maximum penalty for an early withdraw in % ()
     uint constant public maxEarlyWithdrawPenality = 10 ;
 
+    // check if a token Pair already exists
     modifier tokenPairExists(uint _pairID) {
         require(tokenPairs[_pairID].tokenAddressA != address(0) ,"Token Pair not Found");
         _;
@@ -142,6 +155,10 @@ contract DOApp is Ownable {
 
     receive() external payable {
     }
+
+    fallback() external payable {
+    }
+
 
     /**
      * @notice  Add a token pair to DOapp application, to enable DCA on this pair
@@ -218,13 +235,11 @@ contract DOApp is Ownable {
         require(_amount > 0, "Deposit amount should be > 0");
         TokenPair memory lPair = tokenPairs[_pairId];
 
-        //deposit token to curretn contract
+        //deposit token to current contract
         IERC20(lPair.tokenAddressA).safeTransferFrom(msg.sender, address(this), _amount);
 
-        // deposit token to aave lending pool
-        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
-        IERC20(lPair.tokenAddressA).safeIncreaseAllowance(address(aavePool), _amount);
-        aavePool.supply(lPair.tokenAddressA, _amount, address(this), 0);
+        //supply token to AAVE
+        supplyTokenAsLending(IPoolAddressesProvider(lPair.aavePoolAddressesProvider), lPair.tokenAddressA, _amount);
 
         // refresh index balance
         tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
@@ -249,17 +264,8 @@ contract DOApp is Ownable {
         tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
         tokenPairUserBalances[_pairId][msg.sender].balanceA -= _amount;
 
-        // withdraw token from aave lending pool
-        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
-
-        //get aTokenA address
-        address aTokenA = aavePool.getReserveData(lPair.tokenAddressA).aTokenAddress;
-
-        //approve aToken doAPP vers aavePool 
-        IERC20(aTokenA).approve(address(aavePool), _amount);
-
-        //withdraw token
-        aavePool.withdraw(lPair.tokenAddressA, _amount, address(this));
+        // withdraw token from Lending popl
+        withdrawTokenFromLending(IPoolAddressesProvider(lPair.aavePoolAddressesProvider), lPair.tokenAddressA, _amount);
 
         //withdraw token to user
         IERC20(lPair.tokenAddressA).safeTransfer(msg.sender, _amount);
@@ -281,10 +287,8 @@ contract DOApp is Ownable {
          //deposit token to curretn contract
         IERC20(lPair.tokenAddressB).safeTransferFrom(msg.sender, address(this), _amount);
 
-        // deposit token to aave lending pool
-        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
-        IERC20(lPair.tokenAddressB).safeIncreaseAllowance(address(aavePool), _amount);
-        aavePool.supply(lPair.tokenAddressB, _amount, address(this), 0);
+        //supply token to AAVE
+        supplyTokenAsLending(IPoolAddressesProvider(lPair.aavePoolAddressesProvider), lPair.tokenAddressB, _amount);
 
         // refresh index balance
         tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
@@ -309,17 +313,8 @@ contract DOApp is Ownable {
         tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
         tokenPairUserBalances[_pairId][msg.sender].balanceB -= _amount;
 
-        // withdraw token from aave lending pool
-        IPool aavePool = IPool(IPoolAddressesProvider(lPair.aavePoolAddressesProvider).getPool());
-
-        //get aTokenA address
-        address aTokenB = aavePool.getReserveData(lPair.tokenAddressB).aTokenAddress;
-
-        //approve aToken doAPP vers aavePool 
-        IERC20(aTokenB).approve(address(aavePool), _amount);
-
-        //withdraw tokenB
-        aavePool.withdraw(lPair.tokenAddressB, _amount, address(this));
+        // withdraw token from Lending popl
+        withdrawTokenFromLending(IPoolAddressesProvider(lPair.aavePoolAddressesProvider), lPair.tokenAddressB, _amount);
 
         //withdraw token to user
         IERC20(lPair.tokenAddressB).safeTransfer(msg.sender, _amount);
@@ -335,7 +330,8 @@ contract DOApp is Ownable {
      * @return  balanceB  user balance for tokenB in the specified pairID
      * @dev     _pairId should exist
      */
-    function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) returns (uint256 balanceA, uint256 balanceB, uint indexA, uint indexB) {
+    function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) 
+    returns (uint256 balanceA, uint256 balanceB, uint indexA, uint indexB) {
         return  (
             tokenPairUserBalances[_pairId][msg.sender].balanceA,
             tokenPairUserBalances[_pairId][msg.sender].balanceB,
@@ -362,7 +358,8 @@ contract DOApp is Ownable {
         uint24 _min, 
         uint24 _max, 
         uint16 _amount, 
-        uint8 _scalingFactor
+        uint8 _scalingFactor,
+        DCADelayEnum _dcaDelay
     ) external tokenPairExists(_pairId) returns (uint configId) {
 
         TokenPair memory tokenPair = tokenPairs[_pairId];
@@ -372,12 +369,33 @@ contract DOApp is Ownable {
         if (_amount <= 0 ) revert DCAConfigError("amount must be > 0");
         if (_scalingFactor < 1 ) revert DCAConfigError("scaling factor must be >= 1");
 
-        DCAConfig memory dcaConfig = DCAConfig(_pairId,_isBuyTokenASellTokenB, _min, _max, _amount, _scalingFactor, uint32(block.timestamp));
+        DCAConfig memory dcaConfig = 
+            DCAConfig(
+                _pairId,
+                _isBuyTokenASellTokenB, 
+                _min, 
+                _max, 
+                _amount, 
+                _scalingFactor, 
+                uint32(block.timestamp),
+                _dcaDelay
+            );
         createSegments(dcaConfig, _segmentNumber, tokenPair.tokenPairSegmentSize);
 
         configId = getDCAConfigHash(_pairId);
         emit DCAConfigCreation(msg.sender,_pairId, configId);
         return (configId);
+    }
+
+    function executeDCA() external {
+        uint amount;
+        address account;
+        uint pairId;
+
+        computeDCA();
+        OTCTransaction();
+
+        //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
     }
 
 
@@ -386,11 +404,22 @@ contract DOApp is Ownable {
      * @param   _pairId  the token pair Id
      * @return  hash  the DCA config hash
      */
-    function getDCAConfigHash(uint _pairId)internal view returns (uint hash) {
+    function getDCAConfigHash(uint _pairId) internal view returns (uint hash) {
         //@TODO check if it should be based on more param
+        // actual limit is one order / user / TokenPair
         return (uint256)(keccak256(abi.encodePacked(msg.sender,_pairId)));
     }
 
+    /**
+     * @notice  Create segmeents for a DCA configuration
+     * @dev     Create multiple segment of a specified size to cover the DCA interval
+     *          For example, with an interval 1000-1500 and segment size of 25,
+     *          20 segments wil be created with the DCA Amount de execute on each segmeent
+     *          based on the DCA base amount, the scalling factor and the segment start value
+     * @param   _dcaConfig  DCA configuration to create segment for
+     * @param   _segmentNumber  Segment number to create
+     * @param   _pairSegmentSize  Segment size
+     */
     function createSegments(
         DCAConfig memory _dcaConfig,
         uint24 _segmentNumber,
@@ -411,19 +440,29 @@ contract DOApp is Ownable {
                 currentArray.push(entry);
                 dcaSegmentsMap[pairID][segmentStart][1] = currentArray;
              }
-                
         }
     }
 
-    function getDCAAmount( DCAConfig memory _dcaConfig, uint24 _segmentStart) pure internal returns (uint16 dcaAmount) {
+    /**
+     * @notice  Calculate DCA amount based on the DCA base amount, the scalling factor 
+     *          and the segment start value
+     * @dev     .
+     * @param   _dcaConfig  Associated DCA config
+     * @param   _segmentStart  Segment start value
+     * @return  dcaAmount  Base DCA amount
+     */
+    function getDCAAmount( DCAConfig memory _dcaConfig, uint24 _segmentStart) pure internal 
+        returns (uint16 dcaAmount) {
             //@TODO  compute using scalinfFactor
             uint24 min = _dcaConfig.min;
             uint24 max = _dcaConfig.max;
             if (_dcaConfig.isSwapTookenAForTokenB) {
-                return uint16((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) * (((max -_segmentStart)*MULT_FACTOR) / (max - min))))/MULT_FACTOR);
+                return uint16((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) 
+                        * (((max -_segmentStart)*MULT_FACTOR) / (max - min))))/MULT_FACTOR);
             }
             else {
-                return uint16((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) * (((_segmentStart - min)*MULT_FACTOR) / ( max -min))))/MULT_FACTOR);
+                return uint16((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) 
+                        * (((_segmentStart - min)*MULT_FACTOR) / ( max -min))))/MULT_FACTOR);
             }
     }
     
@@ -435,43 +474,23 @@ contract DOApp is Ownable {
      * @return  uint  Segment number in this interval
      * @dev     Revert if segment number > DCA_CONFIG_MAX_SEGMENT
      */
-    function getSegmentNumber(uint24 _min, uint24 _max, uint16 _segmentSize) pure internal returns (uint24) {
+    function getSegmentNumber(uint24 _min, uint24 _max, uint16 _segmentSize) pure internal 
+        returns (uint24) {
         uint24 segmentNumber = (_max - _min) / _segmentSize;
         return segmentNumber;
     }
 
 
     /**
-     * @notice  .
-     * @dev     .
-     * @param   _dcaConfigId  .
-     */
-    function deleteDCAConfig(uint _dcaConfigId) external  {
-        
-    }
-
-    function computeBalanceIndex() internal returns (uint){
-        // @TODO
-    }
-
-    function computeDCA () private {
-    }
-
-    function executeDCA() external {
-        uint amount;
-        address account;
-        uint pairId;
-
-        computeDCA();
-        OTCTransaction();
-
-        //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
-   }
-
-   function OTCTransaction() internal {
-   }
-
-   function swap(uint _pairId, uint256 _amountIn, bool _isSwapTokenAtoB) internal returns (uint256 amountOut) {
+    * @notice  Swap a token to another for a specifed tokenPair and amount
+    * @dev     .
+    * @param   _pairId  token pair id to swap
+    * @param   _amountIn  amount to swap (input)
+    * @param   _isSwapTokenAtoB  true : swap A=> B, false swap B => A
+    * @return  amountOut  .
+    */
+    function swap(uint _pairId, uint256 _amountIn, bool _isSwapTokenAtoB) internal 
+        returns (uint256 amountOut) {
 
         TokenPair memory lPair = tokenPairs[_pairId];
         address tokenSource;
@@ -486,12 +505,10 @@ contract DOApp is Ownable {
             tokenDest = lPair.tokenAddressA;
         }
 
-        // Transfer the specified amount of WETH9 to this contract.
-        //TransferHelper.safeTransferFrom(tokenSource, msg.sender, address(this), amountIn);
-        // Approve the router to spend WETH9.
+        // Approve the router to spend token to swap
         TransferHelper.safeApprove(tokenSource, address(lPair.swapRouter), _amountIn);
 
-        // Note: we should explicitly set slippage limits
+        // Note: we should explicitly set slippage limits for production
         uint256 minOut = /* Calculate min output */ 0;
         uint160 priceLimit = /* Calculate price limit */ 0;
 
@@ -517,16 +534,69 @@ contract DOApp is Ownable {
         return amountOut;
     }
 
-   function stackTokenA(uint amount) internal {
-    //function supply(address pool, address token) public {
-        /*
-        IPool pool = 
-        IPool(pool).supply(token, amount, msg.sender, 0);
-        */
-     }
-   
+    /**
+     * @notice  Supply token to aave pool for lending
+     * @dev     A AToken is given back for each token supplied
+     * @param   _poolAddressProvider  AAVE poolAddressProvider
+     * @param   _token  token to supply
+     * @param   _amount  amount to supply
+     */
+    function supplyTokenAsLending(
+        IPoolAddressesProvider _poolAddressProvider, 
+        address _token, 
+        uint _amount
+        ) internal {
+        
+        // deposit token to aave lending pool
+        IPool aavePool = IPool(IPoolAddressesProvider(_poolAddressProvider).getPool());
+        IERC20(_token).safeIncreaseAllowance(address(aavePool), _amount);
+        aavePool.supply(_token, _amount, address(this), 0);
+    }
 
-   function stackTokenB() internal {
-   }
+    /**
+     * @notice  Withdraw token to aave pool for lending
+     * @dev     Contract mus have AToken (token given while supplied) to be able to withdraw 
+     * @param   _poolAddressProvider  AAVE poolAddressProvider
+     * @param   _token  token to supply
+     * @param   _amount  amount to supply
+     */
+    function withdrawTokenFromLending(
+        IPoolAddressesProvider _poolAddressProvider, 
+        address _token, 
+        uint _amount) 
+        internal{
+        
+        // withdraw token from aave lending pool
+        IPool aavePool = IPool(_poolAddressProvider.getPool());
+
+        //get aTokenA address
+        address aTokenA = aavePool.getReserveData(_token).aTokenAddress;
+
+        //approve aToken doAPP vers aavePool 
+        IERC20(aTokenA).approve(address(aavePool), _amount);
+
+        //withdraw token
+        aavePool.withdraw(_token, _amount, address(this));
+    }
+
+    function computeDCA () private {
+    }
+
+    function OTCTransaction() internal {
+    }
+
+    function computeBalanceIndex() internal returns (uint){
+        // @TODO
+    }
+
+    /**
+     * @notice  .
+     * @dev     .
+     * @param   _dcaConfigId  .
+     */
+    function deleteDCAConfig(uint _dcaConfigId) external  {
+        //@ TODO
+    }
+
 
 }

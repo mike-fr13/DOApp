@@ -22,7 +22,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           Constant.DCA_CONFIG_1_AMOUNT,
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           ))
           .to.be.revertedWith('Token Pair not Found')
       })
@@ -36,7 +37,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_AMOUNT,
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           ))
           .to.be.revertedWithCustomError(doApp,'DCAConfigError')
       })
@@ -49,7 +51,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           BigNumber.from(0),
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           ))
           .to.be.revertedWithCustomError(doApp,'DCAConfigError')
       })
@@ -62,7 +65,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           Constant.DCA_CONFIG_1_AMOUNT,
-          BigNumber.from(0)
+          BigNumber.from(0),
+          Constant.DCA_CONFIG_1_DELAY
           ))
           .to.be.revertedWithCustomError(doApp,'DCAConfigError')
       })
@@ -75,7 +79,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           BigNumber.from(0),
           BigNumber.from(1000000),
           Constant.DCA_CONFIG_1_AMOUNT,
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           ))
           .to.be.revertedWithCustomError(doApp,'DCAConfigError')
       })
@@ -88,7 +93,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           Constant.DCA_CONFIG_1_AMOUNT,
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           ))
           .to.emit(doApp, 'DCAConfigCreation').withArgs(account1.address, pairId, anyValue);
       })
@@ -101,7 +107,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           Constant.DCA_CONFIG_1_AMOUNT,
-          1
+          1,
+          Constant.DCA_CONFIG_1_DELAY
           )
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
@@ -122,7 +129,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_MIN,
           Constant.DCA_CONFIG_2_MAX,
           Constant.DCA_CONFIG_2_AMOUNT,
-          1
+          1,
+          Constant.DCA_CONFIG_2_DELAY
           )
 
           for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
@@ -143,7 +151,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           Constant.DCA_CONFIG_1_AMOUNT,
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           )
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
@@ -178,7 +187,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_MIN,
           Constant.DCA_CONFIG_2_MAX,
           Constant.DCA_CONFIG_2_AMOUNT,
-          Constant.DCA_CONFIG_2_SCALING_FACTOR
+          Constant.DCA_CONFIG_2_SCALING_FACTOR,
+          Constant.DCA_CONFIG_2_DELAY
           )
 
           for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
@@ -212,7 +222,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_MIN,
           Constant.DCA_CONFIG_1_MAX,
           Constant.DCA_CONFIG_1_AMOUNT,
-          Constant.DCA_CONFIG_1_SCALING_FACTOR
+          Constant.DCA_CONFIG_1_SCALING_FACTOR,
+          Constant.DCA_CONFIG_1_DELAY
           )
 
         await doApp.connect(account1).addDCAConfig(
@@ -221,7 +232,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_3_MIN,
           Constant.DCA_CONFIG_3_MAX,
           Constant.DCA_CONFIG_3_AMOUNT,
-          Constant.DCA_CONFIG_3_SCALING_FACTOR
+          Constant.DCA_CONFIG_3_SCALING_FACTOR,
+          Constant.DCA_CONFIG_3_DELAY
           )
   
 
@@ -288,7 +300,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_MIN,
           Constant.DCA_CONFIG_2_MAX,
           Constant.DCA_CONFIG_2_AMOUNT,
-          Constant.DCA_CONFIG_2_SCALING_FACTOR
+          Constant.DCA_CONFIG_2_SCALING_FACTOR,
+          Constant.DCA_CONFIG_2_DELAY
           )
 
         await doApp.connect(account1).addDCAConfig(
@@ -297,7 +310,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_4_MIN,
           Constant.DCA_CONFIG_4_MAX,
           Constant.DCA_CONFIG_4_AMOUNT,
-          Constant.DCA_CONFIG_4_SCALING_FACTOR
+          Constant.DCA_CONFIG_4_SCALING_FACTOR,
+          Constant.DCA_CONFIG_4_DELAY
           )
 
           for (let i = Constant.DCA_CONFIG_4_MIN; i<Constant.DCA_CONFIG_4_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {

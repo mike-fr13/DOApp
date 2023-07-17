@@ -27,6 +27,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_1_MAX : new BigNumber.from(1500),
     DCA_CONFIG_1_AMOUNT : new BigNumber.from(50),
     DCA_CONFIG_1_SCALING_FACTOR : new BigNumber.from(2),
+    DCA_CONFIG_1_DELAY : new BigNumber.from(0),
 
     //ex  WETH/USDC => swap WETH fo USDC
     DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
@@ -34,6 +35,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_2_MAX : new BigNumber.from(3000),
     DCA_CONFIG_2_AMOUNT : new BigNumber.from(100),
     DCA_CONFIG_2_SCALING_FACTOR : new BigNumber.from(3),
+    DCA_CONFIG_2_DELAY : new BigNumber.from(0),
 
     //ex  WETH/USDC => swap USDC for WETH
     DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
@@ -41,6 +43,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_3_MAX : new BigNumber.from(1750),
     DCA_CONFIG_3_AMOUNT : new BigNumber.from(10),
     DCA_CONFIG_3_SCALING_FACTOR : new BigNumber.from(5),
+    DCA_CONFIG_3_DELAY : new BigNumber.from(1),
 
     //ex  WETH/USDC => swap WETH fo USDC
     DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
@@ -48,6 +51,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_4_MAX : new BigNumber.from(3250),
     DCA_CONFIG_4_AMOUNT : new BigNumber.from(5),
     DCA_CONFIG_4_SCALING_FACTOR : new BigNumber.from(10),
+    DCA_CONFIG_4_DELAY : new BigNumber.from(2),
 
 
     // mult factor for arithmetics
