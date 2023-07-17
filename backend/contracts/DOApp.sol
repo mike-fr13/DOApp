@@ -12,25 +12,28 @@ contract DOApp is Ownable {
 
     uint16 constant DCA_CONFIG_MAX_SEGMENT = 1000;
     uint16 constant MULT_FACTOR = 1000;
+    uint8 constant BALANCE_INDEX_DECIMAL_NUMBER = 20;
 
     /**
      *  @Dev This structure contains configuration for a specific pair of token 
      */
     struct TokenPair {
-        // 8 + 160 +16 +8 = 192
-        bool enabled;
+        // 160 +96 = 256
         address tokenAddressA;
-        uint16 tokenPairSegmentSize;
-        uint8 tokenPairDecimalNumber;
+        uint96 indexBalanceTokenA;
 
-        //160
+        //160 + 96 = 256
         address tokenAddressB;
+        uint96 indexBalanceTokenB;
 
         //160
         address chainlinkPriceFetcher;
 
-        //160
+        //160 + 8 + 16 + 8 =192
         IPoolAddressesProvider aavePoolAddressesProvider;
+        bool enabled;
+        uint16 tokenPairSegmentSize;
+        uint8 tokenPairDecimalNumber;
     }
 
     struct DCAConfig {
@@ -53,14 +56,20 @@ contract DOApp is Ownable {
         uint32 lastSwapTime;
     }
 
-    // User address => staked amount
-    mapping(uint => mapping(address => uint)) balanceTokenA;
-    mapping(uint => mapping(address => uint)) balanceTokenB;
+    struct TokenPairUserBalance {
+        uint balanceA;
+        uint indexA;
+        uint balanceB;
+        uint indexB;
+    }
+
+    // pairID => User address => staked amount
+    mapping(uint => mapping(address => TokenPairUserBalance)) tokenPairUserBalances;
 
     // tokenPairs contains all available token pairs for DCA
     mapping(uint256 => TokenPair) public tokenPairs;
 
-    //tokePair Segments DCA configuration 
+    //tokenPair Segments DCA configuration 
     mapping (uint pairID => mapping (uint segmentStart => SegmentDCAEntry[][2])) public dcaSegmentsMap;
 
     //deposit lock penalty  time
@@ -74,11 +83,47 @@ contract DOApp is Ownable {
         _;
     }
 
-    event TokenPAirAdded(uint _pairId, address _tokenAddressA,address _tokenAddressB,address _chainLinkPriceFetcher);
-    event TokenDeposit(address _sender, uint _pairId, address token, uint _amount, uint _timestamp);
-    event TokenWithdrawal(address _sender, uint _pairId, address token, uint _amount, uint _timestamp);
-    event DCAConfigCreation(address _sender, uint _pairId, uint _configId);
-    event DCAExecution(address _account, uint _pairId, address _tokenInput, uint _tokenInputPrice, IERC20 _tokenOutput, uint _amount, uint _timeStamp);
+    event TokenPAirAdded(
+        uint _pairId, 
+        address _tokenAddressA,
+        address _tokenAddressB,
+        uint16 _tokenPairSegmentSize, 
+        uint8 _tokenPairDecimalNumber,
+        address _chainLinkPriceFetcher, 
+        IPoolAddressesProvider _aavePoolAddressesProvider
+        );
+
+    event TokenDeposit(
+        address _sender, 
+        uint _pairId, 
+        address token, 
+        uint _amount, 
+        uint _timestamp
+        );
+    
+    event TokenWithdrawal(
+        address _sender, 
+        uint _pairId, 
+        address token, 
+        uint _amount, 
+        uint _timestamp
+        );
+
+    event DCAConfigCreation(
+        address _sender, 
+        uint _pairId, 
+        uint _configId
+        );
+
+    event DCAExecution(
+        address _account, 
+        uint _pairId, 
+        address _tokenInput, 
+        uint _tokenInputPrice, 
+        IERC20 _tokenOutput, 
+        uint _amount, 
+        uint _timeStamp
+        );
 
     error DCAConfigError(string _errorMessage);
     
@@ -123,14 +168,27 @@ contract DOApp is Ownable {
         require (tokenPairs[hash2].tokenAddressA  == address(0), "Token Pair Allready Defined");
 
         tokenPairs[hash] = TokenPair(
-            false, 
             _tokenAddressA, 
+            uint96(1),
+            _tokenAddressB, 
+            uint96(1),
+            _chainLinkPriceFetcher,
+            IPoolAddressesProvider(_aavePoolAddressesProvider),
+            false, 
+            _tokenPairSegmentSize,
+            _tokenPairDecimalNumber
+            );
+
+        emit TokenPAirAdded(
+            hash, 
+            _tokenAddressA, 
+            _tokenAddressB, 
             _tokenPairSegmentSize,
             _tokenPairDecimalNumber,
-            _tokenAddressB, 
             _chainLinkPriceFetcher,
-            IPoolAddressesProvider(_aavePoolAddressesProvider));
-        emit TokenPAirAdded(hash, _tokenAddressA, _tokenAddressB, _chainLinkPriceFetcher);
+            IPoolAddressesProvider(_aavePoolAddressesProvider)
+            );
+
         return(hash);
     }
 
@@ -145,9 +203,18 @@ contract DOApp is Ownable {
         require(_amount > 0, "Deposit amount should be > 0");
         TokenPair memory lPair = tokenPairs[_pairId];
 
-        (IERC20(lPair.tokenAddressA)).safeTransferFrom(msg.sender, address(this), _amount);
+        //deposit token to curretn contract
+        IERC20(lPair.tokenAddressA).safeTransferFrom(msg.sender, address(this), _amount);
 
-        balanceTokenA[_pairId][msg.sender] += _amount;
+        // deposit token to aave lending pool
+        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+        IERC20(lPair.tokenAddressA).safeIncreaseAllowance(address(aavePool), _amount);
+        aavePool.supply(lPair.tokenAddressA, _amount, address(this), 0);
+
+        // refresh index balance
+        tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceA += _amount;
+
         emit TokenDeposit(msg.sender, _pairId, lPair.tokenAddressA, _amount, block.timestamp);
     }
 
@@ -160,10 +227,26 @@ contract DOApp is Ownable {
      */
     function withdrawTokenA(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
         require(_amount > 0, "Withdraw amount should be > 0");
-        require( _amount <= balanceTokenA[_pairId][msg.sender], "Amount to withdraw should be < your account balance");
+        require( _amount <= tokenPairUserBalances[_pairId][msg.sender].balanceA, "Amount to withdraw should be < your account balance");
         TokenPair memory lPair = tokenPairs[_pairId];
 
-        balanceTokenA[_pairId][msg.sender] -= _amount;
+        //refresh balance index 
+        tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceA -= _amount;
+
+        // withdraw token from aave lending pool
+        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+
+        //get aTokenA address
+        address aTokenA = aavePool.getReserveData(lPair.tokenAddressA).aTokenAddress;
+
+        //approve aToken doAPP vers aavePool 
+        IERC20(aTokenA).approve(address(aavePool), _amount);
+
+        //withdraw token
+        aavePool.withdraw(lPair.tokenAddressA, _amount, address(this));
+
+        //withdraw token to user
         IERC20(lPair.tokenAddressA).safeTransfer(msg.sender, _amount);
 
         emit TokenWithdrawal(msg.sender, _pairId, lPair.tokenAddressA, _amount, block.timestamp);
@@ -180,8 +263,17 @@ contract DOApp is Ownable {
         require(_amount > 0, "Deposit amount should be > 0");
         TokenPair memory lPair = tokenPairs[_pairId];
 
+         //deposit token to curretn contract
         IERC20(lPair.tokenAddressB).safeTransferFrom(msg.sender, address(this), _amount);
-        balanceTokenB[_pairId][msg.sender] += _amount;
+
+        // deposit token to aave lending pool
+        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+        IERC20(lPair.tokenAddressB).safeIncreaseAllowance(address(aavePool), _amount);
+        aavePool.supply(lPair.tokenAddressB, _amount, address(this), 0);
+
+        // refresh index balance
+        tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceB += _amount;
         
         emit TokenDeposit(msg.sender, _pairId, lPair.tokenAddressB, _amount, block.timestamp);
     }
@@ -195,10 +287,26 @@ contract DOApp is Ownable {
      */
     function withdrawTokenB(uint _pairId, uint _amount) external tokenPairExists(_pairId) {
         require(_amount > 0, "Withdraw amount should be > 0");
-        require( _amount <= balanceTokenB[_pairId][msg.sender], "Amount to withdraw should be < your account balance");
+        require( _amount <= tokenPairUserBalances[_pairId][msg.sender].balanceB, "Amount to withdraw should be < your account balance");
         TokenPair memory lPair = tokenPairs[_pairId];
 
-        balanceTokenB[_pairId][msg.sender] -= _amount;
+        //refresh balance index 
+        tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceB -= _amount;
+
+        // withdraw token from aave lending pool
+        IPool aavePool = IPool(lPair.aavePoolAddressesProvider.getPool());
+
+        //get aTokenA address
+        address aTokenB = aavePool.getReserveData(lPair.tokenAddressB).aTokenAddress;
+
+        //approve aToken doAPP vers aavePool 
+        IERC20(aTokenB).approve(address(aavePool), _amount);
+
+        //withdraw tokenB
+        aavePool.withdraw(lPair.tokenAddressB, _amount, address(this));
+
+        //withdraw token to user
         IERC20(lPair.tokenAddressB).safeTransfer(msg.sender, _amount);
                 
         emit TokenWithdrawal(msg.sender, _pairId, lPair.tokenAddressB, _amount, block.timestamp);
@@ -212,8 +320,13 @@ contract DOApp is Ownable {
      * @return  balanceB  user balance for tokenB in the specified pairID
      * @dev     _pairId should exist
      */
-    function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) returns (uint256 balanceA, uint256 balanceB) {
-        return  (balanceTokenA[_pairId][msg.sender],  balanceTokenB[_pairId][msg.sender]);
+    function getTokenBalances(uint _pairId) external view tokenPairExists(_pairId) returns (uint256 balanceA, uint256 balanceB, uint indexA, uint indexB) {
+        return  (
+            tokenPairUserBalances[_pairId][msg.sender].balanceA,
+            tokenPairUserBalances[_pairId][msg.sender].balanceB,
+            tokenPairUserBalances[_pairId][msg.sender].indexA,
+            tokenPairUserBalances[_pairId][msg.sender].indexB
+            );
     }
 
 
@@ -320,6 +433,10 @@ contract DOApp is Ownable {
      */
     function deleteDCAConfig(uint _dcaConfigId) external  {
         
+    }
+
+    function computeBalanceIndex() internal returns (uint){
+        // @TODO
     }
 
     function computeDCA () private {
