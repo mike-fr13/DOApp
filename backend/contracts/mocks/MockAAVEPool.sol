@@ -7,25 +7,125 @@ import {IPoolAddressesProvider} from "@aave/core-v3/contracts/interfaces/IPoolAd
 import {DataTypes} from "@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+import './MockERC20.sol';
 
 contract MockAavePool is IPool {
     using SafeERC20 for IERC20;
 
-    mapping (address => mapping(address => uint)) userTokensBalance;
+    mapping (address => address) public tokentoATokenMapping;
 
+    event ATokenCreated(address aToken, string name);
+    event ATokenMinted(address aToken, address owner, uint amount);
+    event ATokenBurn(address aToken, address owner, uint amount);
+
+    
+    /**
+     * @notice  Mock function to simulate AAVE pool supply function
+     * @dev     .
+     * @param   _asset  Asset to supply
+     * @param   _amount  Amount to supply
+     * @param   _onBehalfOf  Address to target
+     */
     function supply(address _asset, uint256 _amount, address _onBehalfOf, uint16 ) external {
 
-        // supply asset to current contract
-         (IERC20(_asset)).safeTransferFrom(_onBehalfOf, address(this), _amount);
+      address aTokenAddress  = tokentoATokenMapping[_asset] ;
+
+      // If token was never supplied
+      if (aTokenAddress == address(0)) {
+          string memory assetName = string(abi.encodePacked("AMock", IERC20Metadata(_asset).name()));
+          string memory symbol = string(abi.encodePacked("A", IERC20Metadata(_asset).symbol()));
+          // Create an AToken
+          aTokenAddress = address(new MockERC20(assetName, symbol, 0));
+          tokentoATokenMapping[_asset] = aTokenAddress;
+
+          emit ATokenCreated(aTokenAddress, assetName);
+      }
+
+      // supply asset to current contract
+      (IERC20(_asset)).safeTransferFrom(_onBehalfOf, address(this), _amount);
+
+      // supply AToken to msg.sender
+      MockERC20(aTokenAddress).mint(_onBehalfOf, _amount);
+
+      emit ATokenMinted(aTokenAddress, _onBehalfOf, _amount);
+
     }
 
+    /**
+     * @notice  Mock function to simulate AAVE pool withdraw function
+     * @dev     .
+     * @param   _asset  asset to withdraw
+     * @param   _amount  amount to withdraw
+     * @param   _to  target for withdraw
+     * @return  uint256  amount withdrawn
+     */
     function withdraw(address _asset, uint256 _amount, address _to) external returns (uint256){
 //        userTokensBalance[_asset][address(address(_to))] -= _amount;
  
-        // withdraw asset from current contract
-        IERC20(_asset).safeTransfer(_to, _amount);
-        return (_amount);
+      address aTokenAddress  = tokentoATokenMapping[_asset] ;
+
+      // If token was never supplied
+      if (aTokenAddress == address(0)) {
+          revert("Asset never supplied");
+      }
+
+      if (IERC20(aTokenAddress).balanceOf(msg.sender) < _amount) {
+        revert("AToken balance to low");
+      }
+      
+      //burn AToken
+      ERC20Burnable(aTokenAddress).burnFrom(msg.sender,_amount);
+      emit ATokenBurn(aTokenAddress, msg.sender, _amount);
+
+
+      // withdraw asset from current contract
+      IERC20(_asset).safeTransfer(_to, _amount);
+      return (_amount);
     }
+
+   /**
+   * @notice   Mock function to simulate AAVE pool withdraw function
+   * @dev     Mock only property 'aTokenAddress'
+   * @param   asset  Asset to get reserve Data information
+   * @return  DataTypes.ReserveData  .
+   */
+  function getReserveData(
+    address asset
+  ) external view virtual override returns (DataTypes.ReserveData memory) {
+    return DataTypes.ReserveData(
+          //stores the reserve configuration
+          DataTypes.ReserveConfigurationMap (0),
+          //the liquidity index. Expressed in ray
+          0,
+          //the current supply rate. Expressed in ray
+          0,
+          //variable borrow index. Expressed in ray
+          0,
+          //the current variable borrow rate. Expressed in ray
+          0,
+          //the current stable borrow rate. Expressed in ray
+          0,
+          //timestamp of last update
+          0,
+          //the id of the reserve. Represents the position in the list of the active reserves
+          0,
+          //aTokenAddress : aToken address
+          tokentoATokenMapping[asset],
+          //stableDebtToken address
+          address(0),
+          //variableDebtToken address
+          address(0),
+          //address of the interest rate strategy
+          address(0),
+          //the current treasury balance, scaled
+          0,
+          //the outstanding unbacked aTokens minted through the bridging feature
+          0,
+          //the outstanding debt borrowed against this asset in isolation mode
+          0
+    );
+  }
 
 /**
  * @dev None of the functions below are implemented.
@@ -207,11 +307,11 @@ contract MockAavePool is IPool {
   function getReserveNormalizedVariableDebt(address asset) external view returns (uint256){
     revert("Not implemented for Mock");
   }
-
+/*
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory){
     revert("Not implemented for Mock");
   }
-
+*/
   function finalizeTransfer(
     address asset,
     address from,

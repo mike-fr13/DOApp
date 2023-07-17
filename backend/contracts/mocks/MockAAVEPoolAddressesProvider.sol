@@ -21,9 +21,9 @@ contract MockAAVEPoolAddressesProvider is  IPoolAddressesProvider{
    * @return The Pool proxy address
    */
   function getPool() external view returns (address){
-    // @TODO : add pool impl
     return (_poolImpl);
   }
+
   /**
    * @notice Updates the implementation of the Pool, or creates a proxy
    * setting the new `pool` implementation when the function is called for the first time.
