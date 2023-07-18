@@ -1,5 +1,6 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const Constant = require("./Constants.js")
+const isLogEnable = false;
 
 async function deployDOApp_Fixture() {
   const [owner, account1, account2, account3, account4] = await ethers.getSigners();
@@ -7,45 +8,45 @@ async function deployDOApp_Fixture() {
   // deploy DOApp main contract
   const DataStorage = await ethers.getContractFactory('DataStorage');
   const dataStorage = await DataStorage.deploy();
-  console.log(`dataStorage deployed to ${dataStorage.address}`);
+  isLogEnable ? console.log(`dataStorage deployed to ${dataStorage.address}`):{}
   
   // deploy DOApp main contract
   const DOApp = await ethers.getContractFactory('DOApp');
   const doApp = await DOApp.deploy(false,dataStorage.address);
-  console.log(`doApp deployed to ${doApp.address}`);
+  isLogEnable ? console.log(`doApp deployed to ${doApp.address}`):{}
 
   // create an ERC20 Mock : tockenA
   const TokenA = await ethers.getContractFactory('MockERC20');
   const tokenA = await TokenA.deploy(Constant.MCKA_NAME, Constant.MCKA_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
-  console.log(`DOApp deployed to ${tokenA.address}`);
+  isLogEnable ? console.log(`DOApp deployed to ${tokenA.address}`):{}
 
   // create an ERC20 Mock : tockenB
   const TokenB = await ethers.getContractFactory('MockERC20');
   const tokenB = await TokenB.deploy(Constant.MCKB_NAME, Constant.MCKB_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
-  console.log(`tokenB deployed to ${tokenB.address}`);
+  isLogEnable ? console.log(`tokenB deployed to ${tokenB.address}`):{}
 
   // create AAVEPoolAddressProvider Mock
   const MockAAVEPoolAddressesProvider = await ethers.getContractFactory('MockAAVEPoolAddressesProvider');
   const mockAAVEPoolAddressesProvider = await MockAAVEPoolAddressesProvider.deploy();
-  console.log(`mockAAVEPoolAddressesProvider deployed to ${mockAAVEPoolAddressesProvider.address}`);
+  isLogEnable ? console.log(`mockAAVEPoolAddressesProvider deployed to ${mockAAVEPoolAddressesProvider.address}`):{}
 
   // create AAVEPool Mock
   const MockAavePool = await ethers.getContractFactory('MockAavePool');
   const mockAavePool = await MockAavePool.deploy();
-  console.log(`mockAavePool deployed to ${mockAavePool.address}`);
+  isLogEnable ? console.log(`mockAavePool deployed to ${mockAavePool.address}`):{}
 
   //set AAVEPool Mock as Pool implementation 
-  await mockAAVEPoolAddressesProvider.setPoolImpl(mockAavePool.address);
+  await mockAAVEPoolAddressesProvider.setPoolImpl(mockAavePool.address)
 
   //create ChainLinkAgggregatorV3  mock
   const MockChainLinkAggregatorV3 = await ethers.getContractFactory('MockChainLinkAggregatorV3');
   const mockChainLinkAggregatorV3 = await MockChainLinkAggregatorV3.deploy(Constant.ADDRESS_0, true);
-  console.log(`mockChainLinkAggregatorV3 deployed to ${mockChainLinkAggregatorV3.address}`);
+  isLogEnable ? console.log(`mockChainLinkAggregatorV3 deployed to ${mockChainLinkAggregatorV3.address}`):{}
 
   //create ChainLinkAgggregatorV3  mock
   const MockUniswapISwapRouter = await ethers.getContractFactory('MockUniswapISwapRouter');
   const mockUniswapISwapRouter = await MockUniswapISwapRouter.deploy();
-  console.log(`mockUniswapISwapRouter deployed to ${mockUniswapISwapRouter.address}`);
+  isLogEnable ? console.log(`mockUniswapISwapRouter deployed to ${mockUniswapISwapRouter.address}`):{}
 
   return { doApp, dataStorage,tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, mockAavePool, mockUniswapISwapRouter, owner, account1, account2, account3, account4 };
 }
