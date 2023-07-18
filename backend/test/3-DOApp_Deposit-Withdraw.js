@@ -31,13 +31,13 @@ describe('DOApp Contract - Deposit and Withdraw tests', function () {
         const {doApp, dataStorage, tokenA, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await (tokenA.connect(account1).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT))
         await ( (doApp.connect(account1)).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT))
-        console.log('account1 tokenA balance : ',await tokenA.balanceOf(account1.address))
-        console.log('account1 doApp tokenA : ', (await doApp.connect(account1).getTokenBalances(pairId))[0])
+        //console.log('account1 tokenA balance : ',await tokenA.balanceOf(account1.address))
+        //console.log('account1 doApp tokenA : ', (await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceA)
 
         expect(await tokenA.balanceOf(account1.address)).to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENA_DEPOSIT_AMOUNT))
         //console.log('account1 tokenA balance : ',await tokenA.balanceOf(account1.address))
-        //console.log('account1 doApp tokenA : ', (await doApp.connect(account1).getTokenBalances(pairId))[0])
-        expect((await doApp.connect(account1).getTokenBalances(pairId))[0]).to.be.equals(Constant.TOKENA_DEPOSIT_AMOUNT);
+        //console.log('account1 doApp tokenA : ', (await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceA)
+        expect((await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceA).to.be.equals(Constant.TOKENA_DEPOSIT_AMOUNT);
       })
 
       it('Should emit a TokenDeposit event on depositTokenA success', async function () {
@@ -74,11 +74,17 @@ describe('DOApp Contract - Deposit and Withdraw tests', function () {
       })
 
       it('Should Deposit a specified amount of token B', async function () {
-        const {doApp,  tokenB, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        const isLogEnable = false
+        const {doApp,dataStorage,  tokenB, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+
+        isLogEnable ? console.log("Befoe Deposit TokenB balance for account1 : ",await tokenB.balanceOf(account1.address)):{}
+        isLogEnable ? console.log("Befoe Deposit getTokenPairUserBalances : ",await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)):{}
         await tokenB.connect(account1).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
         await doApp.connect(account1).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
+        isLogEnable ? console.log("After withdraw TokenB balance for account1 : ",await tokenB.balanceOf(account1.address)):{}
+        isLogEnable ? console.log("After withdraw getTokenPairUserBalances : ",await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)):{}
         expect(await tokenB.balanceOf(account1.address)).to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENB_DEPOSIT_AMOUNT))
-        expect((await doApp.connect(account1).getTokenBalances(pairId))[1]).to.be.equals(Constant.TOKENB_DEPOSIT_AMOUNT);
+        expect((await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceB).to.be.equals(Constant.TOKENB_DEPOSIT_AMOUNT);
       })
 
       it('Should emit a TokenDeposit event on depositTokenB success', async function () {
@@ -91,10 +97,10 @@ describe('DOApp Contract - Deposit and Withdraw tests', function () {
     })
   })
 
-  describe ('getTokenBalances() tests', function () {
+  describe ('getTokenPairUserBalances() tests', function () {
     it('Should Revert when trying to get token Balance from an unknow token pair (pairId)', async function () {
-      const {doApp, account1} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-      await expect( doApp.connect(account1).getTokenBalances(Constant.BAD_PAIR_ID)).to.be.revertedWith("Token Pair not Found")
+      const {dataStorage, account1} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+      await expect( dataStorage.connect(account1).getTokenPairUserBalances(Constant.BAD_PAIR_ID, account1.address)).to.be.revertedWith("Token Pair not Found")
     })
   })
 
@@ -123,17 +129,17 @@ describe('DOApp Contract - Deposit and Withdraw tests', function () {
     })
 
     it('Should withdraw a specified amount of token A', async function () {
-      const {doApp,  tokenA, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_DepositToken_Fixture);
+      const {doApp, dataStorage, tokenA, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_DepositToken_Fixture);
       // check tokenA balance for account1 berfore withdraw
       expect(await tokenA.balanceOf(account1.address)).to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENA_DEPOSIT_AMOUNT))
       // check tokenA balance for doApp berfore withdraw
-      expect((await doApp.connect(account1).getTokenBalances(pairId))[0]).to.be.equals(Constant.TOKENA_DEPOSIT_AMOUNT);
+      expect((await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceA).to.be.equals(Constant.TOKENA_DEPOSIT_AMOUNT);
 
       await doApp.connect(account1).withdrawTokenA(pairId, Constant.TOKENA_WITHDRAW_AMOUNT)
 
       expect(await tokenA.balanceOf(account1.address))
         .to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENA_DEPOSIT_AMOUNT).add(Constant.TOKENA_WITHDRAW_AMOUNT))
-      expect((await doApp.connect(account1).getTokenBalances(pairId))[0])
+      expect((await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceA)
         .to.be.equals(Constant.TOKENA_DEPOSIT_AMOUNT.sub(Constant.TOKENA_WITHDRAW_AMOUNT));
     })
 
@@ -170,18 +176,34 @@ describe('DOApp Contract - Deposit and Withdraw tests', function () {
 
 
     it('Should withdraw a specified amount of token B', async function () {
-      const {doApp,  tokenB, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_DepositToken_Fixture);
+      const isLogEnable = false;
+      const {doApp, dataStorage, tokenB, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_DepositToken_Fixture);
       // check tokenB balance for account1 berfore withdraw
+      isLogEnable ? console.log("Before Withdraw TokenB balance for account1 : ",await tokenB.balanceOf(account1.address)):{}
+      isLogEnable ? console.log("Before Withdraw getTokenPairUserBalances : ",await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)):{}
       expect(await tokenB.balanceOf(account1.address)).to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENB_DEPOSIT_AMOUNT))
-      // check tokenB balance for doApp berfore withdraw
-      expect((await doApp.connect(account1).getTokenBalances(pairId))[1]).to.be.equals(Constant.TOKENB_DEPOSIT_AMOUNT);
+      expect((await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)).balanceB).to.be.equals(Constant.TOKENB_DEPOSIT_AMOUNT);
 
+      isLogEnable ? console.log("PairId : ",pairId):{}
+      isLogEnable ? console.log("Constant.TOKENB_WITHDRAW_AMOUNT : ",Constant.TOKENB_WITHDRAW_AMOUNT):{}
       await doApp.connect(account1).withdrawTokenB(pairId, Constant.TOKENB_WITHDRAW_AMOUNT)
+      //await doApp.connect(account1).withdrawTokenB(pairId, 248)
 
+      isLogEnable ? console.log("After Withdraw TokenB balance for account1 : ", await tokenB.balanceOf(account1.address)):{}
+      isLogEnable ? console.log("After Withdraw getTokenPairUserBalances : ",await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)):{}
+      
       expect(await tokenB.balanceOf(account1.address))
         .to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENB_DEPOSIT_AMOUNT).add(Constant.TOKENB_WITHDRAW_AMOUNT))
-      expect((await doApp.connect(account1).getTokenBalances(pairId))[1])
-        .to.be.equals(Constant.TOKENB_DEPOSIT_AMOUNT.sub(Constant.TOKENB_WITHDRAW_AMOUNT));
+      
+      struct = await dataStorage.connect(account1).getTokenPairUserBalances(pairId,account1.address)         
+      balanceB = struct.balanceB
+      output = Constant.TOKENB_DEPOSIT_AMOUNT.sub(Constant.TOKENB_WITHDRAW_AMOUNT)
+
+      isLogEnable ? console.log("After Withdraw getTokenPairUserBalances - balanceB: ",balanceB):{}
+      isLogEnable ? console.log("After Withdraw getTokenPairUserBalances - output: ",output):{}
+      
+      expect(balanceB).to.be.equals(output);
+        
     })    
 
     it('Should emit a TokenWithdrawal event on withdrawTokenB() success', async function () {

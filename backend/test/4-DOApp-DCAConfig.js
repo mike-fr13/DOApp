@@ -148,7 +148,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               Constant.DCA_CONFIG_2_DELAY,
               BigNumber.from(1)
             )
-            console.log("DCA Entries : ", struct);
+            //console.log("DCA Entries : ", struct);
             const [owner,amount, lastSwapTime] = (struct[0])
 
             //console.log(owner, amount, lastSwapTime)

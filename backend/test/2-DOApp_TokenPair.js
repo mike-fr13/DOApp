@@ -126,7 +126,7 @@ const Fixture = require("./lib/Fixtures.js")
 
         let eventFilter = dataStorage.filters.TokenPAirAdded()
         let events = await dataStorage.queryFilter(eventFilter, 'latest')
-        console.log(events)
+        //console.log(events)
         let hashOfPair = events[0].args[0]
         let tokenPair = await dataStorage.getTokenPair(hashOfPair)
 
