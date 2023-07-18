@@ -4,6 +4,8 @@ const hre = require("hardhat");
 
 async function main() {
 
+  const isDebugEnable = false
+
   // Get the deployment network name
   const network = hre.network.name;
 
@@ -19,12 +21,12 @@ async function main() {
 
   // deploy DOApp main contract
   const DataStorage = await hre.ethers.getContractFactory('DataStorage');
-  const dataStorage = await DataStorage.deploy(false);
+  const dataStorage = await DataStorage.deploy();
   await dataStorage.deployed();
   console.log(`dataStorage deployed to ${dataStorage.address}`);
   
   const DOApp = await hre.ethers.getContractFactory("DOApp");
-  const doApp = await DOApp.deploy(false,dataStorage);
+  const doApp = await DOApp.deploy(false,dataStorage.address);
   await doApp.deployed();
   console.log(`DOApp deployed to ${doApp.address}`);
 
@@ -72,6 +74,7 @@ async function main() {
 
   // Write contract addresses to output file
   const output = `
+    const DataStoragecontractAddress = "${dataStorage.address}";
     const DOAppcontractAddress = "${doApp.address}";
     const TokenAcontractAddress = "${tokenA.address}";
     const TokenBcontractAddress = "${tokenB.address}";
@@ -80,6 +83,7 @@ async function main() {
     const MockUniswapContractAddress = "${mockUniswapISwapRouter.address}";
 
     module.exports = {
+      DataStoragecontractAddress,
       DOAppcontractAddress,
       TokenAcontractAddress,
       TokenBcontractAddress,

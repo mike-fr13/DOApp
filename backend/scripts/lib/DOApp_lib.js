@@ -1,11 +1,15 @@
 const fs = require("fs")
 const path = require("path")
 
-const getDoAppAbi = () => {
+const getAbi = (contractName, folder) => {
   try {
+
+    let filePath = `../../artifacts/contracts/${folder ? `${folder}/` : ''}${contractName}.sol/${contractName}.json`;
+
+
     const dir = path.resolve(
       __dirname,
-      "../../artifacts/contracts/DOApp.sol/DOApp.json"
+      filePath
     )
     const file = fs.readFileSync(dir, "utf8")
     const json = JSON.parse(file)
@@ -46,16 +50,16 @@ async function getTokenPairs(dataStorage) {
   }
 
   async function addTokenPair(
-    doAPPcontract,
+    datastorecontract,
     tokenAAddress,
     tokenBAddress,
-    tokenPairSize,
+    tokenPairSegmentSize,
     tokenPairDecimalsNumber,
     mockChainLinkAggregatorV3Address,
     mockAAVEPoolAddressesProviderAddress,
     mockUniswapISwapRouterAddress
   ) {
-    doAPPcontract.addTokenPair(
+    datastorecontract.addTokenPair(
       tokenAAddress,
       tokenPairSegmentSize,
       tokenPairDecimalsNumber,
@@ -65,10 +69,32 @@ async function getTokenPairs(dataStorage) {
       mockUniswapISwapRouterAddress
     );
   }  
+
+  async function mintToken(
+    _tokenContract,
+    _user, 
+    _amount) {
+    await (_tokenContract.mint(_user, _amount))
+    console.log(`${_amount} token ${_tokenContract.address} mint for address ${_user}`)
+  }
+
+  async function depositToken(doAPPContract, pairId, _tokenContract, _user, _amount, dataStorage) {
+    const userSigner = await ethers.provider.getSigner(_user);
+    
+    await (_tokenContract.connect(userSigner).approve(doAPPContract.address, _amount))
+    await ( (doAPPContract.connect(userSigner)).depositTokenA(pairId, _amount))
+    console.log(`Balance of ${_user} for token ${_tokenContract.address} : `  ,await ( (_tokenContract.balanceOf(_user))))
+    console.log(`Balance of ${doAPPContract.address} for token ${_tokenContract.address} : `  ,await ( (_tokenContract.balanceOf(doAPPContract.address))))
+
+    console.log('account1 doApp tokenA : ', (await dataStorage.connect(_user).getTokenPairUserBalances(pairId,_user)))
+  }
+
   
 module.exports = {
     getTokenPairs,
-    getDoAppAbi,
-    addTokenPair
+    getAbi,
+    addTokenPair,
+    mintToken,
+    depositToken
 }
 

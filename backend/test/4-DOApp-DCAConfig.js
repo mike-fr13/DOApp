@@ -343,7 +343,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add 2 dca config and get segment entries for each segment interval on success  (swap Token B for Token A)', async function () {
-        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_Prepare_All_DCA_Config_Fixture);
         await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,

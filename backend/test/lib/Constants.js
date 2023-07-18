@@ -53,6 +53,52 @@ module.exports = Object.freeze({
     DCA_CONFIG_4_SCALING_FACTOR : new BigNumber.from(10),
     DCA_CONFIG_4_DELAY : new BigNumber.from(2),
 
+    //DCA config constants
+    //ex  WETH/USDC => swap USDC for WETH
+    DCA_CONFIG_5_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
+    DCA_CONFIG_5_MIN : new BigNumber.from(1500),
+    DCA_CONFIG_5_MAX : new BigNumber.from(2000),
+    DCA_CONFIG_5_AMOUNT : new BigNumber.from(50),
+    DCA_CONFIG_5_SCALING_FACTOR : new BigNumber.from(2),
+    DCA_CONFIG_5_DELAY : new BigNumber.from(0),
+
+    //ex  WETH/USDC => swap WETH fo USDC
+    DCA_CONFIG_6_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
+    DCA_CONFIG_6_MIN : new BigNumber.from(1700),
+    DCA_CONFIG_6_MAX : new BigNumber.from(2200),
+    DCA_CONFIG_6_AMOUNT : new BigNumber.from(100),
+    DCA_CONFIG_6_SCALING_FACTOR : new BigNumber.from(3),
+    DCA_CONFIG_6_DELAY : new BigNumber.from(2),
+    //ex  WETH/USDC => swap USDC for WETH
+    DCA_CONFIG_7_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
+    DCA_CONFIG_7_MIN : new BigNumber.from(1800),
+    DCA_CONFIG_7_MAX : new BigNumber.from(2500),
+    DCA_CONFIG_7_AMOUNT : new BigNumber.from(10),
+    DCA_CONFIG_7_SCALING_FACTOR : new BigNumber.from(5),
+    DCA_CONFIG_7_DELAY : new BigNumber.from(0),
+    //ex  WETH/USDC => swap WETH fo USDC
+    DCA_CONFIG_8_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
+    DCA_CONFIG_8_MIN : new BigNumber.from(2000),
+    DCA_CONFIG_8_MAX : new BigNumber.from(2500),
+    DCA_CONFIG_8_AMOUNT : new BigNumber.from(5),
+    DCA_CONFIG_8_SCALING_FACTOR : new BigNumber.from(10),
+    DCA_CONFIG_8_DELAY : new BigNumber.from(2),
+        //ex  WETH/USDC => swap USDC for WETH
+    DCA_CONFIG_9_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
+    DCA_CONFIG_9_MIN : new BigNumber.from(2300),
+    DCA_CONFIG_9_MAX : new BigNumber.from(3000),
+    DCA_CONFIG_9_AMOUNT : new BigNumber.from(10),
+    DCA_CONFIG_9_SCALING_FACTOR : new BigNumber.from(5),
+    DCA_CONFIG_9_DELAY : new BigNumber.from(0),
+    //ex  WETH/USDC => swap WETH fo USDC
+    DCA_CONFIG_10_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
+    DCA_CONFIG_10_MIN : new BigNumber.from(2000),
+    DCA_CONFIG_10_MAX : new BigNumber.from(3000),
+    DCA_CONFIG_10_AMOUNT : new BigNumber.from(5),
+    DCA_CONFIG_10_SCALING_FACTOR : new BigNumber.from(10),
+    DCA_CONFIG_10_DELAY : new BigNumber.from(2),
+
+
 
     // mult factor for arithmetics
     MULT_FACTOR : BigNumber.from(1000)

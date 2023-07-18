@@ -1,6 +1,6 @@
 const hre = require("hardhat");
 const Constant = require("../test/lib/Constants.js");
-const { getDoAppAbi, addTokenPair } = require("./lib/DOApp_lib.js");
+const { getAbi, getTokenPairs, addTokenPair, mintToken, depositToken } = require("./lib/DOApp_lib.js");
 
 async function main() {
   const network = hre.network.name;
@@ -15,6 +15,7 @@ async function main() {
   }
 
   const {
+    DataStoragecontractAddress,
     DOAppcontractAddress, 
     TokenAcontractAddress, 
     TokenBcontractAddress, 
@@ -23,6 +24,7 @@ async function main() {
     MockUniswapContractAddress, 
     ADD_owner } = require ("./lib/deployedContractAddresses.js")
 
+    console.log("DataStoragecontractAddress", DataStoragecontractAddress)
     console.log ("DOAppcontractAddress : ", DOAppcontractAddress)
     console.log ("TokenAcontractAddress : ", TokenAcontractAddress)
     console.log ("TokenBcontractAddress : ", TokenBcontractAddress)
@@ -37,18 +39,25 @@ async function main() {
   const ADD_account5 = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
   const ADD_account6 = "0x976EA74026E726554dB657fA54763abd0C3a0aa9";
 
-  const doAPPABI = getDoAppAbi();
+  const doAPPABI = getAbi("DOApp");
   //console.log(doAPPABI);
   const { ethers } = require("hardhat");
   const provider = ethers.provider;
   const owner = provider.getSigner(ADD_owner);
   const doAPP = new ethers.Contract(DOAppcontractAddress, doAPPABI, owner);
 
-  //const account1Signer = await doAPP.provider.getSigner(ADD_account1);
+  const dataStorageABI = getAbi("DataStorage");
+  //console.log(dataStorageABI);
+  const dataStorage = new ethers.Contract(DataStoragecontractAddress, dataStorageABI, owner);
 
-  
+  const mockERC20ABI = getAbi("MockERC20","mocks/");
+  //console.log(mockERC20ABI);
+  const tokenA = new ethers.Contract(TokenAcontractAddress, mockERC20ABI, owner);
+  const tokenB = new ethers.Contract(TokenBcontractAddress, mockERC20ABI, owner);
+
+  /*
   await addTokenPair(
-    doAPP,
+    dataStorage,
     TokenAcontractAddress,
     TokenBcontractAddress,
     Constant.TOCKEN_PAIR_SEGMENT_SIZE,
@@ -57,7 +66,82 @@ async function main() {
     MockAAVEPoolcontractAddress,
     MockUniswapContractAddress
   );
-  
+  */
+
+  pairIds = await getTokenPairs(dataStorage)
+  console.log("pairIds : ", pairIds)
+
+  await mintToken (
+    tokenA, 
+    ADD_account1, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenA, 
+    ADD_account2, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenA, 
+    ADD_account3, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenA, 
+    ADD_account4, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenA, 
+    ADD_account5, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenA, 
+    ADD_account6, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+
+  await mintToken (
+    tokenB, 
+    ADD_account1, 
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenB, 
+    ADD_account2, 
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenB, 
+    ADD_account3, 
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenB, 
+    ADD_account4, 
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenB, 
+    ADD_account5, 
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenB, 
+    ADD_account6, 
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
+
+
+  await depositToken(
+    doAPP, 
+    pairIds[0], 
+    tokenA, 
+    ADD_account1, 
+    Constant.TOKENA_DEPOSIT_AMOUNT,
+    dataStorage
+  )  
 }
 
 main().catch((error) => {

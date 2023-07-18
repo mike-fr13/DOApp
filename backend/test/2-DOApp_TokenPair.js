@@ -12,6 +12,7 @@ const Fixture = require("./lib/Fixtures.js")
       it("Should revert if caller is not a owner", async function () {
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, account1} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
+
         await expect(dataStorage.connect(account1).addTokenPair(
           tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
