@@ -34,6 +34,9 @@ contract DataStorage is IDataStorage, Ownable{
     // pairID => User address => staked amount
     mapping(uint => mapping(address => IDataStorage.TokenPairUserBalance)) private tokenPairUserBalances;
 
+    //user address => DCAConfig hash => DCA config
+    mapping(address => mapping(uint => IDataStorage.DCAConfig)) private userDCAConfig;
+
     //maximum penalty for an early withdraw in % ()
     //uint constant public maxEarlyWithdrawPenality = 10;
     // eraly withdraw delay (10 days for example : 10*24*3600)
@@ -61,7 +64,7 @@ contract DataStorage is IDataStorage, Ownable{
 
     error DCAConfigError(string _errorMessage);
 
-                // check if a token Pair already exists
+    // check if a token Pair already exists
     modifier tokenPairExists(uint _pairID) {
         require(tokenPairs[_pairID].tokenAddressA != address(0) ,"Token Pair not Found");
         _;
@@ -205,9 +208,13 @@ contract DataStorage is IDataStorage, Ownable{
                 uint32(block.timestamp),
                 _dcaDelay
             );
+        configId = getDCAConfigHash(dcaConfig);
+
+        //edge case where two identical config where created on the same block by the same user
+        if (userDCAConfig[msg.sender][configId].creationDate != 0) revert DCAConfigError("DCA Config already exists");
+
         createSegments(dcaConfig, _segmentNumber, tokenPair.tokenPairSegmentSize);
 
-        configId = getDCAConfigHash(_pairId);
         emit DCAConfigCreation(msg.sender,_pairId, configId);
         return (configId);
     }
@@ -264,13 +271,24 @@ contract DataStorage is IDataStorage, Ownable{
 
     /**
      * @notice  Create a DCA config hash based on pairId and user address
-     * @param   _pairId  the token pair Id
+     * @param   _dcaConfig  a DCAConfig object
      * @return  hash  the DCA config hash
      */
-    function getDCAConfigHash(uint _pairId) internal view returns (uint hash) {
-        //@TODO check if it should be based on more param
-        // actual limit is one order / user / TokenPair
-        return (uint256)(keccak256(abi.encodePacked(msg.sender,_pairId)));
+    function getDCAConfigHash(IDataStorage.DCAConfig memory _dcaConfig) internal view returns (uint hash) {
+
+        // unicity is one DCAconfig by user / TokenPair / Creation Date
+        return (uint256)(keccak256(abi.encodePacked(
+            msg.sender,
+            _dcaConfig.pairID, 
+            _dcaConfig.isSwapTookenAForTokenB,
+            _dcaConfig.min,
+            _dcaConfig.max,
+            _dcaConfig.amount,
+            _dcaConfig.scalingFactor,
+            _dcaConfig.creationDate,
+            _dcaConfig.dcaDelay)
+            )
+        );
     }
 
    /**
