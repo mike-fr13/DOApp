@@ -28,9 +28,12 @@ describe('DOApp Contract - Deposit and Withdraw tests', function () {
       })
 
       it('Should be able to deposit a specified amount of token A and check balance', async function () {
-        const {doApp, tokenA, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        const {doApp, dataStorage, tokenA, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await (tokenA.connect(account1).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT))
         await ( (doApp.connect(account1)).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT))
+        console.log('account1 tokenA balance : ',await tokenA.balanceOf(account1.address))
+        console.log('account1 doApp tokenA : ', (await doApp.connect(account1).getTokenBalances(pairId))[0])
+
         expect(await tokenA.balanceOf(account1.address)).to.be.equals(Constant.TOKEN_INITIAL_SUPPLY.sub(Constant.TOKENA_DEPOSIT_AMOUNT))
         //console.log('account1 tokenA balance : ',await tokenA.balanceOf(account1.address))
         //console.log('account1 doApp tokenA : ', (await doApp.connect(account1).getTokenBalances(pairId))[0])

@@ -17,8 +17,14 @@ async function main() {
   }
   
 
+  // deploy DOApp main contract
+  const DataStorage = await hre.ethers.getContractFactory('DataStorage');
+  const dataStorage = await DataStorage.deploy(false);
+  await dataStorage.deployed();
+  console.log(`dataStorage deployed to ${dataStorage.address}`);
+  
   const DOApp = await hre.ethers.getContractFactory("DOApp");
-  const doApp = await DOApp.deploy(false);
+  const doApp = await DOApp.deploy(false,dataStorage);
   await doApp.deployed();
   console.log(`DOApp deployed to ${doApp.address}`);
 

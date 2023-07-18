@@ -14,9 +14,9 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
     describe ('addDCAConfig() tests', function () {
       it('Should Revert when trying to create a DCA configuration to an unknow token pair (pairId)', async function () {
-        const {doApp, account1} 
+        const {dataStorage, account1} 
           = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await expect(doApp.connect(account1).addDCAConfig(
+        await expect(dataStorage.connect(account1).addDCAConfig(
           Constant.BAD_PAIR_ID,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -29,9 +29,9 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should Revert when trying to create a DCA configuration with min >= max', async function () {
-        const {doApp,pairId, account1} 
+        const {dataStorage, pairId, account1} 
           = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await expect(doApp.connect(account1).addDCAConfig(
+        await expect(dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -40,12 +40,12 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_SCALING_FACTOR,
           Constant.DCA_CONFIG_1_DELAY
           ))
-          .to.be.revertedWithCustomError(doApp,'DCAConfigError')
+          .to.be.revertedWithCustomError(dataStorage,'DCAConfigError')
       })
       it('Should Revert when trying to create a DCA configuration with amount <=0 ', async function () {
-        const {doApp,pairId, account1} 
+        const {dataStorage,pairId, account1} 
           = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await expect(doApp.connect(account1).addDCAConfig(
+        await expect(dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -54,12 +54,12 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_SCALING_FACTOR,
           Constant.DCA_CONFIG_1_DELAY
           ))
-          .to.be.revertedWithCustomError(doApp,'DCAConfigError')
+          .to.be.revertedWithCustomError(dataStorage,'DCAConfigError')
       })
       it('Should Revert when trying to create a DCA configuration with scaling factor <= 0 ', async function () {
-        const {doApp,pairId, account1} 
+        const {dataStorage,pairId, account1} 
           = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await expect(doApp.connect(account1).addDCAConfig(
+        await expect(dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -68,12 +68,12 @@ describe('DOApp Contract - DCA configuration tests', function () {
           BigNumber.from(0),
           Constant.DCA_CONFIG_1_DELAY
           ))
-          .to.be.revertedWithCustomError(doApp,'DCAConfigError')
+          .to.be.revertedWithCustomError(dataStorage,'DCAConfigError')
       })
       it('Should Revert when trying to create a DCA configuration with too many segments', async function () {
-        const {doApp,pairId, account1} 
+        const {dataStorage,pairId, account1} 
           = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await expect(doApp.connect(account1).addDCAConfig(
+        await expect(dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           BigNumber.from(0),
@@ -82,12 +82,12 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_SCALING_FACTOR,
           Constant.DCA_CONFIG_1_DELAY
           ))
-          .to.be.revertedWithCustomError(doApp,'DCAConfigError')
+          .to.be.revertedWithCustomError(dataStorage,'DCAConfigError')
       })
       
       it('Should emit a DCAConfigCreation event on success', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await expect(doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await expect(dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -96,12 +96,12 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_SCALING_FACTOR,
           Constant.DCA_CONFIG_1_DELAY
           ))
-          .to.emit(doApp, 'DCAConfigCreation').withArgs(account1.address, pairId, anyValue);
+          .to.emit(dataStorage, 'DCAConfigCreation').withArgs(account1.address, pairId, anyValue);
       })
 
       it('Should add a valid segment entry for each segment interval on success (swap Token A for Token B)', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -113,15 +113,13 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
-              .dcaSegmentsMap(
+            const [owner,amount, lastSwapTime] = ((await dataStorage.connect(account1)
+              .getDCASegmentEntries(
                 pairId, 
                 BigNumber.from(i),
                 Constant.DCA_CONFIG_1_DELAY,
-                BigNumber.from(0),
-                BigNumber.from(0)
-              )
-            )
+                BigNumber.from(0))
+              )[0])
             //console.log(owner, amount, lastSwapTime)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_1_AMOUNT)
@@ -130,8 +128,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add a valid segment entry for each segment interval on success (swap Token B for Token A)', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_2_MIN,
@@ -143,14 +141,16 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = await doApp.connect(account1)
-              .dcaSegmentsMap(
-                pairId, 
-                BigNumber.from(i),
-                Constant.DCA_CONFIG_2_DELAY,
-                BigNumber.from(1),
-                BigNumber.from(0)
-                )
+            struct = await dataStorage.connect(account1)
+            .getDCASegmentEntries(
+              pairId, 
+              BigNumber.from(i),
+              Constant.DCA_CONFIG_2_DELAY,
+              BigNumber.from(1)
+            )
+            console.log("DCA Entries : ", struct);
+            const [owner,amount, lastSwapTime] = (struct[0])
+
             //console.log(owner, amount, lastSwapTime)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_2_AMOUNT)
@@ -159,8 +159,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add a valid segment entry with scaling factor for each segment interval on success (swap Token A for Token B)', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -171,14 +171,17 @@ describe('DOApp Contract - DCA configuration tests', function () {
           )
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
-            //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = await doApp.connect(account1)
-              .dcaSegmentsMap(
-                pairId, 
-                BigNumber.from(i),
-                Constant.DCA_CONFIG_1_DELAY,
-                BigNumber.from(0),
-                BigNumber.from(0))
+            //console.log("segment : ", i);
+            struct = await dataStorage.connect(account1)
+            .getDCASegmentEntries(
+              pairId, 
+              BigNumber.from(i),
+              Constant.DCA_CONFIG_1_DELAY,
+              BigNumber.from(0)
+            )
+            //console.log("DCA Entries : ", struct);
+            const [owner,amount, lastSwapTime] = (struct[0])
+                
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_1_MAX.sub(Constant.DCA_CONFIG_1_MIN)))
@@ -201,8 +204,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add a valid segment entry with scaling factor for each segment interval on success (swap Token B for Token A)', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_2_MIN,
@@ -214,15 +217,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
-              .dcaSegmentsMap(
-                pairId, 
-                BigNumber.from(i),
-                Constant.DCA_CONFIG_2_DELAY,
-                BigNumber.from(1),
-                BigNumber.from(0)
-                )
-              )
+            struct = await dataStorage.connect(account1)
+            .getDCASegmentEntries(
+              pairId, 
+              BigNumber.from(i),
+              Constant.DCA_CONFIG_2_DELAY,
+              BigNumber.from(1)
+            )
+            //console.log("DCA Entries : ", struct);
+            const [owner,amount, lastSwapTime] = (struct[0])
 
             rapport = (((i.sub(Constant.DCA_CONFIG_2_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_2_MAX.sub(Constant.DCA_CONFIG_2_MIN)))
@@ -244,8 +247,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add 2 dca config and get segment entries for each segment interval on success (swap Token A for Token B)', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_1_MIN,
@@ -255,7 +258,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_DELAY
           )
 
-        await doApp.connect(account1).addDCAConfig(
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_3_MIN,
@@ -268,15 +271,16 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
-              .dcaSegmentsMap(
-                pairId, 
-                BigNumber.from(i),
-                Constant.DCA_CONFIG_3_DELAY,
-                BigNumber.from(0),
-                BigNumber.from(0)
-              )
+            struct = await dataStorage.connect(account1)
+            .getDCASegmentEntries(
+              pairId, 
+              BigNumber.from(i),
+              Constant.DCA_CONFIG_3_DELAY,
+              BigNumber.from(0)
             )
+            //console.log("DCA Entries : ", struct);
+            const [owner,amount, lastSwapTime] = (struct[0])
+
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_1_MAX.sub(Constant.DCA_CONFIG_1_MIN)))
@@ -307,15 +311,16 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 // we have only 1 segment entry (config 3)
                 index = 0;
             }
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
-              .dcaSegmentsMap(
-                pairId, 
-                BigNumber.from(i),
-                Constant.DCA_CONFIG_3_DELAY,
-                BigNumber.from(0),
-                BigNumber.from(index)
-              )
+
+            struct = await dataStorage.connect(account1)
+            .getDCASegmentEntries(
+              pairId, 
+              BigNumber.from(i),
+              Constant.DCA_CONFIG_3_DELAY,
+              BigNumber.from(0)
             )
+            //console.log("DCA Entries : ", struct);
+            const [owner,amount, lastSwapTime] = (struct[index])
 
             rapport = (((Constant.DCA_CONFIG_3_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_3_MAX.sub(Constant.DCA_CONFIG_3_MIN)))
@@ -338,8 +343,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add 2 dca config and get segment entries for each segment interval on success  (swap Token B for Token A)', async function () {
-        const {doApp, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
-        await doApp.connect(account1).addDCAConfig(
+        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_2_MIN,
@@ -349,7 +354,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_DELAY
           )
 
-        await doApp.connect(account1).addDCAConfig(
+        await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_4_MIN,
@@ -373,15 +378,15 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 // we have only 1 segment entry (config 4)
                 index = 0;
             }
-            const [owner,amount, lastSwapTime] = (await doApp.connect(account1)
-              .dcaSegmentsMap(
-                pairId, 
-                BigNumber.from(i),
-                Constant.DCA_CONFIG_4_DELAY,
-                BigNumber.from(1),
-                BigNumber.from(index)
-              )
+            struct = await dataStorage.connect(account1)
+            .getDCASegmentEntries(
+              pairId, 
+              BigNumber.from(i),
+              Constant.DCA_CONFIG_4_DELAY,
+              BigNumber.from(1)
             )
+            //console.log("DCA Entries : ", struct);
+            const [owner,amount, lastSwapTime] = (struct[index])
 
             rapport = (((i.sub(Constant.DCA_CONFIG_4_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_4_MAX.sub(Constant.DCA_CONFIG_4_MIN)))
