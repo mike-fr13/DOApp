@@ -5,6 +5,8 @@ coverage.json
 typechain
 typechain-types
 docgen
+Meadow*
+scripts/lib/deployedContractAddresses.js
 
 # Hardhat files
 cache
