@@ -5,8 +5,13 @@ async function deployDOApp_Fixture() {
   const [owner, account1, account2, account3, account4] = await ethers.getSigners();
 
   // deploy DOApp main contract
+  const DataStorage = await ethers.getContractFactory('DataStorage');
+  const dataStorage = await DataStorage.deploy();
+  console.log(`dataStorage deployed to ${dataStorage.address}`);
+  
+  // deploy DOApp main contract
   const DOApp = await ethers.getContractFactory('DOApp');
-  const doApp = await DOApp.deploy(false);
+  const doApp = await DOApp.deploy(false,dataStorage.address);
   console.log(`doApp deployed to ${doApp.address}`);
 
   // create an ERC20 Mock : tockenA
@@ -42,17 +47,17 @@ async function deployDOApp_Fixture() {
   const mockUniswapISwapRouter = await MockUniswapISwapRouter.deploy();
   console.log(`mockUniswapISwapRouter deployed to ${mockUniswapISwapRouter.address}`);
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, mockAavePool, mockUniswapISwapRouter, owner, account1, account2, account3, account4 };
+  return { doApp, dataStorage,tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, mockAavePool, mockUniswapISwapRouter, owner, account1, account2, account3, account4 };
 }
 
 // deploy contracts and add a token Pair
 async function deploy_AddATokenPair_Fixture() {
   //deploy contracts
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, mockUniswapISwapRouter, owner, account1, account2, account3, account4 }
+  const { doApp, dataStorage,tokenA, tokenB, mockChainLinkAggregatorV3, mockAAVEPoolAddressesProvider, mockUniswapISwapRouter, owner, account1, account2, account3, account4 }
     = await loadFixture(deployDOApp_Fixture);
 
   //add a token pair
-  await doApp.addTokenPair(
+  await dataStorage.addTokenPair(
     tokenA.address,
     Constant.TOCKEN_PAIR_SEGMENT_SIZE,
     Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
@@ -61,16 +66,16 @@ async function deploy_AddATokenPair_Fixture() {
     mockAAVEPoolAddressesProvider.address,
     mockUniswapISwapRouter.address)
 
-  let eventFilter = doApp.filters.TokenPAirAdded()
-  let events = await doApp.queryFilter(eventFilter, 'latest')
+  let eventFilter = dataStorage.filters.TokenPAirAdded()
+  let events = await dataStorage.queryFilter(eventFilter, 'latest')
   let pairId = events[0].args[0]
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
+  return { doApp, dataStorage,tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
 }
 
 async function deploy_AddATokenPair_MinToken_Fixture() {
   // deploy contract, add a token pair and mint TokenA and TokenB for account1 to account3
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
+  const { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
     = await loadFixture(deploy_AddATokenPair_Fixture);
 
   //mint tokenA
@@ -83,7 +88,7 @@ async function deploy_AddATokenPair_MinToken_Fixture() {
   await tokenB.mint(account2.address, Constant.TOKEN_INITIAL_SUPPLY)
   await tokenB.mint(account3.address, Constant.TOKEN_INITIAL_SUPPLY)
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
+  return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
 }
 
 // deploy contract, add a token pair, mint TokenA and TokenB, deposit tokenA and token B in the pair for account1 to account3
@@ -93,7 +98,7 @@ async function deploy_AddATokenPair_MinToken_Fixture() {
 
 async function deploy_AddATokenPair_MinToken_DepositToken_Fixture() {
   //deploy contracts
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
+  const { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
     = await loadFixture(deploy_AddATokenPair_MinToken_Fixture);
 
   //acount1 => deposit token A and token B
@@ -110,16 +115,16 @@ async function deploy_AddATokenPair_MinToken_DepositToken_Fixture() {
   await tokenB.connect(account3).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
   await doApp.connect(account3).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
+  return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
 }
 
 
 async function deploy_Prepare_One_DCA_Config_Fixture() {
   //deploy contracts
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
+  const { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
     = await loadFixture(deploy_AddATokenPair_MinToken_DepositToken_Fixture);
 
-  await doApp.connect(account1).addDCAConfig(
+  await dataStorage.connect(account1).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_1_MIN,
@@ -128,16 +133,16 @@ async function deploy_Prepare_One_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_1_SCALING_FACTOR,
     Constant.DCA_CONFIG_1_DELAY
   )
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
+  return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
 }
 
 
 async function deploy_Prepare_All_DCA_Config_Fixture() {
   //deploy contracts
-  const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
+  const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId }
     = await loadFixture(deploy_AddATokenPair_MinToken_DepositToken_Fixture);
 
-  await doApp.connect(account1).addDCAConfig(
+  await dataStorage.connect(account1).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_1_MIN,
@@ -148,7 +153,7 @@ async function deploy_Prepare_All_DCA_Config_Fixture() {
   )
 
 
-  await doApp.connect(account1).addDCAConfig(
+  await dataStorage.connect(account1).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_2_MIN,
@@ -158,7 +163,7 @@ async function deploy_Prepare_All_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_2_DELAY
   )
 
-  await doApp.connect(account1).addDCAConfig(
+  await dataStorage.connect(account1).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_3_MIN,
@@ -168,7 +173,7 @@ async function deploy_Prepare_All_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_3_DELAY
   )
 
-  await doApp.connect(account1).addDCAConfig(
+  await dataStorage.connect(account1).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_4_MIN,
@@ -178,7 +183,7 @@ async function deploy_Prepare_All_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_4_DELAY
   )
 
-  return { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
+  return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, pairId };
 }
 
 
