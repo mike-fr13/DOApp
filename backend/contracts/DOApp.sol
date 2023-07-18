@@ -8,6 +8,7 @@ import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
 import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 
 contract DOApp is Ownable {
@@ -36,6 +37,9 @@ contract DOApp is Ownable {
 
         //160
         address swapRouter;
+
+        //256
+        uint pairID;
     }
 
     struct DCAConfig {
@@ -67,6 +71,13 @@ contract DOApp is Ownable {
         uint indexB;
     }
 
+    struct SegmentDCAToProcess {    
+        SegmentDCAEntry[]  segmentBuyEntries;
+        SegmentDCAEntry[]  segmentSellEntries;
+        uint amountBuy;
+        uint amountSell;
+    }
+
         /// @notice workflow status list for the voting process
     enum  DCADelayEnum {
         Hourly,
@@ -80,6 +91,7 @@ contract DOApp is Ownable {
     uint24 constant UNISWAP_FEE_TIERS = 3000;
     //deposit lock penalty  time
     uint constant public lockTime = 10 days;
+    uint8 constant MAX_DCA_JOB_PER_DCA_EXECUTION_CALL = 3;
 
     // boolean to check if production mode
     // we use it to verify som uniswap settings (min output token swap and swap price estimation)
@@ -121,7 +133,7 @@ contract DOApp is Ownable {
 
     event TokenDeposit(
         address _sender, 
-        uint _pairId, 
+        uint indexed _pairId, 
         address token, 
         uint _amount, 
         uint _timestamp
@@ -129,21 +141,21 @@ contract DOApp is Ownable {
     
     event TokenWithdrawal(
         address _sender, 
-        uint _pairId, 
+        uint indexed _pairId, 
         address token, 
         uint _amount, 
         uint _timestamp
         );
 
     event DCAConfigCreation(
-        address _sender, 
-        uint _pairId, 
+        address indexed _sender, 
+        uint indexed _pairId, 
         uint _configId
         );
 
     event DCAExecution(
         address _account, 
-        uint _pairId, 
+        uint indexed _pairId, 
         address _tokenInput, 
         uint _tokenInputPrice, 
         IERC20 _tokenOutput, 
@@ -211,7 +223,8 @@ contract DOApp is Ownable {
             false, 
             _tokenPairSegmentSize,
             _tokenPairDecimalNumber,
-            _uniswapV3SwapRouter
+            _uniswapV3SwapRouter,
+            hash
             );
 
         emit TokenPAirAdded(
@@ -391,16 +404,129 @@ contract DOApp is Ownable {
         return (configId);
     }
 
-    function executeDCA() external {
+    function executeDCA(uint _pairId) external tokenPairExists(_pairId)  returns (bool hasRemainingJobs){
         uint amount;
         address account;
-        uint pairId;
+        TokenPair memory lPair = tokenPairs[_pairId];
+
+        SegmentDCAToProcess storage segmentDCAToProcess;
+
+        (segmentDCAToProcess) = getDCAJobs(lPair, DCADelayEnum.Hourly, segmentDCAToProcess);
+        
+        if ((segmentDCAToProcess.segmentBuyEntries.length + segmentDCAToProcess.segmentSellEntries.length) 
+            < MAX_DCA_JOB_PER_DCA_EXECUTION_CALL) {
+            (segmentDCAToProcess) = getDCAJobs(lPair, DCADelayEnum.Daily, segmentDCAToProcess);
+        }
+
+        if ((segmentDCAToProcess.segmentBuyEntries.length + segmentDCAToProcess.segmentSellEntries.length) 
+            < MAX_DCA_JOB_PER_DCA_EXECUTION_CALL) {
+            (segmentDCAToProcess) = getDCAJobs(lPair, DCADelayEnum.Weekly, segmentDCAToProcess);
+        }
 
         computeDCA();
         OTCTransaction();
 
+        hasRemainingJobs=false;
+        return hasRemainingJobs;
+
         //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
     }
+
+function getDCAJobs(
+    TokenPair memory _pair, 
+    DCADelayEnum _delay, 
+    SegmentDCAToProcess storage segmentDCAToProcess
+) internal returns(
+    SegmentDCAToProcess storage
+){
+
+    // Obtenir le prix du tokenA
+    (, int256 oracleTokenAPrice, , , ) = AggregatorV3Interface(_pair.chainlinkPriceFetcher).latestRoundData();
+    uint moduloTokenPrice = uint(oracleTokenAPrice) % _pair.tokenPairSegmentSize;
+
+    //mapping (uint pairID => mapping (uint segmentStart => mapping(DCADelayEnum => SegmentDCAEntry[][2]))) public dcaSegmentsMap;
+    // Obtenir les segments d'entrées correspondants à ce prix
+    SegmentDCAEntry[][2] storage segmentEntries = dcaSegmentsMap[_pair.pairID][moduloTokenPrice][_delay];
+
+    uint cptBuy;
+    uint cptSell;
+    bool isBuy = true;
+    uint timeStamp = block.timestamp;
+
+    if ((segmentEntries[0].length !=0 ) && segmentEntries[1].length !=0 ) {
+        while ( (
+                    (segmentDCAToProcess.segmentBuyEntries.length + segmentDCAToProcess.segmentSellEntries.length) 
+                    < MAX_DCA_JOB_PER_DCA_EXECUTION_CALL
+                ) ||
+                ((segmentEntries[0].length == cptBuy) && (segmentEntries[1].length == cptSell)))
+        {
+            if (isBuy) {
+            // search for a buy entry
+                (SegmentDCAEntry memory segEntry, uint nextCptBuy) = getNextSegmentEntry(
+                    segmentEntries[0],  
+                    _delay, 
+                    cptBuy, 
+                    isBuy,
+                    timeStamp
+                );
+
+                cptBuy = nextCptBuy;
+
+                // if a segment is found
+                if (segEntry.amount != 0) {
+                    segmentDCAToProcess.segmentBuyEntries.push(segEntry);
+                    segmentDCAToProcess.amountBuy += segEntry.amount;
+                }
+                if ((segmentDCAToProcess.amountBuy > segmentDCAToProcess.amountSell) || (segmentEntries[0].length == cptBuy)) {
+                    isBuy = false;
+                } 
+            }
+            else {
+            // Search for a sell entry
+                (SegmentDCAEntry memory segEntry, uint nextCptSell) = getNextSegmentEntry(
+                    segmentEntries[0],  
+                    _delay, 
+                    cptBuy, 
+                    isBuy,
+                    timeStamp
+                );
+
+                cptSell = nextCptSell;
+
+                // if a segment is found
+                if (segEntry.amount != 0) {
+                    segmentDCAToProcess.segmentSellEntries.push(segEntry);
+                    segmentDCAToProcess.amountSell += segEntry.amount;
+                }
+                if ((segmentDCAToProcess.amountSell >= segmentDCAToProcess.amountBuy) || (segmentEntries[1].length == cptSell)) {
+                    isBuy = true;
+                } 
+            }
+        }
+    }
+    return(segmentDCAToProcess); 
+}
+
+function getNextSegmentEntry(
+    SegmentDCAEntry[] memory segmentEntries,
+    DCADelayEnum _delay,
+    uint cpt,
+    bool isBuy,
+    uint timeStamp
+    ) internal pure returns (
+        SegmentDCAEntry memory foundSegEntry,
+        uint nextCptBuy
+    ){
+        while ((foundSegEntry.amount != 0)||((segmentEntries.length) > cpt)) {
+
+            //DO the stuff
+            // si on est bien ds les temps (last DCA + delay > timestamp)
+
+            cpt++;
+        }
+    return (foundSegEntry,cpt);
+}
+
 
 
     /**
