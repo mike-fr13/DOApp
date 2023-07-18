@@ -11,11 +11,10 @@ describe('DOApp DCA execution', function () {
   // Test contract deployment
   describe('executeDCA() tests', function () {
     it('Should revert if call with a wrong token Pair', async function () {
-      const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+      const { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deployDOApp_Fixture);
-      expect(await doApp.owner()).to.equal(owner.address);
 
-      tokenPairs = await getTokenPairs(doApp);
+      tokenPairs = await getTokenPairs(dataStorage);
       console.log ("TokenPairs : ", tokenPairs);
       expect(tokenPairs.length == 0)
       //console.log("await doApp.callStatic.executeDCA(0) : ", await doApp.callStatic.executeDCA(0));
@@ -24,11 +23,11 @@ describe('DOApp DCA execution', function () {
     })
 
     it('Should do nothing whent launch executeDCA() for an existing TokenPair with oracle price not in DCA interval', async function () {
-      const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+      const { doApp,dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_One_DCA_Config_Fixture);
       expect(await doApp.owner()).to.equal(owner.address);
 
-      tokenPairs = await getTokenPairs(doApp);
+      tokenPairs = await getTokenPairs(dataStorage);
       console.log ("TokenPairs : ", tokenPairs);
       expect(tokenPairs.length == 1)
 
@@ -40,11 +39,11 @@ describe('DOApp DCA execution', function () {
     })
 
     it('Should DCA for an existing TokenPair with oracle price set in DCA interval', async function () {
-      const { doApp, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
+      const { doApp,dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_One_DCA_Config_Fixture);
       expect(await doApp.owner()).to.equal(owner.address);
 
-      tokenPairs = await getTokenPairs(doApp);
+      tokenPairs = await getTokenPairs(dataStorage);
       console.log ("TokenPairs : ", tokenPairs);
       expect(tokenPairs.length == 1)
 

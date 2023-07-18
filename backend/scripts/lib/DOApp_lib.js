@@ -18,11 +18,11 @@ const getDoAppAbi = () => {
   }
 }
 
-async function getTokenPairs(doApp) {
+async function getTokenPairs(dataStorage) {
     const [owner, account1, account2, account3, account4] = await ethers.getSigners();
     //const ABI = getDoAppAbi();
-    const filter = doApp.filters.TokenPAirAdded(null, null, null, null, null, null, null, null);
-    const events = await doApp.queryFilter(filter, 0);
+    const filter = dataStorage.filters.TokenPAirAdded(null, null, null, null, null, null, null, null);
+    const events = await dataStorage.queryFilter(filter, 0);
 
     const pairIds = [];
 
