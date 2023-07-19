@@ -34,8 +34,11 @@ contract DataStorage is IDataStorage, Ownable{
     // pairID => User address => staked amount
     mapping(uint => mapping(address => IDataStorage.TokenPairUserBalance)) private tokenPairUserBalances;
 
-    //user address => DCAConfig hash => DCA config
-    mapping(address => mapping(uint => IDataStorage.DCAConfig)) private userDCAConfig;
+    //user address => DCAConfig hash => bool
+    mapping(address => mapping(uint => bool)) private userDCAConfig;
+
+    //dca config hash
+    mapping(uint => IDataStorage.DCAConfig) private dcaConfigHashMap;
 
     //maximum penalty for an early withdraw in % ()
     //uint constant public maxEarlyWithdrawPenality = 10;
@@ -80,7 +83,7 @@ contract DataStorage is IDataStorage, Ownable{
         return tokenPairUserBalances[_pairId][_user];
     }
 
-    function  setTokenPairUserBalances (uint _pairId, address _user, TokenPairUserBalance memory _userBalance) external tokenPairExists(_pairId) returns( TokenPairUserBalance memory){
+    function  setTokenPairUserBalances (uint _pairId, address _user, TokenPairUserBalance memory _userBalance) external tokenPairExists(_pairId) {
         tokenPairUserBalances[_pairId][_user] = _userBalance;
     }
 
@@ -199,6 +202,7 @@ contract DataStorage is IDataStorage, Ownable{
 
         IDataStorage.DCAConfig memory dcaConfig = 
             IDataStorage.DCAConfig(
+                0,
                 _pairId,
                 _isBuyTokenASellTokenB, 
                 _min, 
@@ -206,17 +210,28 @@ contract DataStorage is IDataStorage, Ownable{
                 _amount, 
                 _scalingFactor, 
                 uint32(block.timestamp),
-                _dcaDelay
+                _dcaDelay,
+                0
             );
         configId = getDCAConfigHash(dcaConfig);
+        dcaConfig.dcaConfigId = configId;
 
         //edge case where two identical config where created on the same block by the same user
-        if (userDCAConfig[msg.sender][configId].creationDate != 0) revert DCAConfigError("DCA Config already exists");
+        if (userDCAConfig[msg.sender][configId] == true) revert DCAConfigError("DCA Config already exists");
+
+        // add this new config tomapping
+        userDCAConfig[msg.sender][configId] = true;
+        dcaConfigHashMap[configId] = dcaConfig;   
+
 
         createSegments(dcaConfig, _segmentNumber, tokenPair.tokenPairSegmentSize);
 
         emit DCAConfigCreation(msg.sender,_pairId, configId);
         return (configId);
+    }
+
+    function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory) {
+
     }
 
     function getDCASegment(uint _pairId, uint price, IDataStorage.DCADelayEnum delay) public view returns(SegmentDCAEntry[][2] memory){
@@ -255,7 +270,12 @@ contract DataStorage is IDataStorage, Ownable{
 
         for (uint16 i=0; i< _segmentNumber; i++) {
             uint24 segmentStart = _dcaConfig.min + i*_pairSegmentSize;
-            IDataStorage.SegmentDCAEntry memory entry = IDataStorage.SegmentDCAEntry (msg.sender, getDCAAmount(_dcaConfig, segmentStart), 0);
+            IDataStorage.SegmentDCAEntry memory entry = 
+            IDataStorage.SegmentDCAEntry (
+                msg.sender, 
+                getDCAAmount(_dcaConfig, segmentStart), 
+                _dcaConfig.dcaConfigId
+            );
              if (_dcaConfig.isSwapTookenAForTokenB) {
                 IDataStorage.SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0];
                 currentArray.push(entry);

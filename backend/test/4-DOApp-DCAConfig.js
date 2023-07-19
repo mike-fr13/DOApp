@@ -113,17 +113,17 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
-            const [owner,amount, lastSwapTime] = ((await dataStorage.connect(account1)
+            const [owner,amount, dcaConfigHash] = ((await dataStorage.connect(account1)
               .getDCASegmentEntries(
                 pairId, 
                 BigNumber.from(i),
                 Constant.DCA_CONFIG_1_DELAY,
                 BigNumber.from(0))
               )[0])
-            //console.log(owner, amount, lastSwapTime)
+            //console.log(owner, amount, dcaConfigHash)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_1_AMOUNT)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
       })
 
@@ -149,12 +149,12 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(1)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, lastSwapTime] = (struct[0])
+            const [owner,amount, dcaConfigHash] = (struct[0])
 
-            //console.log(owner, amount, lastSwapTime)
+            //console.log(owner, amount, dcaConfigHash)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_2_AMOUNT)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
       })
 
@@ -180,7 +180,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(0)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, lastSwapTime] = (struct[0])
+            const [owner,amount, dcaConfigHash] = (struct[0])
                 
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
@@ -196,10 +196,10 @@ describe('DOApp Contract - DCA configuration tests', function () {
                   )
                 )
               ).div(Constant.MULT_FACTOR)
-            //console.log(owner, amount, lastSwapTime, localComputedAmount)
+            //console.log(owner, amount, dcaConfigHash, localComputedAmount)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
       })
 
@@ -225,7 +225,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(1)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, lastSwapTime] = (struct[0])
+            const [owner,amount, dcaConfigHash] = (struct[0])
 
             rapport = (((i.sub(Constant.DCA_CONFIG_2_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_2_MAX.sub(Constant.DCA_CONFIG_2_MIN)))
@@ -239,10 +239,10 @@ describe('DOApp Contract - DCA configuration tests', function () {
               )
             ).div(Constant.MULT_FACTOR)
 
-            //console.log(owner, amount, lastSwapTime, localComputedAmount)
+            //console.log(owner, amount, dcaConfigHash, localComputedAmount)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
       })
 
@@ -279,7 +279,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(0)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, lastSwapTime] = (struct[0])
+            const [owner,amount, dcaConfigHash] = (struct[0])
 
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
@@ -295,10 +295,10 @@ describe('DOApp Contract - DCA configuration tests', function () {
                   )
                 )
               ).div(Constant.MULT_FACTOR)
-            //console.log(owner, amount, lastSwapTime, localComputedAmount)
+            //console.log(owner, amount, dcaConfigHash, localComputedAmount)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
 
           for (let i = Constant.DCA_CONFIG_3_MIN; i<Constant.DCA_CONFIG_3_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
@@ -320,7 +320,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(0)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, lastSwapTime] = (struct[index])
+            const [owner,amount, dcaConfigHash] = (struct[index])
 
             rapport = (((Constant.DCA_CONFIG_3_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_3_MAX.sub(Constant.DCA_CONFIG_3_MIN)))
@@ -335,10 +335,10 @@ describe('DOApp Contract - DCA configuration tests', function () {
                   )
                 )
               ).div(Constant.MULT_FACTOR)
-            //console.log(owner, amount, lastSwapTime, localComputedAmount)
+            //console.log(owner, amount, dcaConfigHash, localComputedAmount)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
       })
 
@@ -386,7 +386,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(1)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, lastSwapTime] = (struct[index])
+            const [owner,amount, dcaConfigHash] = (struct[index])
 
             rapport = (((i.sub(Constant.DCA_CONFIG_4_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_4_MAX.sub(Constant.DCA_CONFIG_4_MIN)))
@@ -400,11 +400,11 @@ describe('DOApp Contract - DCA configuration tests', function () {
               )
             ).div(Constant.MULT_FACTOR)
 
-            //console.log(owner, amount, lastSwapTime, localComputedAmount)
+            //console.log(owner, amount, dcaConfigHash, localComputedAmount)
             //console.log(i, amount, localComputedAmount)
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
-            expect(lastSwapTime).to.be.equal(0)
+            
           }
         })
     })

@@ -84,7 +84,7 @@ contract MockAavePool is IPool {
     }
 
    /**
-   * @notice   Mock function to simulate AAVE pool withdraw function
+   * @notice   Mock function to simulate AAVE pool getReserveData function (to retrieve aToken)
    * @dev     Mock only property 'aTokenAddress'
    * @param   asset  Asset to get reserve Data information
    * @return  DataTypes.ReserveData  .

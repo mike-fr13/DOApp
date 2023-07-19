@@ -1,6 +1,6 @@
 const hre = require("hardhat");
 const Constant = require("../test/lib/Constants.js");
-const { getAbi, getTokenPairs, addTokenPair, mintToken, depositToken } = require("./lib/DOApp_lib.js");
+const { pause, getAbi, getTokenPairs, addTokenPair, mintToken, depositToken, addDCAConfig} = require("./lib/DOApp_lib.js");
 
 async function main() {
   const network = hre.network.name;
@@ -55,7 +55,7 @@ async function main() {
   const tokenA = new ethers.Contract(TokenAcontractAddress, mockERC20ABI, owner);
   const tokenB = new ethers.Contract(TokenBcontractAddress, mockERC20ABI, owner);
 
-  /*
+  
   await addTokenPair(
     dataStorage,
     TokenAcontractAddress,
@@ -66,7 +66,8 @@ async function main() {
     MockAAVEPoolcontractAddress,
     MockUniswapContractAddress
   );
-  */
+  
+  await pause();
 
   pairIds = await getTokenPairs(dataStorage)
   console.log("pairIds : ", pairIds)
@@ -133,7 +134,6 @@ async function main() {
     Constant.TOKENB_DEPOSIT_AMOUNT
   )
 
-
   await depositToken(
     doAPP, 
     pairIds[0], 
@@ -142,6 +142,20 @@ async function main() {
     Constant.TOKENA_DEPOSIT_AMOUNT,
     dataStorage
   )  
+
+  await addDCAConfig(
+    dataStorage,
+    ADD_account1,
+    pairIds[0],
+    Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+    Constant.DCA_CONFIG_1_MIN,
+    Constant.DCA_CONFIG_1_MAX,
+    Constant.DCA_CONFIG_1_AMOUNT,
+    Constant.DCA_CONFIG_1_SCALING_FACTOR,
+    Constant.DCA_CONFIG_1_DELAY
+    )
+
+
 }
 
 main().catch((error) => {

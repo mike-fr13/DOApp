@@ -42,6 +42,9 @@ interface IDataStorage {
     }
 
     struct DCAConfig {
+        //256
+        uint dcaConfigId;
+
         // 256
         uint pairID;
 
@@ -53,13 +56,18 @@ interface IDataStorage {
         uint8 scalingFactor;
         uint32 creationDate;
         DCADelayEnum dcaDelay;
+
+        //256
+        uint lastSwapTime;
     }
 
     struct SegmentDCAEntry {
-        //160 + 16 + 32 = 208
+        //160 + 16 = 178
         address owner;
         uint16 amount;
-        uint32 lastSwapTime;
+
+        //256
+        uint  dcaConfigId;
     }
 
     struct SegmentDCAToProcess {    
@@ -104,6 +112,8 @@ function addDCAConfig(
         IDataStorage.DCADelayEnum _dcaDelay
     ) external returns (uint configId);
 
+function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory);
+
     function getDCASegment(
         uint _pairId, 
         uint price, 
@@ -120,7 +130,7 @@ function addDCAConfig(
         uint _pairId, 
         address _user, 
         TokenPairUserBalance memory _userBalance
-        ) external returns( TokenPairUserBalance memory);
+        ) external;
 
     function getDCASegmentEntries (
         uint _pairId,
