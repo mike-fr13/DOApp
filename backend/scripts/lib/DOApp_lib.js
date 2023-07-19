@@ -49,6 +49,13 @@ async function getTokenPairs(dataStorage) {
       return pairIds;
   }
 
+  function pause() {
+    return new Promise(resolve => {
+        setTimeout(resolve, 5000); // Pause de 5 secondes (5000 millisecondes)
+    });
+  }
+
+
   async function addTokenPair(
     datastorecontract,
     tokenAAddress,
@@ -89,12 +96,39 @@ async function getTokenPairs(dataStorage) {
     console.log('account1 doApp tokenA : ', (await dataStorage.connect(_user).getTokenPairUserBalances(pairId,_user)))
   }
 
+  async function addDCAConfig(
+    dataStorage,
+    user, 
+    pairId, 
+    swapAToB, 
+    min, 
+    max, 
+    amount,
+    scalingFactor,
+    delay
+    ) {
+      const userSigner = await ethers.provider.getSigner(user);
+      dataStorage.connect(userSigner).addDCAConfig(
+      pairId,
+      swapAToB, 
+      min, 
+      max, 
+      amount,
+      scalingFactor,
+      delay
+      )
+      Console.log (`DCA config added for pair${pairId} and user ${user}`)
+  }
+
+
   
 module.exports = {
-    getTokenPairs,
-    getAbi,
-    addTokenPair,
-    mintToken,
-    depositToken
+  pause,
+  getTokenPairs,
+  getAbi,
+  addTokenPair,
+  mintToken,
+  depositToken,
+  addDCAConfig
 }
 

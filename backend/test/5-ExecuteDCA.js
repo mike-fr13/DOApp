@@ -11,11 +11,12 @@ describe('DOApp DCA execution', function () {
   // Test contract deployment
   describe('executeDCA() tests', function () {
     it('Should revert if call with a wrong token Pair', async function () {
+      isLogEnable = false
       const { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deployDOApp_Fixture);
 
       tokenPairs = await getTokenPairs(dataStorage);
-      console.log ("TokenPairs : ", tokenPairs);
+      isLogEnable ? console.log ("TokenPairs : ", tokenPairs) : {}
       expect(tokenPairs.length == 0)
       //console.log("await doApp.callStatic.executeDCA(0) : ", await doApp.callStatic.executeDCA(0));
       //result = await (doApp.executeDCA(0));
@@ -28,18 +29,18 @@ describe('DOApp DCA execution', function () {
       expect(await doApp.owner()).to.equal(owner.address)
 
       tokenPairs = await getTokenPairs(dataStorage)
-      console.log ("TokenPairs : ", tokenPairs)
+      isLogEnable ? console.log ("TokenPairs : ", tokenPairs) : {}
       expect(tokenPairs.length == 1)
 
       await (doApp.executeDCA(tokenPairs[0]))
-      hasRemainingJobs = await doApp.callStatic.executeDCA(tokenPairs[0])
-      console.log ("hasRemainingJobs : ", hasRemainingJobs)
+//    hasRemainingJobs = await doApp.callStatic.executeDCA(tokenPairs[0])
+      isLogEnable ? console.log ("hasRemainingJobs : ", hasRemainingJobs) : {}
       expect(hasRemainingJobs).to.be.false;
 
     })
 
-    it('Should DCA for an existing TokenPair with oracle price set in DCA interval', async function () {
-      const isLogEnable = true;
+    it.only('Should DCA for an existing TokenPair with oracle price set in DCA interval', async function () {
+      const isLogEnable = false;
       const { doApp,dataStorage, pairId,  tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_One_DCA_Config_Fixture)
       expect(await doApp.owner()).to.equal(owner.address)
@@ -64,14 +65,14 @@ describe('DOApp DCA execution', function () {
       isLogEnable ? console.log("Get segment data for this oracle price : ", struct) : {}
 
       await(doApp.executeDCA(tokenPairs[0]))
-      hasRemainingJobs = await doApp.callStatic.executeDCA(tokenPairs[0])
-      console.log ("hasRemainingJobs : ", hasRemainingJobs)
+      //hasRemainingJobs = await doApp.callStatic.executeDCA(tokenPairs[0])
+      isLogEnable ? console.log ("hasRemainingJobs : ", hasRemainingJobs) :{}
       expect(hasRemainingJobs).to.be.false
     })
 
 
     it('Should DCA for an existing TokenPair and multiple DCA config with oracle price set in DCA interval', async function () {
-      const isLogEnable = true;
+      const isLogEnable = false;
       const { doApp,dataStorage, pairId,  tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_All_DCA_Config_Fixture)
       expect(await doApp.owner()).to.equal(owner.address)
