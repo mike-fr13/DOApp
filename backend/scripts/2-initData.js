@@ -67,7 +67,7 @@ async function main() {
     MockUniswapContractAddress
   );
   
-  await pause();
+  await pause(3000);
 
   pairIds = await getTokenPairs(dataStorage)
   console.log("pairIds : ", pairIds)
