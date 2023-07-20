@@ -43,7 +43,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_3_MAX : new BigNumber.from(175000000000),
     DCA_CONFIG_3_AMOUNT : new BigNumber.from(1000000000),
     DCA_CONFIG_3_SCALING_FACTOR : new BigNumber.from(5),
-    DCA_CONFIG_3_DELAY : new BigNumber.from(0),
+    DCA_CONFIG_3_DELAY : new BigNumber.from(1),
 
     //ex  WETH/USDC => swap WETH fo USDC
     DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
@@ -68,7 +68,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_6_MAX : new BigNumber.from(220000000000),
     DCA_CONFIG_6_AMOUNT : new BigNumber.from(10000000000),
     DCA_CONFIG_6_SCALING_FACTOR : new BigNumber.from(3),
-    DCA_CONFIG_6_DELAY : new BigNumber.from(2),
+    DCA_CONFIG_6_DELAY : new BigNumber.from(1),
     //ex  WETH/USDC => swap USDC for WETH
     DCA_CONFIG_7_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
     DCA_CONFIG_7_MIN : new BigNumber.from(180000000000),
@@ -101,10 +101,14 @@ module.exports = Object.freeze({
 
 
     // mult factor for arithmetics
-    MULT_FACTOR : BigNumber.from(1000000),
+    MULT_FACTOR : BigNumber.from(100000000),
 
     // oracle price scenario
-    SET_ORACLE_PRICE_3_BUY_CONFIG :new BigNumber.from("155000000000"),
-    SET_ORACLE_PRICE_3_SELL_CONFIG :new BigNumber.from("245000000000"),
+    SET_ORACLE_PRICE_3_BUY_CONFIG : 
+        new BigNumber.from("155000000000"),
+    SET_ORACLE_PRICE_3_SELL_CONFIG :
+        new BigNumber.from("245000000000"),
+    SET_ORACLE_PRICE_MIDDLE_MAX_CONFIG :
+        new BigNumber.from("200000000000"),
     
     });

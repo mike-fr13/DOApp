@@ -57,7 +57,7 @@ interface IDataStorage {
         DCADelayEnum dcaDelay;
 
         //256
-        uint lastSwapTime;
+        uint lastDCATime;
     }
 
     struct SegmentDCAEntry {
@@ -114,6 +114,9 @@ function addDCAConfig(
     ) external returns (uint configId);
 
 function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory);
+
+function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external;
+
 
 function getDCASegment(
         uint _pairId, 

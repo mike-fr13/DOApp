@@ -4,16 +4,24 @@ const isLogEnable = false;
 
 async function deployDOApp_Fixture() {
   const [owner, account1, account2, account3, account4, account5, account6] = await ethers.getSigners();
+  isLogEnable ? console.log(`owner : ${owner.address}`):{}
+  isLogEnable ? console.log(`account1 : ${account1.address}`):{}
+  isLogEnable ? console.log(`account2 : ${account2.address}`):{}
+  isLogEnable ? console.log(`account3 : ${account3.address}`):{}
+  isLogEnable ? console.log(`account4 : ${account4.address}`):{}
+  isLogEnable ? console.log(`account5 : ${account5.address}`):{}
+  isLogEnable ? console.log(`account6 : ${account6.address}`):{}
+  
 
   // deploy DOApp main contract
   const DataStorage = await ethers.getContractFactory('DataStorage');
   const dataStorage = await DataStorage.deploy();
-  isLogEnable ? console.log(`dataStorage deployed to ${dataStorage.address}`):{}
+  isLogEnable ? console.log(`dataStorage deployed to ${dataStorage.address} by account ${await(dataStorage.owner())}`):{}
   
   // deploy DOApp main contract
   const DOApp = await ethers.getContractFactory('DOApp');
   const doApp = await DOApp.deploy(false,dataStorage.address);
-  isLogEnable ? console.log(`doApp deployed to ${doApp.address}`):{}
+  isLogEnable ? console.log(`doApp deployed to ${doApp.address} by ${await(doApp.owner())}`):{}
 
   // create an ERC20 Mock : tokenA
   const TokenA = await ethers.getContractFactory('MockERC20');
@@ -90,11 +98,17 @@ async function deploy_AddATokenPair_MinToken_Fixture() {
   await tokenA.mint(account1.address, Constant.TOKEN_INITIAL_SUPPLY)
   await tokenA.mint(account2.address, Constant.TOKEN_INITIAL_SUPPLY)
   await tokenA.mint(account3.address, Constant.TOKEN_INITIAL_SUPPLY)
+  await tokenA.mint(account4.address, Constant.TOKEN_INITIAL_SUPPLY)
+  await tokenA.mint(account5.address, Constant.TOKEN_INITIAL_SUPPLY)
+  await tokenA.mint(account6.address, Constant.TOKEN_INITIAL_SUPPLY)
 
   //mint tokenB
   await tokenB.mint(account1.address, Constant.TOKEN_INITIAL_SUPPLY)
   await tokenB.mint(account2.address, Constant.TOKEN_INITIAL_SUPPLY)
   await tokenB.mint(account3.address, Constant.TOKEN_INITIAL_SUPPLY)
+  await tokenB.mint(account4.address, Constant.TOKEN_INITIAL_SUPPLY)
+  await tokenB.mint(account5.address, Constant.TOKEN_INITIAL_SUPPLY)
+  await tokenB.mint(account6.address, Constant.TOKEN_INITIAL_SUPPLY)
 
   return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, account5, account6, pairId };
 }
@@ -109,19 +123,39 @@ async function deploy_AddATokenPair_MinToken_DepositToken_Fixture() {
   const { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, account5, account6, pairId }
     = await loadFixture(deploy_AddATokenPair_MinToken_Fixture);
 
-  //acount1 => deposit token A and token B
+  //account1 => deposit token A and token B
   await tokenA.connect(account1).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT)
   await doApp.connect(account1).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT)
   await tokenB.connect(account1).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
   await doApp.connect(account1).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
 
-  //acount2 => deposit token A only
+  //account2 => deposit token A only
   await tokenA.connect(account2).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT)
   await doApp.connect(account2).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT)
 
-  //acount3 => deposit token B only
+  //account3 => deposit token B only
   await tokenB.connect(account3).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
   await doApp.connect(account3).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
+
+  //account4 => deposit A et B
+  await tokenA.connect(account4).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT)
+  await doApp.connect(account4).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT)
+  await tokenB.connect(account4).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
+  await doApp.connect(account4).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
+
+  //account5 => deposit A et B
+  await tokenA.connect(account5).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT)
+  await doApp.connect(account5).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT)
+  await tokenB.connect(account5).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
+  await doApp.connect(account5).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
+
+  //account6 => deposit A et B
+  await tokenA.connect(account6).approve(doApp.address, Constant.TOKENA_DEPOSIT_AMOUNT)
+  await doApp.connect(account6).depositTokenA(pairId, Constant.TOKENA_DEPOSIT_AMOUNT)
+  await tokenB.connect(account6).approve(doApp.address, Constant.TOKENB_DEPOSIT_AMOUNT)
+  await doApp.connect(account6).depositTokenB(pairId, Constant.TOKENB_DEPOSIT_AMOUNT)
+    
+
 
   return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, account5, account6, pairId };
 }
@@ -318,8 +352,7 @@ async function deploy_Prepare_Multi_DCA_Config_Fixture() {
 
   return { doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4, account5, account6, pairId };
 }
-
-
+  
 
 module.exports = {
   deployDOApp_Fixture,
@@ -330,4 +363,5 @@ module.exports = {
   deploy_Prepare_One_Sell_DCA_Config_Fixture,
   deploy_Prepare_4_DCA_Config_Fixture,
   deploy_Prepare_Multi_DCA_Config_Fixture
+  
 }

@@ -52,7 +52,7 @@ contract DOApp is Ownable {
 
     //deposit lock penalty  time
     //uint constant public lockTime = 10 days;
-    uint8 constant MAX_DCA_JOB_PER_DCA_EXECUTION_CALL = 2;
+    uint8 public MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL = 2;
 
     // pairID => User address => staked amount
     mapping(uint => mapping(address => TokenPairUserBalance)) private tokenPairUserBalances;
@@ -105,6 +105,22 @@ contract DOApp is Ownable {
     fallback() external payable {}
     */
 
+   /**
+    * @notice  Set the maximum number of DCA segment processd for each executeDCA() call
+    * @dev     .
+    * @param   _newVal  .
+    */
+   function setMaxDCAProcessSegmentPerCall(uint8 _newVal) external onlyOwner() {
+        MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL = _newVal;
+   }
+
+
+    /**
+     * @notice  Return token balance of user for a specified Tokenpair
+     * @dev     .
+     * @param   _pairId  the token pair of balance 
+     * @param   _user  search user
+     */
     function  getTokenPairUserBalances (
         uint _pairId, 
         address _user
@@ -191,7 +207,7 @@ contract DOApp is Ownable {
         );
     }
 
-    /**
+    /**>
      * @notice  Deposit a token B amount in a DOapp token Pair
      * @param   _pairId  the pair ID used to deposit token B
      * @param   _amount  the token amount to deposit
@@ -275,8 +291,8 @@ contract DOApp is Ownable {
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
 
         IDataStorage.SegmentDCAToProcess memory segmentDCAToProcess;
-        segmentDCAToProcess.segmentBuyEntries = new IDataStorage.SegmentDCAEntry[](MAX_DCA_JOB_PER_DCA_EXECUTION_CALL);
-        segmentDCAToProcess.segmentSellEntries = new IDataStorage.SegmentDCAEntry[](MAX_DCA_JOB_PER_DCA_EXECUTION_CALL);
+        segmentDCAToProcess.segmentBuyEntries = new IDataStorage.SegmentDCAEntry[](MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL);
+        segmentDCAToProcess.segmentSellEntries = new IDataStorage.SegmentDCAEntry[](MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL);
 
         console.log("-----------executeDCA Hourly -----------");
         (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAEntriesToProcess(
@@ -293,7 +309,7 @@ contract DOApp is Ownable {
 
         if (
             (cptTotalBuy+ cptTotalSell) <
-            MAX_DCA_JOB_PER_DCA_EXECUTION_CALL
+            MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL
         ) {
             console.log("-----------executeDCA Daily -----------");
             (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAEntriesToProcess(
@@ -312,7 +328,7 @@ contract DOApp is Ownable {
 
         if (
             (cptTotalBuy+ cptTotalSell) <
-            MAX_DCA_JOB_PER_DCA_EXECUTION_CALL
+            MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL
         ) {
             console.log("-----------executeDCA Weekly -----------");
             (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAEntriesToProcess(
@@ -329,6 +345,13 @@ contract DOApp is Ownable {
         console.log("cptTotalBuy : %s", cptTotalBuy);
         console.log("cptTotalSell : %s", cptTotalSell);
 
+         if (
+            (cptTotalBuy+ cptTotalSell) <
+            MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL
+        ) {
+            hasRemainingDCAJobs =false;
+        }
+
         // process segment
         computeDCA(_pairId, segmentDCAToProcess);
 
@@ -340,8 +363,7 @@ contract DOApp is Ownable {
         block.timestamp,
         hasRemainingDCAJobs
         );
-
-        hasRemainingJobs = false;
+  
         return hasRemainingJobs;
 
         //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
@@ -380,12 +402,12 @@ contract DOApp is Ownable {
             console.log("getDCAEntriesToProcess - Init segment entries BUY %s SELL %s", procVars.waitingSegmentEntries[0].length, procVars.waitingSegmentEntries[1].length);
             if ((procVars.waitingSegmentEntries[0].length != 0) || procVars.waitingSegmentEntries[1].length != 0) {
             
-                console.log("getDCAEntriesToProcess - MAX_DCA_JOB_PER_DCA_EXECUTION_CALL %s ", MAX_DCA_JOB_PER_DCA_EXECUTION_CALL );
+                console.log("getDCAEntriesToProcess - MAX_DCA_JOB_PER_DCA_EXECUTION_CALL %s ", MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL );
                 console.log("getDCAEntriesToProcess - cptBuy %s cptSell %s ", procVars.cptBuy, procVars.cptSell);
                 console.log("getDCAEntriesToProcess - cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
                 while 
                     (
-                    ((cptTotalBuy + cptTotalSell + procVars.cptBuy + procVars.cptSell <  MAX_DCA_JOB_PER_DCA_EXECUTION_CALL) 
+                    ((cptTotalBuy + cptTotalSell  <  MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL) 
                     && ((procVars.waitingSegmentEntries[0].length != procVars.cptBuy) 
                         ||  
                         (procVars.waitingSegmentEntries[1].length != procVars.cptSell))) 
@@ -416,9 +438,12 @@ contract DOApp is Ownable {
                             console.log("getDCAEntriesToProcess - segEntry.amount %s ",segEntry.amount);
                             console.log("getDCAEntriesToProcess - segEntry.owner %s ",segEntry.owner);
                             console.log("getDCAEntriesToProcess - segEntry.dcaConfigId %s ",segEntry.dcaConfigId);
+                            console.log("getDCAEntriesToProcess - procVars.cptBuy %s ",procVars.cptBuy);
+                            console.log("getDCAEntriesToProcess - cptTotalBuy %s ",cptTotalBuy);
                             if (segEntry.amount != 0) {
-                                segmentDCAToProcess.segmentBuyEntries[cptTotalBuy+procVars.cptBuy -1] = segEntry;
+                                segmentDCAToProcess.segmentBuyEntries[cptTotalBuy] = segEntry;
                                 segmentDCAToProcess.amountBuy += segEntry.amount;
+                                cptTotalBuy ++;
                             }
                             // if amount to buy > amount to sell, search for a sell entry at next loop
                             console.log("getDCAEntriesToProcess - Buy : amountBuy %s amountSell %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
@@ -451,8 +476,9 @@ contract DOApp is Ownable {
 
                             // if a segment is found
                             if (segEntry.amount != 0) {
-                                segmentDCAToProcess.segmentSellEntries[cptTotalSell+procVars.cptSell -1]=segEntry;
+                                segmentDCAToProcess.segmentSellEntries[cptTotalSell]=segEntry;
                                 segmentDCAToProcess.amountSell += segEntry.amount;
+                                cptTotalSell++;
                             }
 
                             // if amount to sell >= amount to buy, search for a buy entry at next loop
@@ -473,10 +499,6 @@ contract DOApp is Ownable {
                 }
             }
         }
-
-        cptTotalBuy += procVars.cptBuy;
-        cptTotalSell += procVars.cptSell;
-
         console.log("End GetDCAJobs - cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
         return (segmentDCAToProcess, cptTotalBuy, cptTotalSell);
     }
@@ -514,7 +536,8 @@ contract DOApp is Ownable {
         do {
             //DO the stuff
             // si on est bien ds les temps (last DCA + delay > timestamp)
-            console.log("getNextSegmentEntry - 2 In While cpt : %s, timeStamp %s lastSwapTime %s ",cpt,timeStamp,dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastSwapTime);
+            console.log("getNextSegmentEntry - 2 In While cpt : %s, timeStamp %s lastDCATime %s ",cpt,timeStamp,
+            dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastDCATime);
             console.log("getNextSegmentEntry - 2 In While segment entry amount %s",segmentEntries[cpt].amount);
             uint balance;
             if (isBuy) {
@@ -525,7 +548,7 @@ contract DOApp is Ownable {
             }
             console.log("getNextSegmentEntry - 3 Owner balance : %s", balance);
 
-            if ((timeStamp > ( getDelayInSecond (_delay) + (dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastSwapTime)))
+            if ((timeStamp > ( getDelayInSecond (_delay) + (dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastDCATime)))
                 &&(balance >= segmentEntries[cpt].amount) ) 
              {
                 foundSegEntry = segmentEntries[cpt];
@@ -660,7 +683,7 @@ contract DOApp is Ownable {
 
         console.log("computeDCA - amoutIn : %s, amountOut : %s", amountIn, amountOut);
         uint amountForOTC = amountIn < amountOut ? amountIn : amountOut;
-        uint amountForSwap = amountIn < amountOut ? (amountIn - amountForOTC) : (amountOut-amountForOTC);
+        uint amountForSwap = amountIn < amountOut ? (amountOut - amountForOTC) : (amountIn - amountForOTC) ; 
         console.log("computeDCA - amountForOTC : %s, amountForSwap : %s", amountForOTC, amountForSwap);
 
 
@@ -668,7 +691,15 @@ contract DOApp is Ownable {
             OTCTransaction(amountForOTC);
         }
         if(amountForSwap > 0) {
+            // withdraw token from AAVE to contract
+            withdrawTokenFromLending()
+
+            //swap with uniswap
             swapAmountReturned = swap(_pairId,amountForSwap,amountIn > amountOut ? true : false);
+
+            //suppply to aave
+            supplyTokenAsLending()
+
         }
 
         //compute and transfer fees for DCA Executor
@@ -693,8 +724,8 @@ contract DOApp is Ownable {
             swapAmountReturned
         );
 
-        //update DCA segment to fix lastSwapTimestamp
-        updateSegmentToProcess(_segmentToProcess);
+        //update DCA config to fix lastDCATimestamp
+        updateDCAConfigProcessed(_segmentToProcess);
 
 
     }
@@ -717,19 +748,15 @@ contract DOApp is Ownable {
             console.log("updateUserBalance - amounIn % , amountOut %s ",amounIn,amountOut);
         }
 
-    //update DCA segment to fix lastSwapTimestamp
-    function updateSegmentToProcess(IDataStorage.SegmentDCAToProcess memory _segmentToProcess) internal{
-            console.log("updateSegmentToProcess - ");
+    //update DCA segment to fix lastDCATimestamp
+    function updateDCAConfigProcessed(IDataStorage.SegmentDCAToProcess memory _segmentToProcess) internal{
+            console.log("updateDCAConfigProcessed - ");
             // set lastDCATime on each Segment
             for( uint16 i=0; i <_segmentToProcess.segmentBuyEntries.length; i++ ) {
-                /*
-                amountIn = amountIn + _segmentToProcess.segmentBuyEntries[i].amount;
-                amountOut = amountOut + _segmentToProcess.segmentSellEntries[i].amount;
-                */
+               //update DCA config
+                dataStorage.updateDCAConfigLastDCATime(_segmentToProcess.segmentBuyEntries[i].dcaConfigId,block.timestamp);
             }
-
     }
-
 
     /**
      * @notice  .

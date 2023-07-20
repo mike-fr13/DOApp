@@ -11,6 +11,8 @@ import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAd
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {IDataStorage} from './IDataStorage.sol';
 
+import "hardhat/console.sol";
+
 
 /**
  * @author  yannick tison
@@ -22,7 +24,7 @@ import {IDataStorage} from './IDataStorage.sol';
 contract DataStorage is IDataStorage, Ownable{
 
     uint16 constant DCA_CONFIG_MAX_SEGMENT = 1000;
-    uint16 constant MULT_FACTOR = 1000;
+    uint constant MULT_FACTOR = 1*10**8;
 
     // tokenPairs contains all available token pairs for DCA
     mapping(uint256 => TokenPair) private tokenPairs;
@@ -42,7 +44,7 @@ contract DataStorage is IDataStorage, Ownable{
     // eraly withdraw delay (10 days for example : 10*24*3600)
     //uint constant public EarlyWithdrawInterval = 864000;
     // @TODO manage penalty on early withdraw 
-    // but time flies when you do don't know what you're doing :)
+
  
     event TokenPAirAdded(
             uint _pairId, 
@@ -205,8 +207,33 @@ contract DataStorage is IDataStorage, Ownable{
         return (configId);
     }
 
-    function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory) {
+    function getDCAConfig (uint _dcaConfigId) external view returns(DCAConfig memory) {
+        return dcaConfigHashMap[_dcaConfigId];
+    }
 
+    /**
+     * @notice  this fonction is called by dca process and should only be called by owner 
+     *          for security reason, to avoid multiple DCA on the same config without respect
+     *          of the delay set by the user
+     *          
+     * @dev     .
+     * @param   _dcaConfigId  hash of DCA config to update
+     * @param   _lastDCATime  tiimestamp
+     */
+
+
+
+
+    //function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external onlyOwner() {
+    function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external  {
+
+
+
+
+        console.log("caller : %s", msg.sender);
+        require (dcaConfigHashMap[_dcaConfigId].dcaConfigId == _dcaConfigId,"No such DCAConfig");
+        require (_lastDCATime != 0,"lastDCATime should not be null");
+        dcaConfigHashMap[_dcaConfigId].lastDCATime = _lastDCATime;
     }
 
     function getDCASegment(uint _pairId, uint price, IDataStorage.DCADelayEnum delay) public view returns(SegmentDCAEntry[][2] memory){
