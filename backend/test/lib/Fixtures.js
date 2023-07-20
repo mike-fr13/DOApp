@@ -221,7 +221,7 @@ async function deploy_Prepare_4_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_2_DELAY
   )
 
-  await dataStorage.connect(account1).addDCAConfig(
+  await dataStorage.connect(account2).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_3_MIN,
@@ -231,7 +231,7 @@ async function deploy_Prepare_4_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_3_DELAY
   )
 
-  await dataStorage.connect(account1).addDCAConfig(
+  await dataStorage.connect(account2).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_4_MIN,
@@ -269,7 +269,7 @@ async function deploy_Prepare_Multi_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_2_DELAY
   )
 
-  await dataStorage.connect(account1).addDCAConfig(
+  await dataStorage.connect(account2).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_3_MIN,
@@ -279,7 +279,7 @@ async function deploy_Prepare_Multi_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_3_DELAY
   )
 
-  await dataStorage.connect(account1).addDCAConfig(
+  await dataStorage.connect(account2).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_4_MIN,
@@ -289,7 +289,7 @@ async function deploy_Prepare_Multi_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_4_DELAY
   )
 
-  await dataStorage.connect(account2).addDCAConfig(
+  await dataStorage.connect(account3).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_5_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_5_MIN,
@@ -319,7 +319,7 @@ async function deploy_Prepare_Multi_DCA_Config_Fixture() {
     Constant.DCA_CONFIG_7_DELAY
   )
 
-  await dataStorage.connect(account2).addDCAConfig(
+  await dataStorage.connect(account4).addDCAConfig(
     pairId,
     Constant.DCA_CONFIG_8_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_8_MIN,

@@ -221,25 +221,35 @@ contract DataStorage is IDataStorage, Ownable{
      * @param   _lastDCATime  tiimestamp
      */
 
-
-
-
     //function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external onlyOwner() {
     function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external  {
-
-
-
-
+        //@TODO checker le owner
         console.log("caller : %s", msg.sender);
         require (dcaConfigHashMap[_dcaConfigId].dcaConfigId == _dcaConfigId,"No such DCAConfig");
         require (_lastDCATime != 0,"lastDCATime should not be null");
         dcaConfigHashMap[_dcaConfigId].lastDCATime = _lastDCATime;
     }
 
+    /**
+     * @notice  Get segments for a specific Pair, price, delay  for Both Token A and Token B
+     * @dev     .
+     * @param   _pairId  .
+     * @param   price  .
+     * @param   delay  .
+     */
     function getDCASegment(uint _pairId, uint price, IDataStorage.DCADelayEnum delay) public view returns(SegmentDCAEntry[][2] memory){
         return dcaSegmentsMap[_pairId][price][delay];
     }
 
+    /**
+     * @notice  Get segments for a specific Pair, price, delay and token(A or B)
+     * @dev     .
+     * @param   _pairId  .
+     * @param   _price  .
+     * @param   delay  .
+     * @param   _token  .
+     * @return  IDataStorage.SegmentDCAEntry[]  .
+     */
     function getDCASegmentEntries (
         uint _pairId,
         uint _price, 
@@ -293,6 +303,7 @@ contract DataStorage is IDataStorage, Ownable{
 
     /**
      * @notice  Create a DCA config hash based on pairId and user address
+     *          We allow one DCA config per user / per Pair and per path (2 path :A->B or B->A)
      * @param   _dcaConfig  a DCAConfig object
      * @return  hash  the DCA config hash
      */
@@ -302,13 +313,7 @@ contract DataStorage is IDataStorage, Ownable{
         return (uint256)(keccak256(abi.encodePacked(
             msg.sender,
             _dcaConfig.pairID, 
-            _dcaConfig.isSwapTookenAForTokenB,
-            _dcaConfig.min,
-            _dcaConfig.max,
-            _dcaConfig.amount,
-            _dcaConfig.scalingFactor,
-            _dcaConfig.creationDate,
-            _dcaConfig.dcaDelay)
+            _dcaConfig.isSwapTookenAForTokenB)
             )
         );
     }

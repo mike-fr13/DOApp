@@ -224,7 +224,7 @@ describe('DOApp DCA execution', function () {
         i++;
       } while (lastEvent.args.hasRemainingJobs)
       expect(lastEvent.args.hasRemainingJobs).to.be.false;
-      expect (i).equals(2);
+      expect (i).equals(1);
 
     })
 
@@ -267,7 +267,7 @@ describe('DOApp DCA execution', function () {
       expect (i).equals(1);
     })
 
-    it.only('Should DCA for an existing TokenPair and a mix DCA Sell & Buy config with oracle price set in DCA interval - 3 Segments max by request', async function () {
+    it('Should DCA for an existing TokenPair and a mix DCA Sell & Buy config with oracle price set in DCA interval - 3 Segments max by request', async function () {
       const isLogEnable = false;
       const { doApp,dataStorage, pairId,  tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_Multi_DCA_Config_Fixture)

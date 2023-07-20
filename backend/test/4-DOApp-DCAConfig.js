@@ -115,7 +115,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           let i = new BigNumber.from(0)
           for (i = Constant.DCA_CONFIG_1_MIN; i.lt(Constant.DCA_CONFIG_1_MAX) ; i=i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             isDebugEnable ? console.log("segment : ", i) : {}
-            const [owner,amount, dcaConfigHash] = ((await dataStorage.connect(account1)
+            const [segOwner,amount, dcaConfigHash] = ((await dataStorage.connect(account1)
               .getDCASegmentEntries(
                 pairId, 
                 BigNumber.from(i),
@@ -123,7 +123,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 BigNumber.from(0))
               )[0])
             //console.log(owner, amount, dcaConfigHash)
-            expect(owner).to.be.equal(account1.address)
+            expect(segOwner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_1_AMOUNT)
             
           }
@@ -151,10 +151,10 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(1)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, dcaConfigHash] = (struct[0])
+            const [segOwner,amount, dcaConfigHash] = (struct[0])
 
             //console.log(owner, amount, dcaConfigHash)
-            expect(owner).to.be.equal(account1.address)
+            expect(segOwner).to.be.equal(account1.address)
             expect(amount).to.be.equal(Constant.DCA_CONFIG_2_AMOUNT)
             
           }
@@ -183,7 +183,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(0)
             )
             isDebugEnable ? console.log("DCA Entries : ", struct) : {}
-            const [owner,amount, dcaConfigHash] = (struct[0])
+            const [segOwner,amount, dcaConfigHash] = (struct[0])
                 
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
@@ -199,8 +199,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
                   )
                 )
               ).div(Constant.MULT_FACTOR)
-              isDebugEnable ? console.log(owner, amount, dcaConfigHash, localComputedAmount) : {}
-            expect(owner).to.be.equal(account1.address)
+              isDebugEnable ? console.log(segOwner, amount, dcaConfigHash, localComputedAmount) : {}
+            expect(segOwner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
             
           }
@@ -228,7 +228,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(1)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, dcaConfigHash] = (struct[0])
+            const [segOwner,amount, dcaConfigHash] = (struct[0])
 
             rapport = (((i.sub(Constant.DCA_CONFIG_2_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_2_MAX.sub(Constant.DCA_CONFIG_2_MIN)))
@@ -243,14 +243,14 @@ describe('DOApp Contract - DCA configuration tests', function () {
             ).div(Constant.MULT_FACTOR)
 
             //console.log(owner, amount, dcaConfigHash, localComputedAmount)
-            expect(owner).to.be.equal(account1.address)
+            expect(segOwner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
             
           }
       })
 
       it('Should add 2 dca config and get segment entries for each segment interval on success (swap Token A for Token B)', async function () {
-        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
+        const {dataStorage, account1, account2, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
@@ -261,7 +261,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_DELAY
           )
 
-        await dataStorage.connect(account1).addDCAConfig(
+        await dataStorage.connect(account2).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_3_MIN,
@@ -278,11 +278,11 @@ describe('DOApp Contract - DCA configuration tests', function () {
             .getDCASegmentEntries(
               pairId, 
               BigNumber.from(i),
-              Constant.DCA_CONFIG_3_DELAY,
+              Constant.DCA_CONFIG_1_DELAY,
               BigNumber.from(0)
             )
-            //console.log("DCA Entries : ", struct);
-            const [owner,amount, dcaConfigHash] = (struct[0])
+            console.log("DCA Entries : ", struct);
+            const [segOwner,amount, dcaConfigHash] = (struct[0])
 
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
@@ -299,13 +299,13 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 )
               ).div(Constant.MULT_FACTOR)
             //console.log(owner, amount, dcaConfigHash, localComputedAmount)
-            expect(owner).to.be.equal(account1.address)
+            expect(segOwner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
             
           }
 
           for (let i = Constant.DCA_CONFIG_3_MIN; i<Constant.DCA_CONFIG_3_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
-            //console.log("segment : ", i)
+            //console.log("segment : ", i.toString())
             if (i < Constant.DCA_CONFIG_1_MAX) {
                 // we have 2 segment entries (config 1 and config 3)
                 index = 1;
@@ -315,6 +315,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 index = 0;
             }
 
+
             struct = await dataStorage.connect(account1)
             .getDCASegmentEntries(
               pairId, 
@@ -322,8 +323,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
               Constant.DCA_CONFIG_3_DELAY,
               BigNumber.from(0)
             )
-            //console.log("DCA Entries : ", struct);
-            const [owner,amount, dcaConfigHash] = (struct[index])
+            console.log("DCA Entries : ", struct);
+            const [segOwner,amount, dcaConfigHash] = (struct[index])
 
             rapport = (((Constant.DCA_CONFIG_3_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_3_MAX.sub(Constant.DCA_CONFIG_3_MIN)))
@@ -339,14 +340,14 @@ describe('DOApp Contract - DCA configuration tests', function () {
                 )
               ).div(Constant.MULT_FACTOR)
             //console.log(owner, amount, dcaConfigHash, localComputedAmount)
-            expect(owner).to.be.equal(account1.address)
+            expect(segOwner).to.be.equal(account2.address)
             expect(amount).to.be.equal(localComputedAmount)
             
           }
       })
 
       it('Should add 2 dca config and get segment entries for each segment interval on success  (swap Token B for Token A)', async function () {
-        const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_Prepare_4_DCA_Config_Fixture);
+        const {dataStorage, account1, account2, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await dataStorage.connect(account1).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
@@ -357,7 +358,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_DELAY
           )
 
-        await dataStorage.connect(account1).addDCAConfig(
+        await dataStorage.connect(account2).addDCAConfig(
           pairId,
           Constant.DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           Constant.DCA_CONFIG_4_MIN,
@@ -389,7 +390,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               BigNumber.from(1)
             )
             //console.log("DCA Entries : ", struct);
-            const [owner,amount, dcaConfigHash] = (struct[index])
+            const [segOwner,amount, dcaConfigHash] = (struct[index])
 
             rapport = (((i.sub(Constant.DCA_CONFIG_4_MIN)).mul(Constant.MULT_FACTOR))
             .div(Constant.DCA_CONFIG_4_MAX.sub(Constant.DCA_CONFIG_4_MIN)))
@@ -405,7 +406,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
 
             //console.log(owner, amount, dcaConfigHash, localComputedAmount)
             //console.log(i, amount, localComputedAmount)
-            expect(owner).to.be.equal(account1.address)
+            expect(segOwner).to.be.equal(account2.address)
             expect(amount).to.be.equal(localComputedAmount)
             
           }

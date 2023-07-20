@@ -283,10 +283,9 @@ contract DOApp is Ownable {
         );
     }
 
-    function executeDCA(uint _pairId) external returns (bool hasRemainingJobs) {
+    function executeDCA(uint _pairId) external returns (bool hasRemainingDCAJobs) {
         uint16 cptTotalBuy;
         uint16 cptTotalSell;
-        bool hasRemainingDCAJobs;
 
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
 
@@ -303,8 +302,8 @@ contract DOApp is Ownable {
             0
         );
 
-        console.log("cptTotalBuy : %s", cptTotalBuy);
-        console.log("cptTotalSell : %s", cptTotalSell);
+        console.log("Post hourly cptTotalBuy : %s", cptTotalBuy);
+        console.log("Post hourly cptTotalSell : %s", cptTotalSell);
 
 
         if (
@@ -323,8 +322,8 @@ contract DOApp is Ownable {
             hasRemainingDCAJobs = true;
         }
 
-        console.log("cptTotalBuy : %s", cptTotalBuy);
-        console.log("cptTotalSell : %s", cptTotalSell);
+        console.log("Post daily cptTotalBuy : %s", cptTotalBuy);
+        console.log("Post daily cptTotalSell : %s", cptTotalSell);
 
         if (
             (cptTotalBuy+ cptTotalSell) <
@@ -342,8 +341,8 @@ contract DOApp is Ownable {
             hasRemainingDCAJobs = true;
         }
 
-        console.log("cptTotalBuy : %s", cptTotalBuy);
-        console.log("cptTotalSell : %s", cptTotalSell);
+        console.log("Post weekly cptTotalBuy : %s", cptTotalBuy);
+        console.log("Post weekly cptTotalSell : %s", cptTotalSell);
 
          if (
             (cptTotalBuy+ cptTotalSell) <
@@ -364,7 +363,7 @@ contract DOApp is Ownable {
         hasRemainingDCAJobs
         );
   
-        return hasRemainingJobs;
+        return hasRemainingDCAJobs;
 
         //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
     }
@@ -505,14 +504,15 @@ contract DOApp is Ownable {
 
     function getDelayInSecond(IDataStorage.DCADelayEnum _delay) internal pure returns (uint delayInSecond) {
         if (_delay == IDataStorage.DCADelayEnum.Hourly ) {
-            return 3600;
+            delayInSecond = 3600;
         }
-        else if (_delay == IDataStorage.DCADelayEnum.Hourly ) {
-            return 3600*24;
+        else if (_delay == IDataStorage.DCADelayEnum.Daily ) {
+            delayInSecond = 3600*24;
         }
-        else if (_delay == IDataStorage.DCADelayEnum.Hourly ) {
-            return 3600*24*7;
+        else if (_delay == IDataStorage.DCADelayEnum.Weekly ) {
+            delayInSecond = 3600*24*7;
         }
+        return delayInSecond;
 
     }
 
@@ -547,6 +547,9 @@ contract DOApp is Ownable {
                 balance = tokenPairUserBalances[_pairId][segmentEntries[cpt].owner].balanceB;    
             }
             console.log("getNextSegmentEntry - 3 Owner balance : %s", balance);
+            console.log("getNextSegmentEntry - 3 _delay : %s", uint(_delay));
+            console.log("getNextSegmentEntry - 3 getDelayInSecond(_delay) : %s", getDelayInSecond(_delay));
+            console.log("getNextSegmentEntry - 3 calcul %s", timeStamp, getDelayInSecond(_delay) + (dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastDCATime));
 
             if ((timeStamp > ( getDelayInSecond (_delay) + (dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastDCATime)))
                 &&(balance >= segmentEntries[cpt].amount) ) 
@@ -602,6 +605,16 @@ contract DOApp is Ownable {
                 "In prodution mode, you should explicitly set slippage limits for uniswap swap"
             );
         }
+
+        console.log("swap - address msg.sender : ", msg.sender);
+        console.log("swap - address this : ", address(this));
+        console.log("swap - address lPair.swapRouter : ", lPair.swapRouter);
+        console.log("swap - atoken balance msg.sender : ", IERC20(tokenSource).balanceOf(msg.sender));
+        console.log("swap - atoken balance this(address) : ", IERC20(tokenSource).balanceOf(address(this)));
+        console.log("swap - atoken balance lPair.swapRouter : ", IERC20(tokenSource).balanceOf(lPair.swapRouter));
+        console.log("swap - atoken allowance msg.sender -> swaprouter : ", IERC20(tokenSource).allowance(msg.sender,address(lPair.swapRouter)));
+        console.log("swap - atoken allowance this(address) -> swaprouter: ", IERC20(tokenSource).allowance(address(this),address(lPair.swapRouter)));
+
 
         // Create the params that will be used to execute the swap
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
@@ -674,6 +687,8 @@ contract DOApp is Ownable {
         uint amountInExecutorFees;
         uint amountOutExecutorFees;
         uint swapAmountReturned;
+        address tokenToSwap;
+        address tokenOut;
 
         // sum amount in and amount out
         for( uint16 i=0; i <_segmentToProcess.segmentBuyEntries.length; i++ ) {
@@ -691,14 +706,29 @@ contract DOApp is Ownable {
             OTCTransaction(amountForOTC);
         }
         if(amountForSwap > 0) {
+            IDataStorage.TokenPair memory tokenPair = dataStorage.getTokenPair(_pairId);
+             if(amountIn > amountOut) {
+                tokenToSwap = tokenPair.tokenA;
+                tokenOut = tokenPair.tokenB;
+             } else {
+                tokenToSwap = tokenPair.tokenB;
+                tokenOut = tokenPair.tokenA;
+             } 
+            
+
+            address atokenToSwap;
+            atokenToSwap = amountIn > amountOut ? tokenPair.aTokenA : tokenPair.aTokenB;
+            console.log("computeDCA - atoken balance msg.sender : ", IERC20(atokenToSwap).balanceOf(msg.sender));
+            console.log("computeDCA - atoken balance this(address) : ", IERC20(atokenToSwap).balanceOf(address(this)));
+
             // withdraw token from AAVE to contract
-            withdrawTokenFromLending()
+            withdrawTokenFromLending(IPoolAddressesProvider(tokenPair.aavePoolAddressesProvider),tokenToSwap,amountForSwap);
 
             //swap with uniswap
             swapAmountReturned = swap(_pairId,amountForSwap,amountIn > amountOut ? true : false);
 
             //suppply to aave
-            supplyTokenAsLending()
+            supplyTokenAsLending(IPoolAddressesProvider(tokenPair.aavePoolAddressesProvider),tokenOut, swapAmountReturned );
 
         }
 

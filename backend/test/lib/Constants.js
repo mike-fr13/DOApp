@@ -43,7 +43,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_3_MAX : new BigNumber.from(175000000000),
     DCA_CONFIG_3_AMOUNT : new BigNumber.from(1000000000),
     DCA_CONFIG_3_SCALING_FACTOR : new BigNumber.from(5),
-    DCA_CONFIG_3_DELAY : new BigNumber.from(1),
+    DCA_CONFIG_3_DELAY : new BigNumber.from(0),
 
     //ex  WETH/USDC => swap WETH fo USDC
     DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B : false,
