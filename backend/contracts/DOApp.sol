@@ -16,6 +16,17 @@ import "hardhat/console.sol";
 contract DOApp is Ownable {
     using SafeERC20 for IERC20;
 
+
+    struct ProcessingVars {
+        uint roundedTokenPrice;
+        IDataStorage.SegmentDCAEntry[][2] waitingSegmentEntries;
+        IERC20 aTokenA;
+        IERC20 aTokenB;
+        uint16 cptBuy;
+        uint16 cptSell;
+        bool isBuy;
+    }
+
     // boolean to check if production mode
     // we use it to verify som uniswap settings (min output token swap and swap price estimation)
     bool isProductionMode = false;
@@ -82,7 +93,7 @@ contract DOApp is Ownable {
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
 
         //deposit token to current contract
-        IERC20(lPair.tokenAddressA).safeTransferFrom(
+        IERC20(lPair.tokenA).safeTransferFrom(
             msg.sender,
             address(this),
             _amount
@@ -91,7 +102,7 @@ contract DOApp is Ownable {
         //supply token to AAVE
         supplyTokenAsLending(
             IPoolAddressesProvider(lPair.aavePoolAddressesProvider),
-            lPair.tokenAddressA,
+            lPair.tokenA,
             _amount
         );
 
@@ -105,7 +116,7 @@ contract DOApp is Ownable {
         emit TokenDeposit(
             msg.sender,
             _pairId,
-            lPair.tokenAddressA,
+            lPair.tokenA, 
             _amount,
             block.timestamp
         );
@@ -139,17 +150,17 @@ contract DOApp is Ownable {
         // withdraw token from Lending popl
         withdrawTokenFromLending(
             IPoolAddressesProvider(lPair.aavePoolAddressesProvider),
-            lPair.tokenAddressA,
+            lPair.tokenA,
             _amount
         );
 
         //withdraw token to user
-        IERC20(lPair.tokenAddressA).safeTransfer(msg.sender, _amount);
+        IERC20(lPair.tokenA).safeTransfer(msg.sender, _amount);
 
         emit TokenWithdrawal(
             msg.sender,
             _pairId,
-            lPair.tokenAddressA,
+            lPair.tokenA,
             _amount,
             block.timestamp
         );
@@ -167,7 +178,7 @@ contract DOApp is Ownable {
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
 
         //deposit token to curretn contract
-        IERC20(lPair.tokenAddressB).safeTransferFrom(
+        IERC20(lPair.tokenB).safeTransferFrom(
             msg.sender,
             address(this),
             _amount
@@ -176,7 +187,7 @@ contract DOApp is Ownable {
         //supply token to AAVE
         supplyTokenAsLending(
             IPoolAddressesProvider(lPair.aavePoolAddressesProvider),
-            lPair.tokenAddressB,
+            lPair.tokenB,
             _amount
         );
 
@@ -191,7 +202,7 @@ contract DOApp is Ownable {
         emit TokenDeposit(
             msg.sender,
             _pairId,
-            lPair.tokenAddressB,
+            lPair.tokenB,
             _amount,
             block.timestamp
         );
@@ -225,17 +236,17 @@ contract DOApp is Ownable {
         // withdraw token from Lending popl
         withdrawTokenFromLending(
             IPoolAddressesProvider(lPair.aavePoolAddressesProvider),
-            lPair.tokenAddressB,
+            lPair.tokenB,
             _amount
         );
 
         //withdraw token to user
-        IERC20(lPair.tokenAddressB).safeTransfer(msg.sender, _amount);
+        IERC20(lPair.tokenB).safeTransfer(msg.sender, _amount);
 
         emit TokenWithdrawal(
             msg.sender,
             _pairId,
-            lPair.tokenAddressB,
+            lPair.tokenB,
             _amount,
             block.timestamp
         );
@@ -252,7 +263,7 @@ contract DOApp is Ownable {
         segmentDCAToProcess.segmentSellEntries = new IDataStorage.SegmentDCAEntry[](MAX_DCA_JOB_PER_DCA_EXECUTION_CALL);
 
         console.log("-----------executeDCA Hourly -----------");
-        (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAJobs(
+        (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAEntriesToProcess(
             lPair,
             IDataStorage.DCADelayEnum.Hourly,
             segmentDCAToProcess, 
@@ -267,7 +278,7 @@ contract DOApp is Ownable {
             MAX_DCA_JOB_PER_DCA_EXECUTION_CALL
         ) {
             console.log("-----------executeDCA Daily -----------");
-            (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAJobs(
+            (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAEntriesToProcess(
                 lPair,
                 IDataStorage.DCADelayEnum.Daily,
                 segmentDCAToProcess, 
@@ -283,7 +294,7 @@ contract DOApp is Ownable {
             MAX_DCA_JOB_PER_DCA_EXECUTION_CALL
         ) {
             console.log("-----------executeDCA Weekly -----------");
-            (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAJobs(
+            (segmentDCAToProcess, cptTotalBuy, cptTotalSell) = getDCAEntriesToProcess(
                 lPair,
                 IDataStorage.DCADelayEnum.Weekly,
                 segmentDCAToProcess, 
@@ -301,7 +312,17 @@ contract DOApp is Ownable {
         //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
     }
 
-    function getDCAJobs(
+
+    function getRoundedOraclePrice(IDataStorage.TokenPair memory _pair) internal view returns(uint){
+        // get Token price
+        (, int256 oracleTokenAPrice, , , ) = AggregatorV3Interface(
+            _pair.chainlinkPriceFetcher
+        ).latestRoundData();
+        return (uint(oracleTokenAPrice) - (uint(oracleTokenAPrice) % _pair.tokenPairSegmentSize));
+    }
+
+
+    function getDCAEntriesToProcess(
         IDataStorage.TokenPair memory _pair,
         IDataStorage.DCADelayEnum _delay,
         IDataStorage.SegmentDCAToProcess memory segmentDCAToProcess,
@@ -309,121 +330,127 @@ contract DOApp is Ownable {
         uint16 cptTotalSell
     ) internal returns (IDataStorage.SegmentDCAToProcess memory, uint16 outCptTotalBuy, uint16 outCptTotalSell) {
 
-
         console.log("GetDCAJobs from par %s delay %s %s tokens",_pair.pairID, uint(_delay));
 
-        // Obtenir le prix du tokenA
-        (, int256 oracleTokenAPrice, , , ) = AggregatorV3Interface(
-            _pair.chainlinkPriceFetcher
-        ).latestRoundData();
-        uint roundedTokenPrice = uint(oracleTokenAPrice) -
-            (uint(oracleTokenAPrice) % _pair.tokenPairSegmentSize);
+        // structure to avoir stack toot deep
+        ProcessingVars memory procVars;
 
-        //mapping (uint pairID => mapping (uint segmentStart => mapping(DCADelayEnum => SegmentDCAEntry[][2]))) public dcaSegmentsMap;
-        // Obtenir les segments d'entrées correspondants à ce prix
-        IDataStorage.SegmentDCAEntry[][2] memory segmentEntries = dataStorage
-            .getDCASegment(_pair.pairID, roundedTokenPrice, _delay);
-
-        uint16 cptBuy;
-        uint16 cptSell;
-        bool isBuy = true;
-        uint timeStamp = block.timestamp;
+        procVars.roundedTokenPrice = getRoundedOraclePrice(_pair);
+        procVars.waitingSegmentEntries = dataStorage.getDCASegment(_pair.pairID, procVars.roundedTokenPrice, _delay);
+        procVars.aTokenA = IERC20(_pair.aTokenA);
+        procVars.aTokenB = IERC20(_pair.aTokenB);
+        procVars.isBuy = true;
 
 
-        console.log("Init segment entries BUY %s SELL %s", segmentEntries[0].length, segmentEntries[1].length);
-        if ((segmentEntries[0].length != 0) || segmentEntries[1].length != 0) {
-        
-            console.log("Segment buy entries.lenght %s ", segmentDCAToProcess.segmentBuyEntries.length );
-            console.log("Segment sell entries.lenght %s ", segmentDCAToProcess.segmentSellEntries.length );
-            console.log("MAX_DCA_JOB_PER_DCA_EXECUTION_CALL %s ", MAX_DCA_JOB_PER_DCA_EXECUTION_CALL );
-            console.log("cptBuy %s cptSell %s ", cptBuy, cptSell);
-            console.log("cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
-            while 
-                (
-                ((cptTotalBuy + cptTotalSell + cptBuy + cptSell <  MAX_DCA_JOB_PER_DCA_EXECUTION_CALL) 
-                && ((segmentEntries[0].length != cptBuy) ||  (segmentEntries[1].length != cptSell))) 
+        {
+            console.log("Init segment entries BUY %s SELL %s", procVars.waitingSegmentEntries[0].length, procVars.waitingSegmentEntries[1].length);
+            if ((procVars.waitingSegmentEntries[0].length != 0) || procVars.waitingSegmentEntries[1].length != 0) {
 
-                ){
+                IERC20 aTokenA = IERC20(_pair.aTokenA);
+                IERC20 aTokenB = IERC20(_pair.aTokenB);
+            
+                console.log("MAX_DCA_JOB_PER_DCA_EXECUTION_CALL %s ", MAX_DCA_JOB_PER_DCA_EXECUTION_CALL );
+                console.log("cptBuy %s cptSell %s ", procVars.cptBuy, procVars.cptSell);
+                console.log("cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
+                while 
+                    (
+                    ((cptTotalBuy + cptTotalSell + procVars.cptBuy + procVars.cptSell <  MAX_DCA_JOB_PER_DCA_EXECUTION_CALL) 
+                    && ((procVars.waitingSegmentEntries[0].length != procVars.cptBuy) 
+                        ||  
+                        (procVars.waitingSegmentEntries[1].length != procVars.cptSell))) 
 
-                console.log("Start while - cptBuy %s cptSell %s ", cptBuy, cptSell);
-                console.log("Start while - cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
-                if (isBuy) {
-                    console.log("Start isBuy");
-                    if (segmentEntries[0].length > 0) {
-                        // search for a buy entry
-                        (
-                            IDataStorage.SegmentDCAEntry memory segEntry,
-                            uint16 nextCptBuy
-                        ) = getNextSegmentEntry(
-                                segmentEntries[0],
-                                _delay,
-                                cptBuy,
-                                timeStamp
-                            );
+                    ){
 
-                        cptBuy = nextCptBuy;
+                    console.log("Start while - cptBuy %s cptSell %s ", procVars.cptBuy, procVars.cptSell);
+                    console.log("Start while - cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
+                    if (procVars.isBuy) {
+                        console.log("Start isBuy");
+                        //edge case where nobody as supply tokenB 's Pair
+                        if (address(aTokenA) != address(0)) {
+                            console.log("aToken A : %s",address(aTokenA));
+                            if (procVars.waitingSegmentEntries[0].length > 0) {
+                                // search for a buy entry
+                                (
+                                    IDataStorage.SegmentDCAEntry memory segEntry,
+                                    uint16 nextCptBuy
+                                ) = getNextSegmentEntry(
+                                        procVars.waitingSegmentEntries[0],
+                                        _delay,
+                                        procVars.cptBuy,
+                                        block.timestamp,
+                                        aTokenA
+                                    );
 
-                        // if a segment is found
-                        console.log("segEntry.amount %s ",segEntry.amount);
-                        console.log("segEntry.owner %s ",segEntry.owner);
-                        console.log("segEntry.dcaConfigId %s ",segEntry.dcaConfigId);
-                        if (segEntry.amount != 0) {
-                            segmentDCAToProcess.segmentBuyEntries[cptTotalBuy+cptBuy] = segEntry;
-                            segmentDCAToProcess.amountBuy += segEntry.amount;
+                                procVars.cptBuy = nextCptBuy;
+
+                                // if a segment is found
+                                console.log("segEntry.amount %s ",segEntry.amount);
+                                console.log("segEntry.owner %s ",segEntry.owner);
+                                console.log("segEntry.dcaConfigId %s ",segEntry.dcaConfigId);
+                                if (segEntry.amount != 0) {
+                                    segmentDCAToProcess.segmentBuyEntries[cptTotalBuy+procVars.cptBuy] = segEntry;
+                                    segmentDCAToProcess.amountBuy += segEntry.amount;
+                                }
+                                // if amount to buy > amount to sell, search for a sell entry at next loop
+                                console.log("Buy : amountBuy %s amountSell %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
+                            }
                         }
-                        // if amount to buy > amount to sell, search for a sell entry at next loop
-                        console.log("Buy : amountBuy %s amountSell %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
-                    }
-                    console.log("End Buy  - segmentEntries[0].length == cptBuy %s ", segmentEntries[0].length == cptBuy);
-                    if (
-                        (segmentDCAToProcess.amountBuy >
-                            segmentDCAToProcess.amountSell) ||
-                        (segmentEntries[0].length == cptBuy)
-                    ) {
-                        isBuy = false;
-                    }
-                } else {
-                    console.log("Start !isBuy");
-                    if (segmentEntries[1].length > 0) {
-                        // Search for a sell entry
-                        (
-                            IDataStorage.SegmentDCAEntry memory segEntry,
-                            uint16 nextCptSell
-                        ) = getNextSegmentEntry(
-                                segmentEntries[1],
-                                _delay,
-                                cptSell,
-                                timeStamp
-                            );
+                        console.log("End Buy  - segmentEntries[0].length == cptBuy %s ", procVars.waitingSegmentEntries[0].length == procVars.cptBuy);
+                        if (
+                            (segmentDCAToProcess.amountBuy >
+                                segmentDCAToProcess.amountSell) ||
+                            (procVars.waitingSegmentEntries[0].length == procVars.cptBuy)
+                        ) {
+                            procVars.isBuy = false;
+                        }
+                    } else {
+                        console.log("Start !isBuy");
+                        //edge case where nobody as supply tokenB 's Pair
+                        if (address(aTokenB) != address(0)) {
+                            console.log("aToken B : %s",address(aTokenB));
+                            if (procVars.waitingSegmentEntries[1].length > 0) {
+                                // Search for a sell entry
+                                (
+                                    IDataStorage.SegmentDCAEntry memory segEntry,
+                                    uint16 nextCptSell
+                                ) = getNextSegmentEntry(
+                                        procVars.waitingSegmentEntries[1],
+                                        _delay,
+                                        procVars.cptSell,
+                                        block.timestamp,
+                                        aTokenB
+                                    );
 
-                        cptSell = nextCptSell;
+                                procVars.cptSell = nextCptSell;
 
-                        // if a segment is found
-                        if (segEntry.amount != 0) {
-                            segmentDCAToProcess.segmentSellEntries[cptTotalSell+cptSell]=segEntry;
-                            segmentDCAToProcess.amountSell += segEntry.amount;
+                                // if a segment is found
+                                if (segEntry.amount != 0) {
+                                    segmentDCAToProcess.segmentSellEntries[cptTotalSell+procVars.cptSell]=segEntry;
+                                    segmentDCAToProcess.amountSell += segEntry.amount;
+                                }
+
+                                // if amount to sell >= amount to buy, search for a buy entry at next loop
+                                console.log("Sell : amountSell %s amountBuy %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
+                            }
                         }
 
-                        // if amount to sell >= amount to buy, search for a buy entry at next loop
-                        console.log("Sell : amountSell %s amountBuy %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
+                        console.log("End !Buy  - segmentEntries[1].length == cptSell %s ", procVars.waitingSegmentEntries[1].length == procVars.cptSell);
+                        if (
+                            (segmentDCAToProcess.amountSell >=
+                                segmentDCAToProcess.amountBuy) ||
+                            (procVars.waitingSegmentEntries[1].length == procVars.cptSell)
+                        ) {
+                            procVars.isBuy = true;
+                        }
                     }
 
-                    console.log("End !Buy  - segmentEntries[1].length == cptSell %s ", segmentEntries[1].length == cptSell);
-                    if (
-                        (segmentDCAToProcess.amountSell >=
-                            segmentDCAToProcess.amountBuy) ||
-                        (segmentEntries[1].length == cptSell)
-                    ) {
-                        isBuy = true;
-                    }
+                    console.log("End while - cptBuy %s cptSell %s ", procVars.cptBuy, procVars.cptSell);
                 }
-
-                console.log("End while - cptBuy %s cptSell %s ", cptBuy, cptSell);
             }
         }
 
-        cptTotalBuy += cptBuy;
-        cptTotalSell += cptSell;
+        cptTotalBuy += procVars.cptBuy;
+        cptTotalSell += procVars.cptSell;
 
         console.log("End GetDCAJobs - cptTotalBuy %s cptTotalSell %s ", cptTotalBuy, cptTotalSell);
         return (segmentDCAToProcess, cptTotalBuy, cptTotalSell);
@@ -446,7 +473,8 @@ contract DOApp is Ownable {
         IDataStorage.SegmentDCAEntry[] memory segmentEntries,
         IDataStorage.DCADelayEnum _delay,
         uint16 cpt,
-        uint timeStamp
+        uint timeStamp,
+        IERC20 _aToken
     )
         internal
         returns (
@@ -461,8 +489,11 @@ contract DOApp is Ownable {
             //DO the stuff
             // si on est bien ds les temps (last DCA + delay > timestamp)
             console.log("In While delay - cpt : %s, timeStamp %s lastSwapTime %s ",cpt,timeStamp,dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastSwapTime);
+            console.log("In While delay - segment entry amount %s, balance atoken %s",segmentEntries[cpt].amount,_aToken.balanceOf(segmentEntries[cpt].owner));
 
-            if (timeStamp > ( getDelayInSecond (_delay) + (dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastSwapTime))) {
+            if ((timeStamp > ( getDelayInSecond (_delay) + (dataStorage.getDCAConfig(segmentEntries[cpt].dcaConfigId).lastSwapTime)))
+                &&(_aToken.balanceOf(segmentEntries[cpt].owner) >= segmentEntries[cpt].amount) ) 
+             {
                 foundSegEntry = segmentEntries[cpt];
                 console.log("Segment found - amount %s , owner %s ", foundSegEntry.amount, foundSegEntry.owner);
             }
@@ -491,11 +522,11 @@ contract DOApp is Ownable {
         address tokenDest;
 
         if (_isSwapTokenAtoB) {
-            tokenSource = lPair.tokenAddressA;
-            tokenDest = lPair.tokenAddressB;
+            tokenSource = lPair.tokenA;
+            tokenDest = lPair.tokenB;
         } else {
-            tokenSource = lPair.tokenAddressB;
-            tokenDest = lPair.tokenAddressA;
+            tokenSource = lPair.tokenB;
+            tokenDest = lPair.tokenA;
         }
 
         // Approve the router to spend token to swap
@@ -536,18 +567,18 @@ contract DOApp is Ownable {
     /**
      * @notice  Supply token to aave pool for lending
      * @dev     A AToken is given back for each token supplied
-     * @param   _poolAddressProvider  AAVE poolAddressProvider
+     * @param   _aavePoolAddressesProvider  AAVE pool provider
      * @param   _token  token to supply
      * @param   _amount  amount to supply
      */
     function supplyTokenAsLending(
-        IPoolAddressesProvider _poolAddressProvider,
+        IPoolAddressesProvider _aavePoolAddressesProvider,
         address _token,
         uint _amount
     ) internal {
         // deposit token to aave lending pool
         IPool aavePool = IPool(
-            IPoolAddressesProvider(_poolAddressProvider).getPool()
+            _aavePoolAddressesProvider.getPool()
         );
         IERC20(_token).safeIncreaseAllowance(address(aavePool), _amount);
         aavePool.supply(_token, _amount, address(this), 0);

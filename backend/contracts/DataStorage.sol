@@ -69,13 +69,13 @@ contract DataStorage is IDataStorage, Ownable{
 
     // check if a token Pair already exists
     modifier tokenPairExists(uint _pairID) {
-        require(tokenPairs[_pairID].tokenAddressA != address(0) ,"Token Pair not Found");
+        require(tokenPairs[_pairID].tokenA != address(0) ,"Token Pair not Found");
         _;
     }
 
     function getTokenPair(uint _pairId) public view returns (TokenPair memory) {
         TokenPair memory lPair = tokenPairs[_pairId];
-        require(lPair.tokenAddressA != address(0) ,"Token Pair not Found");
+        require(lPair.tokenA != address(0) ,"Token Pair not Found");
         return (lPair);
     }  
 
@@ -86,25 +86,6 @@ contract DataStorage is IDataStorage, Ownable{
     function  setTokenPairUserBalances (uint _pairId, address _user, TokenPairUserBalance memory _userBalance) external tokenPairExists(_pairId) {
         tokenPairUserBalances[_pairId][_user] = _userBalance;
     }
-
-
-        /**
-     * @notice  get the user token balance for a specific token pair
-     * @param   _pairId  the pair ID : a keccak256 hash
-     * @return  balanceA  user balance for tokenA in the specified pairID
-     * @return  balanceB  user balance for tokenB in the specified pairID
-     * @dev     _pairId should exist
-     */
-/*    function getTokenBalances(uint _pairId) external view  
-    returns (uint256 balanceA, uint256 balanceB, uint indexA, uint indexB) {
-        return  (
-            dataStorage.getTokenPairUserBalances(_pairId,msg.sender).balanceA,
-            dataStorage.getTokenPairUserBalances(_pairId,msg.sender).balanceB,
-            dataStorage.getTokenPairUserBalances(_pairId,msg.sender).indexA,
-            dataStorage.getTokenPairUserBalances(_pairId,msg.sender).indexB
-            );
-    }
-*/
 
   /**
      * @notice  Add a token pair to DOapp application, to enable DCA on this pair
@@ -140,8 +121,8 @@ contract DataStorage is IDataStorage, Ownable{
 
         uint hash = (uint256)(keccak256(abi.encodePacked(_tokenAddressA,_tokenAddressB)));
         uint hash2 = (uint256)(keccak256(abi.encodePacked(_tokenAddressB,_tokenAddressA)));
-        require (tokenPairs[hash].tokenAddressA  == address(0), "Token Pair Allready Defined");
-        require (tokenPairs[hash2].tokenAddressA  == address(0), "Token Pair Allready Defined");
+        require (tokenPairs[hash].tokenA  == address(0), "Token Pair Allready Defined");
+        require (tokenPairs[hash2].tokenA  == address(0), "Token Pair Allready Defined");
 
         tokenPairs[hash] = TokenPair(
             _tokenAddressA, 
@@ -154,8 +135,11 @@ contract DataStorage is IDataStorage, Ownable{
             _tokenPairSegmentSize,
             _tokenPairDecimalNumber,
             _uniswapV3SwapRouter,
-            hash
+            hash,
+            IPool(IPoolAddressesProvider(_aavePoolAddressesProvider).getPool()).getReserveData(_tokenAddressA).aTokenAddress,
+            IPool(IPoolAddressesProvider(_aavePoolAddressesProvider).getPool()).getReserveData(_tokenAddressB).aTokenAddress
             );
+
 
         emit TokenPAirAdded(
             hash, 

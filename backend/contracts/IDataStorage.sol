@@ -18,11 +18,11 @@ interface IDataStorage {
      */
     struct TokenPair {
         // 160 +96 = 256
-        address tokenAddressA;
+        address tokenA;
         uint96 indexBalanceTokenA;
 
         //160 + 96 = 256
-        address tokenAddressB;
+        address tokenB;
         uint96 indexBalanceTokenB;
 
         //160
@@ -39,6 +39,12 @@ interface IDataStorage {
 
         //256
         uint pairID;
+
+        //256
+        address aTokenA;
+
+        //256
+        address aTokenB;
     }
 
     struct DCAConfig {
@@ -114,7 +120,7 @@ function addDCAConfig(
 
 function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory);
 
-    function getDCASegment(
+function getDCASegment(
         uint _pairId, 
         uint price, 
         IDataStorage.DCADelayEnum delay
