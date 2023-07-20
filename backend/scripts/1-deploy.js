@@ -59,6 +59,13 @@ async function main() {
   await mockAavePool.deployed();
   console.log(`MockAavePool deployed to ${mockAavePool.address}`);
 
+  //create aTockens associated to tokens (to get in same configuratio as real AAVE pool)
+  await mockAavePool.createAToken(tokenA.address);
+  await mockAavePool.createAToken(tokenB.address);
+  console.log("ATokenA address : ", await mockAavePool.getReserveData(tokenA.address).aTokenAddress);
+  console.log("ATokenB address : ", await mockAavePool.getReserveData(tokenB.address).aTokenAddress);
+
+
   // set AAVEPool Mock as Pool implementation
   await mockAAVEPoolAddressesProvider.setPoolImpl(mockAavePool.address);
   console.log(`AAVE Pool Implementation set to ${mockAavePool.address}`);

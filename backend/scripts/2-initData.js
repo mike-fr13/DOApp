@@ -60,8 +60,8 @@ async function main() {
     dataStorage,
     TokenAcontractAddress,
     TokenBcontractAddress,
-    Constant.TOCKEN_PAIR_SEGMENT_SIZE,
-    Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+    Constant.TOKEN_PAIR_SEGMENT_SIZE,
+    Constant.TOKEN_PAIR_DECIMAL_NUMBER,
     MockChainlinkcontractAddress,
     MockAAVEPoolcontractAddress,
     MockUniswapContractAddress

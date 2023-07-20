@@ -15,12 +15,12 @@ async function deployDOApp_Fixture() {
   const doApp = await DOApp.deploy(false,dataStorage.address);
   isLogEnable ? console.log(`doApp deployed to ${doApp.address}`):{}
 
-  // create an ERC20 Mock : tockenA
+  // create an ERC20 Mock : tokenA
   const TokenA = await ethers.getContractFactory('MockERC20');
   const tokenA = await TokenA.deploy(Constant.MCKA_NAME, Constant.MCKA_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
   isLogEnable ? console.log(`DOApp deployed to ${tokenA.address}`):{}
 
-  // create an ERC20 Mock : tockenB
+  // create an ERC20 Mock : tokenB
   const TokenB = await ethers.getContractFactory('MockERC20');
   const tokenB = await TokenB.deploy(Constant.MCKB_NAME, Constant.MCKB_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
   isLogEnable ? console.log(`tokenB deployed to ${tokenB.address}`):{}
@@ -34,6 +34,13 @@ async function deployDOApp_Fixture() {
   const MockAavePool = await ethers.getContractFactory('MockAavePool');
   const mockAavePool = await MockAavePool.deploy();
   isLogEnable ? console.log(`mockAavePool deployed to ${mockAavePool.address}`):{}
+
+  //create aTockens associated to tokens (to get in same configuratio as real AAVE pool)
+  await mockAavePool.createAToken(tokenA.address);
+  await mockAavePool.createAToken(tokenB.address);
+
+  console.log("ATokenA address : ", mockAavePool.getReserveData(tokenA.address).aTokenAddress);
+  console.log("ATokenB address : ", mockAavePool.getReserveData(tokenB.address).aTokenAddress);
 
   //set AAVEPool Mock as Pool implementation 
   await mockAAVEPoolAddressesProvider.setPoolImpl(mockAavePool.address)
@@ -60,8 +67,8 @@ async function deploy_AddATokenPair_Fixture() {
   //add a token pair
   await dataStorage.addTokenPair(
     tokenA.address,
-    Constant.TOCKEN_PAIR_SEGMENT_SIZE,
-    Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+    Constant.TOKEN_PAIR_SEGMENT_SIZE,
+    Constant.TOKEN_PAIR_DECIMAL_NUMBER,
     tokenB.address,
     mockChainLinkAggregatorV3.address,
     mockAAVEPoolAddressesProvider.address,

@@ -9,8 +9,8 @@ module.exports = Object.freeze({
     BAD_PAIR_ID : new BigNumber.from('01010101010'),
     
     //token pair constante
-    TOCKEN_PAIR_SEGMENT_SIZE : 25,
-    TOCKEN_PAIR_DECIMAL_NUMBER : 0,
+    TOKEN_PAIR_SEGMENT_SIZE : 25,
+    TOKEN_PAIR_DECIMAL_NUMBER : 0,
     
     //TOKEN amount constants
     TOKEN_INITIAL_SUPPLY : new BigNumber.from(1000),

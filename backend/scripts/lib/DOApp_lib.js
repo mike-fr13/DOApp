@@ -117,7 +117,7 @@ async function getTokenPairs(dataStorage) {
       scalingFactor,
       delay
       )
-      Console.log (`DCA config added for pair${pairId} and user ${user}`)
+      console.log (`DCA config added for pair${pairId} and user ${user}`)
   }
 
 
