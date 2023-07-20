@@ -24,7 +24,7 @@ module.exports = Object.freeze({
     //ex  WETH/USDC => swap USDC for WETH
     DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
     DCA_CONFIG_1_MIN : new BigNumber.from(100000000000),
-    DCA_CONFIG_1_MAX : new BigNumber.from(150000000000),
+    DCA_CONFIG_1_MAX : new BigNumber.from(160000000000),
     DCA_CONFIG_1_AMOUNT : new BigNumber.from(5000000000),
     DCA_CONFIG_1_SCALING_FACTOR : new BigNumber.from(2),
     DCA_CONFIG_1_DELAY : new BigNumber.from(0),
@@ -57,7 +57,7 @@ module.exports = Object.freeze({
     //ex  WETH/USDC => swap USDC for WETH
     DCA_CONFIG_5_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
     DCA_CONFIG_5_MIN : new BigNumber.from(150000000000),
-    DCA_CONFIG_5_MAX : new BigNumber.from(200000000000),
+    DCA_CONFIG_5_MAX : new BigNumber.from(210000000000),
     DCA_CONFIG_5_AMOUNT : new BigNumber.from(5000000000),
     DCA_CONFIG_5_SCALING_FACTOR : new BigNumber.from(2),
     DCA_CONFIG_5_DELAY : new BigNumber.from(0),
@@ -72,7 +72,7 @@ module.exports = Object.freeze({
     //ex  WETH/USDC => swap USDC for WETH
     DCA_CONFIG_7_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
     DCA_CONFIG_7_MIN : new BigNumber.from(180000000000),
-    DCA_CONFIG_7_MAX : new BigNumber.from(250000000000),
+    DCA_CONFIG_7_MAX : new BigNumber.from(240000000000),
     DCA_CONFIG_7_AMOUNT : new BigNumber.from(1000000000),
     DCA_CONFIG_7_SCALING_FACTOR : new BigNumber.from(5),
     DCA_CONFIG_7_DELAY : new BigNumber.from(0),
@@ -85,7 +85,7 @@ module.exports = Object.freeze({
     DCA_CONFIG_8_DELAY : new BigNumber.from(2),
         //ex  WETH/USDC => swap USDC for WETH
     DCA_CONFIG_9_IS_SWAP_TOKEN_A_FOR_TOKEN_B : true,
-    DCA_CONFIG_9_MIN : new BigNumber.from(230000000000),
+    DCA_CONFIG_9_MIN : new BigNumber.from(250000000000),
     DCA_CONFIG_9_MAX : new BigNumber.from(300000000000),
     DCA_CONFIG_9_AMOUNT : new BigNumber.from(1000000000),
     DCA_CONFIG_9_SCALING_FACTOR : new BigNumber.from(5),
@@ -101,6 +101,10 @@ module.exports = Object.freeze({
 
 
     // mult factor for arithmetics
-    MULT_FACTOR : BigNumber.from(1000000)
+    MULT_FACTOR : BigNumber.from(1000000),
 
+    // oracle price scenario
+    SET_ORACLE_PRICE_3_BUY_CONFIG :new BigNumber.from("155000000000"),
+    SET_ORACLE_PRICE_3_SELL_CONFIG :new BigNumber.from("245000000000"),
+    
     });

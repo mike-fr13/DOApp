@@ -456,7 +456,7 @@ contract DOApp is Ownable {
                             }
 
                             // if amount to sell >= amount to buy, search for a buy entry at next loop
-                            console.log("getDCAEntriesToProcess - Sell : amountSell %s amountBuy %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
+                            console.log("getDCAEntriesToProcess - Sell : amountBuy %s amountSell %s ",segmentDCAToProcess.amountBuy, segmentDCAToProcess.amountSell);
                         }
 
                         console.log("getDCAEntriesToProcess - End !Buy  - segmentEntries[1].length == cptSell %s ", procVars.waitingSegmentEntries[1].length == procVars.cptSell);
@@ -720,6 +720,13 @@ contract DOApp is Ownable {
     //update DCA segment to fix lastSwapTimestamp
     function updateSegmentToProcess(IDataStorage.SegmentDCAToProcess memory _segmentToProcess) internal{
             console.log("updateSegmentToProcess - ");
+            // set lastDCATime on each Segment
+            for( uint16 i=0; i <_segmentToProcess.segmentBuyEntries.length; i++ ) {
+                /*
+                amountIn = amountIn + _segmentToProcess.segmentBuyEntries[i].amount;
+                amountOut = amountOut + _segmentToProcess.segmentSellEntries[i].amount;
+                */
+            }
 
     }
 

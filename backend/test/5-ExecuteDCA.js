@@ -105,8 +105,8 @@ describe('DOApp DCA execution', function () {
     })
 
 
-    it('Should DCA for an existing TokenPair and multiple DCA config with oracle price set in DCA interval', async function () {
-      const isLogEnable = false;
+    it.only('Should DCA for an existing TokenPair and multiple DCA config with oracle price set in DCA interval', async function () {
+      const isLogEnable = true;
       const { doApp,dataStorage, pairId,  tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_Multi_DCA_Config_Fixture)
       expect(await doApp.owner()).to.equal(owner.address)
@@ -115,7 +115,7 @@ describe('DOApp DCA execution', function () {
       isLogEnable ? console.log ("TokenPairs : ", tokenPairs): {}
       expect(tokenPairs.length == 1)
 
-      mockChainLinkAggregatorV3.setPrice(1550)
+      mockChainLinkAggregatorV3.setPrice(Constant.SET_ORACLE_PRICE_3_BUY_CONFIG)
 
       // DEBUG
       let roundId,  answer,  startedAt,  updatedAt,  answeredInRound
