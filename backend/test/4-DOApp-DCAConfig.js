@@ -77,7 +77,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           pairId,
           Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
           BigNumber.from(0),
-          BigNumber.from(1000000),
+          BigNumber.from("1000000000000000000"),
           Constant.DCA_CONFIG_1_AMOUNT,
           Constant.DCA_CONFIG_1_SCALING_FACTOR,
           Constant.DCA_CONFIG_1_DELAY
@@ -99,7 +99,8 @@ describe('DOApp Contract - DCA configuration tests', function () {
           .to.emit(dataStorage, 'DCAConfigCreation').withArgs(account1.address, pairId, anyValue);
       })
 
-      it('Should add a valid segment entry for each segment interval on success (swap Token A for Token B)', async function () {
+      it('Should add a valid segment entry for each segment interval (swap Token A for Token B)', async function () {
+        isDebugEnable = false
         const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await dataStorage.connect(account1).addDCAConfig(
           pairId,
@@ -111,8 +112,9 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_DELAY
           )
 
-          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
-            //console.log("segment : ", i)
+          let i = new BigNumber.from(0)
+          for (i = Constant.DCA_CONFIG_1_MIN; i.lt(Constant.DCA_CONFIG_1_MAX) ; i=i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
+            isDebugEnable ? console.log("segment : ", i) : {}
             const [owner,amount, dcaConfigHash] = ((await dataStorage.connect(account1)
               .getDCASegmentEntries(
                 pairId, 
@@ -127,7 +129,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           }
       })
 
-      it('Should add a valid segment entry for each segment interval on success (swap Token B for Token A)', async function () {
+      it('Should add a valid segment entry for each segment interval (swap Token B for Token A)', async function () {
         const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await dataStorage.connect(account1).addDCAConfig(
           pairId,
@@ -159,6 +161,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
       })
 
       it('Should add a valid segment entry with scaling factor for each segment interval on success (swap Token A for Token B)', async function () {
+        isDebugEnable = false
         const {dataStorage, account1, pairId} = await loadFixture(Fixture.deploy_AddATokenPair_MinToken_Fixture);
         await dataStorage.connect(account1).addDCAConfig(
           pairId,
@@ -171,7 +174,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           )
 
           for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
-            //console.log("segment : ", i);
+            isDebugEnable ?  console.log("segment : ", i) : {}
             struct = await dataStorage.connect(account1)
             .getDCASegmentEntries(
               pairId, 
@@ -179,14 +182,14 @@ describe('DOApp Contract - DCA configuration tests', function () {
               Constant.DCA_CONFIG_1_DELAY,
               BigNumber.from(0)
             )
-            //console.log("DCA Entries : ", struct);
+            isDebugEnable ? console.log("DCA Entries : ", struct) : {}
             const [owner,amount, dcaConfigHash] = (struct[0])
                 
 
             rapport = (((Constant.DCA_CONFIG_1_MAX.sub(i)).mul(Constant.MULT_FACTOR))
               .div(Constant.DCA_CONFIG_1_MAX.sub(Constant.DCA_CONFIG_1_MIN)))
 
-            //console.log ("rapport : ",rapport )
+            isDebugEnable ? console.log ("rapport : ",rapport ) : {}
 
             localComputedAmount =  
               (Constant.DCA_CONFIG_1_AMOUNT.mul( 
@@ -196,7 +199,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
                   )
                 )
               ).div(Constant.MULT_FACTOR)
-            //console.log(owner, amount, dcaConfigHash, localComputedAmount)
+              isDebugEnable ? console.log(owner, amount, dcaConfigHash, localComputedAmount) : {}
             expect(owner).to.be.equal(account1.address)
             expect(amount).to.be.equal(localComputedAmount)
             

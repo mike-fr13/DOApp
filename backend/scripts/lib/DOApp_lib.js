@@ -95,7 +95,7 @@ async function depositToken(doAPPContract, pairId, _tokenContract, _user, _amoun
   console.log(`Balance of ${_user} for token ${_tokenContract.address} : `  ,await ( (_tokenContract.balanceOf(_user))))
   console.log(`Balance of ${doAPPContract.address} for token ${_tokenContract.address} : `  ,await ( (_tokenContract.balanceOf(doAPPContract.address))))
 
-  console.log('account1 doApp tokenA : ', (await dataStorage.connect(_user).getTokenPairUserBalances(pairId,_user)))
+  console.log('account1 doApp tokenA : ', (await doAPPContract.connect(_user).getTokenPairUserBalances(pairId,_user)))
 }
 
 async function addDCAConfig(

@@ -31,9 +31,6 @@ contract DataStorage is IDataStorage, Ownable{
     // pairID => segment Start price => DCADelay (1h, 1 day, 1 week)  => DCA entry ([0] token A => B [1] token B => A)
     mapping (uint pairID => mapping (uint segmentStart => mapping(DCADelayEnum => SegmentDCAEntry[][2]))) private dcaSegmentsMap;
 
-    // pairID => User address => staked amount
-    mapping(uint => mapping(address => IDataStorage.TokenPairUserBalance)) private tokenPairUserBalances;
-
     //user address => DCAConfig hash => bool
     mapping(address => mapping(uint => bool)) private userDCAConfig;
 
@@ -51,7 +48,7 @@ contract DataStorage is IDataStorage, Ownable{
             uint _pairId, 
             address _tokenAddressA,
             address _tokenAddressB,
-            uint16 _tokenPairSegmentSize, 
+            uint _tokenPairSegmentSize, 
             uint8 _tokenPairDecimalNumber,
             address _chainLinkPriceFetcher, 
             address _aavePoolAddressesProvider,
@@ -79,13 +76,7 @@ contract DataStorage is IDataStorage, Ownable{
         return (lPair);
     }  
 
-    function  getTokenPairUserBalances (uint _pairId, address _user) external view tokenPairExists(_pairId) returns( TokenPairUserBalance memory){
-        return tokenPairUserBalances[_pairId][_user];
-    }
-
-    function  setTokenPairUserBalances (uint _pairId, address _user, TokenPairUserBalance memory _userBalance) external tokenPairExists(_pairId) {
-        tokenPairUserBalances[_pairId][_user] = _userBalance;
-    }
+ 
 
   /**
      * @notice  Add a token pair to DOapp application, to enable DCA on this pair
@@ -99,7 +90,7 @@ contract DataStorage is IDataStorage, Ownable{
      */
     function addTokenPair(
         address _tokenAddressA, 
-        uint16 _tokenPairSegmentSize,
+        uint _tokenPairSegmentSize,
         uint8 _tokenPairDecimalNumber,  
         address _tokenAddressB, 
         address _chainLinkPriceFetcher,
@@ -170,9 +161,9 @@ contract DataStorage is IDataStorage, Ownable{
     function addDCAConfig( 
         uint _pairId,
         bool _isBuyTokenASellTokenB, 
-        uint24 _min, 
-        uint24 _max, 
-        uint16 _amount, 
+        uint _min, 
+        uint _max, 
+        uint _amount, 
         uint8 _scalingFactor,
         IDataStorage.DCADelayEnum _dcaDelay
     ) external returns (uint configId) {
@@ -248,12 +239,12 @@ contract DataStorage is IDataStorage, Ownable{
     function createSegments(
         IDataStorage.DCAConfig memory _dcaConfig,
         uint24 _segmentNumber,
-        uint16 _pairSegmentSize ) internal {
+        uint _pairSegmentSize ) internal {
         
         uint pairID = _dcaConfig.pairID;
 
         for (uint16 i=0; i< _segmentNumber; i++) {
-            uint24 segmentStart = _dcaConfig.min + i*_pairSegmentSize;
+            uint segmentStart = _dcaConfig.min + i*_pairSegmentSize;
             IDataStorage.SegmentDCAEntry memory entry = 
             IDataStorage.SegmentDCAEntry (
                 msg.sender, 
@@ -303,17 +294,17 @@ contract DataStorage is IDataStorage, Ownable{
      * @param   _segmentStart  Segment start value
      * @return  dcaAmount  Base DCA amount
      */
-    function getDCAAmount( IDataStorage.DCAConfig memory _dcaConfig, uint24 _segmentStart) pure internal 
-        returns (uint16 dcaAmount) {
+    function getDCAAmount( IDataStorage.DCAConfig memory _dcaConfig, uint _segmentStart) pure internal 
+        returns (uint dcaAmount) {
             //@TODO  compute using scalinfFactor
-            uint24 min = _dcaConfig.min;
-            uint24 max = _dcaConfig.max;
+            uint min = _dcaConfig.min;
+            uint max = _dcaConfig.max;
             if (_dcaConfig.isSwapTookenAForTokenB) {
-                return uint16((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) 
+                return uint((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) 
                         * (((max -_segmentStart)*MULT_FACTOR) / (max - min))))/MULT_FACTOR);
             }
             else {
-                return uint16((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) 
+                return uint((_dcaConfig.amount * (MULT_FACTOR + (_dcaConfig.scalingFactor -1) 
                         * (((_segmentStart - min)*MULT_FACTOR) / ( max -min))))/MULT_FACTOR);
             }
     }
@@ -327,9 +318,9 @@ contract DataStorage is IDataStorage, Ownable{
      * @return  uint  Segment number in this interval
      * @dev     Revert if segment number > DCA_CONFIG_MAX_SEGMENT
      */
-    function getSegmentNumber(uint24 _min, uint24 _max, uint16 _segmentSize) pure internal 
+    function getSegmentNumber(uint _min, uint _max, uint _segmentSize) pure internal 
         returns (uint24) {
-        uint24 segmentNumber = (_max - _min) / _segmentSize;
+        uint24 segmentNumber = uint24((_max - _min) / _segmentSize);
         return segmentNumber;
     }
 

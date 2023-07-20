@@ -17,6 +17,14 @@ contract DOApp is Ownable {
     using SafeERC20 for IERC20;
 
 
+
+    struct TokenPairUserBalance {
+        //256 * 4
+        uint balanceA;
+        uint indexA;
+        uint balanceB;
+        uint indexB;
+    }
     struct ProcessingVars {
         uint roundedTokenPrice;
         IDataStorage.SegmentDCAEntry[][2] waitingSegmentEntries;
@@ -46,6 +54,8 @@ contract DOApp is Ownable {
     //uint constant public lockTime = 10 days;
     uint8 constant MAX_DCA_JOB_PER_DCA_EXECUTION_CALL = 2;
 
+    // pairID => User address => staked amount
+    mapping(uint => mapping(address => TokenPairUserBalance)) private tokenPairUserBalances;
 
 
     event TokenDeposit(
@@ -95,7 +105,16 @@ contract DOApp is Ownable {
     fallback() external payable {}
     */
 
-    /**
+    function  getTokenPairUserBalances (
+        uint _pairId, 
+        address _user
+        ) external view  
+    returns( TokenPairUserBalance memory){
+        dataStorage.getTokenPair(_pairId);
+        return tokenPairUserBalances[_pairId][_user];
+    }
+
+     /**
      * @notice  Deposit a token A amount in a DOApp token Pair
      * @param   _pairId  the pair ID used to deposit token A
      * @param   _amount  the token amount to deposit
@@ -103,8 +122,8 @@ contract DOApp is Ownable {
      * @dev     amount must be >0
      */
     function depositTokenA(uint _pairId, uint _amount) external {
-        require(_amount > 0, "Deposit amount should be > 0");
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
+        require(_amount > 0, "Deposit amount should be > 0");
 
         //deposit token to current contract
         IERC20(lPair.tokenA).safeTransferFrom(
@@ -120,12 +139,9 @@ contract DOApp is Ownable {
             _amount
         );
 
-        IDataStorage.TokenPairUserBalance memory userBalance = dataStorage
-            .getTokenPairUserBalances(_pairId, msg.sender);
         // refresh index balance
-        userBalance.indexA = computeBalanceIndex();
-        userBalance.balanceA += _amount;
-        dataStorage.setTokenPairUserBalances(_pairId, msg.sender, userBalance);
+        tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceA += _amount;
 
         emit TokenDeposit(
             msg.sender,
@@ -144,22 +160,17 @@ contract DOApp is Ownable {
      * @dev     amount must be >0
      */
     function withdrawTokenA(uint _pairId, uint _amount) external {
+        IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
         require(_amount > 0, "Withdraw amount should be > 0");
         require(
             _amount <=
-                dataStorage
-                    .getTokenPairUserBalances(_pairId, msg.sender)
-                    .balanceA,
+                tokenPairUserBalances[_pairId][msg.sender].balanceA,
             "Amount to withdraw should be < your account balance"
         );
-        IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
 
-        IDataStorage.TokenPairUserBalance memory userBalance = dataStorage
-            .getTokenPairUserBalances(_pairId, msg.sender);
         // refresh index balance
-        userBalance.indexA = computeBalanceIndex();
-        userBalance.balanceA -= _amount;
-        dataStorage.setTokenPairUserBalances(_pairId, msg.sender, userBalance);
+        tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceA -= _amount;
 
         // withdraw token from Lending popl
         withdrawTokenFromLending(
@@ -188,8 +199,8 @@ contract DOApp is Ownable {
      * @dev     amount must be >0
      */
     function depositTokenB(uint _pairId, uint _amount) external {
-        require(_amount > 0, "Deposit amount should be > 0");
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
+        require(_amount > 0, "Deposit amount should be > 0");
 
         //deposit token to curretn contract
         IERC20(lPair.tokenB).safeTransferFrom(
@@ -205,13 +216,9 @@ contract DOApp is Ownable {
             _amount
         );
 
-        IDataStorage.TokenPairUserBalance memory userBalance = dataStorage
-            .getTokenPairUserBalances(_pairId, msg.sender);
-
         // refresh index balance
-        userBalance.indexB = computeBalanceIndex();
-        userBalance.balanceB += _amount;
-        dataStorage.setTokenPairUserBalances(_pairId, msg.sender, userBalance);
+        tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceB += _amount;
 
         emit TokenDeposit(
             msg.sender,
@@ -230,22 +237,16 @@ contract DOApp is Ownable {
      * @dev     amount must be >0
      */
     function withdrawTokenB(uint _pairId, uint _amount) external {
+        IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
         require(_amount > 0, "Withdraw amount should be > 0");
         require(
-            _amount <=
-                dataStorage
-                    .getTokenPairUserBalances(_pairId, msg.sender)
-                    .balanceB,
+            _amount <= tokenPairUserBalances[_pairId][msg.sender].balanceB,
             "Amount to withdraw should be < your account balance"
         );
-        IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
 
-        IDataStorage.TokenPairUserBalance memory userBalance = dataStorage
-            .getTokenPairUserBalances(_pairId, msg.sender);
         // refresh index balance
-        userBalance.indexB = computeBalanceIndex();
-        userBalance.balanceB -= _amount;
-        dataStorage.setTokenPairUserBalances(_pairId, msg.sender, userBalance);
+        tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
+        tokenPairUserBalances[_pairId][msg.sender].balanceB -= _amount;
 
         // withdraw token from Lending popl
         withdrawTokenFromLending(
@@ -517,10 +518,10 @@ contract DOApp is Ownable {
             console.log("getNextSegmentEntry - 2 In While segment entry amount %s",segmentEntries[cpt].amount);
             uint balance;
             if (isBuy) {
-                balance = dataStorage.getTokenPairUserBalances(_pairId,segmentEntries[cpt].owner).balanceA;
+                balance = tokenPairUserBalances[_pairId][segmentEntries[cpt].owner].balanceA;
             }
             else {
-                balance = dataStorage.getTokenPairUserBalances(_pairId,segmentEntries[cpt].owner).balanceB;    
+                balance = tokenPairUserBalances[_pairId][segmentEntries[cpt].owner].balanceB;    
             }
             console.log("getNextSegmentEntry - 3 Owner balance : %s", balance);
 

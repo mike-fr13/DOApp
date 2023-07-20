@@ -6,13 +6,6 @@ interface IDataStorage {
 
 
 
-    struct TokenPairUserBalance {
-        //256 * 4
-        uint balanceA;
-        uint indexA;
-        uint balanceB;
-        uint indexB;
-    }
        /**
      *  @Dev This structure contains configuration for a specific pair of token 
      */
@@ -31,7 +24,7 @@ interface IDataStorage {
         //160 + 8 + 16 + 8 =192
         address aavePoolAddressesProvider;
         bool enabled;
-        uint16 tokenPairSegmentSize;
+        uint tokenPairSegmentSize;
         uint8 tokenPairDecimalNumber;
 
         //160
@@ -56,9 +49,9 @@ interface IDataStorage {
 
         //8+24+24+16+8+32 = 112
         bool isSwapTookenAForTokenB;
-        uint24 min;
-        uint24 max;
-        uint16 amount;
+        uint min;
+        uint max;
+        uint amount;
         uint8 scalingFactor;
         uint32 creationDate;
         DCADelayEnum dcaDelay;
@@ -68,9 +61,11 @@ interface IDataStorage {
     }
 
     struct SegmentDCAEntry {
-        //160 + 16 = 178
+        //160 
         address owner;
-        uint16 amount;
+
+        //256
+        uint amount;
 
         //256
         uint  dcaConfigId;
@@ -96,11 +91,11 @@ interface IDataStorage {
         Weekly
     }
 
-function getTokenPair(uint _pairId) external returns (TokenPair memory);
+function getTokenPair(uint _pairId) external view returns (TokenPair memory);
 
 function addTokenPair(
         address _tokenAddressA, 
-        uint16 _tokenPairSegmentSize,
+        uint _tokenPairSegmentSize,
         uint8 _tokenPairDecimalNumber,  
         address _tokenAddressB, 
         address _chainLinkPriceFetcher,
@@ -111,9 +106,9 @@ function addTokenPair(
 function addDCAConfig( 
         uint _pairId,
         bool _isBuyTokenASellTokenB, 
-        uint24 _min, 
-        uint24 _max, 
-        uint16 _amount, 
+        uint _min, 
+        uint _max, 
+        uint _amount, 
         uint8 _scalingFactor,
         IDataStorage.DCADelayEnum _dcaDelay
     ) external returns (uint configId);
@@ -126,17 +121,19 @@ function getDCASegment(
         IDataStorage.DCADelayEnum delay
     ) external view returns(SegmentDCAEntry[][2] memory);
 
-
+/*
     function  getTokenPairUserBalances (
         uint _pairId, 
         address _user
         ) external view returns( TokenPairUserBalance memory);
 
+    /*
     function  setTokenPairUserBalances (
         uint _pairId, 
         address _user, 
         TokenPairUserBalance memory _userBalance
         ) external;
+    */
 
     function getDCASegmentEntries (
         uint _pairId,
