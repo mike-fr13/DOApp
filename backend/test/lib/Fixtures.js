@@ -39,8 +39,8 @@ async function deployDOApp_Fixture() {
   await mockAavePool.createAToken(tokenA.address);
   await mockAavePool.createAToken(tokenB.address);
 
-  console.log("ATokenA address : ", mockAavePool.getReserveData(tokenA.address).aTokenAddress);
-  console.log("ATokenB address : ", mockAavePool.getReserveData(tokenB.address).aTokenAddress);
+  console.log("ATokenA address : ", (await(mockAavePool.getReserveData(tokenA.address))).aTokenAddress);
+  console.log("ATokenB address : ", (await(mockAavePool.getReserveData(tokenB.address))).aTokenAddress);
 
   //set AAVEPool Mock as Pool implementation 
   await mockAAVEPoolAddressesProvider.setPoolImpl(mockAavePool.address)

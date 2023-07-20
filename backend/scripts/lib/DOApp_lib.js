@@ -49,9 +49,9 @@ async function getTokenPairs(dataStorage) {
       return pairIds;
   }
 
-  function pause() {
+  function pause(x) {
     return new Promise(resolve => {
-        setTimeout(resolve, 5000); // Pause de 5 secondes (5000 millisecondes)
+        setTimeout(resolve, x); // Pause de 5 secondes (5000 millisecondes)
     });
   }
 
