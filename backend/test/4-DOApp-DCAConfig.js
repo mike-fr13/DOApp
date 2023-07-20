@@ -281,7 +281,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               Constant.DCA_CONFIG_1_DELAY,
               BigNumber.from(0)
             )
-            console.log("DCA Entries : ", struct);
+            // console.log("DCA Entries : ", struct);
             const [segOwner,amount, dcaConfigHash] = (struct[0])
 
 
@@ -323,7 +323,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
               Constant.DCA_CONFIG_3_DELAY,
               BigNumber.from(0)
             )
-            console.log("DCA Entries : ", struct);
+            // console.log("DCA Entries : ", struct);
             const [segOwner,amount, dcaConfigHash] = (struct[index])
 
             rapport = (((Constant.DCA_CONFIG_3_MAX.sub(i)).mul(Constant.MULT_FACTOR))
