@@ -42,8 +42,8 @@ describe("MockUniswapISwapRouter", function () {
 
 
       // Approve the router to spend WETH9.
-      //console.log("account1 tockenA balance : ", await(tokenA.balanceOf(account1.address)))
-      //console.log("account1 tockenB balance : ", await(tokenB.balanceOf(account1.address)))
+      //console.log("account1 tokenA balance : ", await(tokenA.balanceOf(account1.address)))
+      //console.log("account1 tokenB balance : ", await(tokenB.balanceOf(account1.address)))
       //console.log("allowance account1 => mockUniswapISwapRouter : ", await(tokenA.allowance(account1.address,mockUniswapISwapRouter.address)))
 
       await(tokenA.connect(account1).approve(mockUniswapISwapRouter.address,Constant.TOKENA_WITHDRAW_AMOUNT))
@@ -52,10 +52,10 @@ describe("MockUniswapISwapRouter", function () {
 
       amountOut = await mockUniswapISwapRouter.exactInputSingle(exactInputSingleParams)
 
-      //console.log("account1 tockenA balance : ", await(tokenA.balanceOf(account1.address)))
+      //console.log("account1 tokenA balance : ", await(tokenA.balanceOf(account1.address)))
       
       tokenBbalance = await(tokenB.balanceOf(account1.address));
-      //console.log("account1 tockenB balance : ", tokenBbalance)
+      //console.log("account1 tokenB balance : ", tokenBbalance)
 
       theoricalAmount = 
         Constant.TOKENA_WITHDRAW_AMOUNT.mul(
@@ -72,8 +72,32 @@ describe("MockUniswapISwapRouter", function () {
     })
   })
 
+  describe("exactInputSingle() tests", function () {
+    it("Should revert if balance too low", async function () {
+      const  { mockUniswapISwapRouter, tokenA, tokenB, account1 } 
+          = await loadFixture(deployMockUniswapISwapRouter_Fixture);
+
+      const UNISWAP_FEE_TIERS = BigNumber.from(3000);
+      const exactInputSingleParams = {
+            tokenIn: tokenA.address,
+            tokenOut: tokenB.address,
+            fee: UNISWAP_FEE_TIERS,
+            recipient: account1.address,
+            deadline: Date.now() + 15,
+            amountIn: Constant.TOKEN_INITIAL_SUPPLY.mul(2),
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+      }
+
+      await(tokenA.connect(account1).approve(mockUniswapISwapRouter.address,Constant.TOKENA_WITHDRAW_AMOUNT.mul(2)))
+      await expect(mockUniswapISwapRouter.exactInputSingle(exactInputSingleParams))
+        .to.revertedWith( "TokenIn Balance too low")
+    })
+  })
+
+
   describe ("Non Mock function tests", function (){
-    it("Should revert if calling a non monck function", async function () {
+    it("Should revert if calling a non mock function", async function () {
       const { mockUniswapISwapRouter, tokenA, tokenB, account1 } = await loadFixture(deployMockUniswapISwapRouter_Fixture);
 
       const b32 = ethers.utils.formatBytes32String("This is a mock")

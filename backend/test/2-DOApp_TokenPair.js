@@ -14,7 +14,7 @@ const Fixture = require("./lib/Fixtures.js")
           = await loadFixture(Fixture.deployDOApp_Fixture);
 
         await expect(dataStorage.connect(account1).addTokenPair(
-          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -25,7 +25,7 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(dataStorage.addTokenPair(
-          Constant.ADDRESS_0,  Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          Constant.ADDRESS_0,  Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -37,7 +37,7 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(dataStorage.addTokenPair(
-          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           Constant.ADDRESS_0, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -48,7 +48,7 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(dataStorage.addTokenPair(
-          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           Constant.ADDRESS_0,
           mockAAVEPoolAddressesProvider.address,
@@ -59,7 +59,7 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(dataStorage.addTokenPair(
-          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           mockChainLinkAggregatorV3.address,
           Constant.ADDRESS_0,
@@ -70,7 +70,7 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await expect(dataStorage.addTokenPair(
-          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -86,7 +86,7 @@ const Fixture = require("./lib/Fixtures.js")
         //console.log("tokenB : ", tokenB.address);
         //console.log("mockChainLinkAggregatorV3 : ", mockChainLinkAggregatorV3.address);
         await expect(dataStorage.addTokenPair(
-          tokenA.address,Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address,Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -95,8 +95,8 @@ const Fixture = require("./lib/Fixtures.js")
             anyValue, 
             tokenA.address, 
             tokenB.address, 
-            Constant.TOCKEN_PAIR_SEGMENT_SIZE, 
-            Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+            Constant.TOKEN_PAIR_SEGMENT_SIZE, 
+            Constant.TOKEN_PAIR_DECIMAL_NUMBER,
             mockChainLinkAggregatorV3.address,
             mockAAVEPoolAddressesProvider.address,
             mockUniswapISwapRouter.address)
@@ -118,8 +118,8 @@ const Fixture = require("./lib/Fixtures.js")
         //console.log("mockAAVEPoolAddressesProvider : ",mockAAVEPoolAddressesProvider.address)
         await (dataStorage.addTokenPair(
           tokenA.address,
-          Constant.TOCKEN_PAIR_SEGMENT_SIZE, 
-          Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          Constant.TOKEN_PAIR_SEGMENT_SIZE, 
+          Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address,
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -132,14 +132,14 @@ const Fixture = require("./lib/Fixtures.js")
         let tokenPair = await dataStorage.getTokenPair(hashOfPair)
 
         //console.log(tokenPair)
-        expect (tokenPair.tokenAddressA).to.equal(tokenA.address)
+        expect (tokenPair.tokenA).to.equal(tokenA.address)
         expect (tokenPair.indexBalanceTokenA).to.equal(1)
-        expect (tokenPair.tokenAddressB).to.equal(tokenB.address)
+        expect (tokenPair.tokenB).to.equal(tokenB.address)
         expect (tokenPair.indexBalanceTokenB).to.equal(1)
         expect (tokenPair.chainlinkPriceFetcher).to.equal(mockChainLinkAggregatorV3.address)
         expect (tokenPair.aavePoolAddressesProvider).to.equal(mockAAVEPoolAddressesProvider.address)
-        expect (tokenPair.tokenPairSegmentSize).to.equal(Constant.TOCKEN_PAIR_SEGMENT_SIZE)
-        expect (tokenPair.tokenPairDecimalNumber).to.equal(Constant.TOCKEN_PAIR_DECIMAL_NUMBER)
+        expect (tokenPair.tokenPairSegmentSize).to.equal(Constant.TOKEN_PAIR_SEGMENT_SIZE)
+        expect (tokenPair.tokenPairDecimalNumber).to.equal(Constant.TOKEN_PAIR_DECIMAL_NUMBER)
 
         //console.log("tokenPair.aavePoolAddressesProvider : ", tokenPair.aavePoolAddressesProvider)
         MockAAVEPoolAddressesProvider = await ethers.getContractFactory('MockAAVEPoolAddressesProvider');
@@ -155,13 +155,13 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await (dataStorage.addTokenPair(
-          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
           mockUniswapISwapRouter.address))
         await expect(dataStorage.addTokenPair(
-          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
@@ -173,13 +173,13 @@ const Fixture = require("./lib/Fixtures.js")
         const {doApp, dataStorage, tokenA, tokenB, mockChainLinkAggregatorV3,mockAAVEPoolAddressesProvider,mockUniswapISwapRouter, owner, account1, account2, account3, account4} 
           = await loadFixture(Fixture.deployDOApp_Fixture);
         await (dataStorage.addTokenPair(
-          tokenA.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenA.address, Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenB.address, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,
           mockUniswapISwapRouter.address))
         await expect(dataStorage.addTokenPair(
-          tokenB.address, Constant.TOCKEN_PAIR_SEGMENT_SIZE, Constant.TOCKEN_PAIR_DECIMAL_NUMBER,
+          tokenB.address, Constant.TOKEN_PAIR_SEGMENT_SIZE, Constant.TOKEN_PAIR_DECIMAL_NUMBER,
           tokenA.address, 
           mockChainLinkAggregatorV3.address,
           mockAAVEPoolAddressesProvider.address,

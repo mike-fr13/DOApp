@@ -39,7 +39,7 @@ describe('DOApp DCA execution', function () {
 
     })
 
-    it.only('Should DCA for an existing TokenPair with oracle price set in DCA interval', async function () {
+    it('Should DCA for an existing TokenPair with oracle price set in DCA interval', async function () {
       const isLogEnable = false;
       const { doApp,dataStorage, pairId,  tokenA, tokenB, mockChainLinkAggregatorV3, owner, account1, account2, account3, account4} 
         = await loadFixture(Fixture.deploy_Prepare_One_DCA_Config_Fixture)
@@ -56,7 +56,7 @@ describe('DOApp DCA execution', function () {
       [roundId,  answer,  startedAt,  updatedAt,  answeredInRound] = await (mockChainLinkAggregatorV3.latestRoundData())
 
       isLogEnable ? console.log("Get Oracle Price : ", answer):{}
-      roundPrice = answer - answer%Constant.TOCKEN_PAIR_SEGMENT_SIZE
+      roundPrice = answer - answer%Constant.TOKEN_PAIR_SEGMENT_SIZE
       isLogEnable ? console.log("Round oracle price : ", roundPrice):{}
       struct = await (dataStorage.connect(account1).getDCASegmentEntries(pairId, 
         roundPrice,
@@ -88,7 +88,7 @@ describe('DOApp DCA execution', function () {
       [roundId,  answer,  startedAt,  updatedAt,  answeredInRound] = await (mockChainLinkAggregatorV3.latestRoundData())
 
       isLogEnable ? console.log("Get Oracle Price : ", answer):{}
-      roundPrice = answer - answer%Constant.TOCKEN_PAIR_SEGMENT_SIZE
+      roundPrice = answer - answer%Constant.TOKEN_PAIR_SEGMENT_SIZE
       isLogEnable ? console.log("Round oracle price : ", roundPrice):{}
       struct = await (dataStorage.connect(account1).getDCASegmentEntries(pairId, 
         roundPrice,

@@ -111,7 +111,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_DELAY
           )
 
-          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
             const [owner,amount, dcaConfigHash] = ((await dataStorage.connect(account1)
               .getDCASegmentEntries(
@@ -139,7 +139,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_DELAY
           )
 
-          for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
             struct = await dataStorage.connect(account1)
             .getDCASegmentEntries(
@@ -170,7 +170,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_1_DELAY
           )
 
-          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i);
             struct = await dataStorage.connect(account1)
             .getDCASegmentEntries(
@@ -215,7 +215,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_2_DELAY
           )
 
-          for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_2_MIN; i<Constant.DCA_CONFIG_2_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
             struct = await dataStorage.connect(account1)
             .getDCASegmentEntries(
@@ -269,7 +269,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           )
   
 
-          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_1_MIN; i<Constant.DCA_CONFIG_1_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
             struct = await dataStorage.connect(account1)
             .getDCASegmentEntries(
@@ -301,7 +301,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
             
           }
 
-          for (let i = Constant.DCA_CONFIG_3_MIN; i<Constant.DCA_CONFIG_3_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_3_MIN; i<Constant.DCA_CONFIG_3_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
             if (i < Constant.DCA_CONFIG_1_MAX) {
                 // we have 2 segment entries (config 1 and config 3)
@@ -364,7 +364,7 @@ describe('DOApp Contract - DCA configuration tests', function () {
           Constant.DCA_CONFIG_4_DELAY
           )
 
-          for (let i = Constant.DCA_CONFIG_4_MIN; i<Constant.DCA_CONFIG_4_MAX ; i = i.add(Constant.TOCKEN_PAIR_SEGMENT_SIZE)) {
+          for (let i = Constant.DCA_CONFIG_4_MIN; i<Constant.DCA_CONFIG_4_MAX ; i = i.add(Constant.TOKEN_PAIR_SEGMENT_SIZE)) {
             //console.log("segment : ", i)
             if (i < Constant.DCA_CONFIG_2_MIN) {
               // we have 1 segment entries (config 4)
