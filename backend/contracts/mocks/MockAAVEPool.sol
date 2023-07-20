@@ -6,6 +6,7 @@ import {IPool} from "@aave/core-v3/contracts/interfaces/IPool.sol";
 import {IPoolAddressesProvider} from "@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol";
 import {DataTypes} from "@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import './MockERC20.sol';
@@ -15,6 +16,7 @@ contract MockAavePool is IPool {
 
     mapping (address => address) public tokentoATokenMapping;
 
+    error MockError(string);
  
     /**
      * @notice  Mock function to simulate AAVE pool supply function
@@ -33,11 +35,7 @@ contract MockAavePool is IPool {
       
       // If token was never supplied
       if (aTokenAddress == address(0)) {
-          string memory assetName = string(abi.encodePacked("AMock", IERC20Metadata(_asset).name()));
-          string memory symbol = string(abi.encodePacked("A", IERC20Metadata(_asset).symbol()));
-          // Create an AToken
-          aTokenAddress = address(new MockERC20(assetName, symbol, 0));
-          tokentoATokenMapping[_asset] = aTokenAddress;
+        aTokenAddress = createAToken(_asset);
       }
 
       // supply asset to current contract
@@ -56,8 +54,6 @@ contract MockAavePool is IPool {
      * @return  uint256  amount withdrawn
      */
     function withdraw(address _asset, uint256 _amount, address _to) external returns (uint256){
-//        userTokensBalance[_asset][address(address(_to))] -= _amount;
- 
       require (_asset != address(0), "Asset address provided should not be zero address");
       require (_amount > 0, "Amount to supply should be > 0");
       require (_to != address(0), "Target address should not be zero address");
@@ -83,6 +79,36 @@ contract MockAavePool is IPool {
       return (_amount);
     }
 
+
+  /**
+   * @notice  mock function to create aTocken based on given _token
+   * @dev     .
+   * @param   _asset  source token to create aToken
+   */
+
+  function createAToken (address _asset) public returns (address aToken){
+    require (_asset != address(0),"Asset should not be a 0 address");
+    string memory assetName = string(abi.encodePacked("AMock", IERC20Metadata(_asset).name()));
+    string memory symbol = string(abi.encodePacked("A", IERC20Metadata(_asset).symbol()));
+
+    // Create an AToken
+    if (tokentoATokenMapping[_asset] == address(0)) {
+      tokentoATokenMapping[_asset] = address(new MockERC20(assetName, symbol, 0));
+    }
+    return tokentoATokenMapping[_asset];
+  }
+
+  /**
+   * @notice  mock function to get aTocken for a given _token
+   * @dev     this function is for test purpose only and should not be used elsewhere as it is not in IPool interface
+   * @param   _asset  source token to create aToken
+   */
+  function getAToken (address _asset) public view returns(address) {
+    require (_asset != address(0),"Asset should not be a 0 address");
+    return tokentoATokenMapping[_asset];
+  }
+
+
    /**
    * @notice   Mock function to simulate AAVE pool getReserveData function (to retrieve aToken)
    * @dev     Mock only property 'aTokenAddress'
@@ -92,6 +118,14 @@ contract MockAavePool is IPool {
   function getReserveData(
     address asset
   ) external view virtual override returns (DataTypes.ReserveData memory) {
+
+    if (asset == address(0)) {
+      revert MockError("Asset should not be a 0 address");
+    }
+    if (tokentoATokenMapping[asset] == address(0)) {
+      revert MockError("aToken not defined");
+    }
+
     return DataTypes.ReserveData(
           //stores the reserve configuration
           DataTypes.ReserveConfigurationMap (0),

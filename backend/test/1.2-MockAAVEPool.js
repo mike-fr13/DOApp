@@ -20,7 +20,39 @@ describe("MockAavePool tests", function () {
   }
 
   describe ("Mock function tests", function (){
+
+    describe ("getReserveData() test", async function () {
+
+      it("Should revert with a 0 address for token", async function() {
+        const { mockAavePool, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.getReserveData(Constant.ADDRESS_0))
+        .to.revertedWithCustomError(mockAavePool,"MockError").withArgs("Asset should not be a 0 address")
+      })
+      it("Should revert if aTokennot created (mock only)", async function() {
+        const { mockAavePool, tokenA } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.getReserveData(tokenA.address))
+        .to.revertedWithCustomError(mockAavePool,"MockError").withArgs("aToken not defined")
+      })
+    })
+
     describe("supply() tests", function () {
+
+      it("Should revert with a 0 address for token", async function() {
+        const { mockAavePool, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.connect(account1).supply(Constant.ADDRESS_0, Constant.TOKENA_DEPOSIT_AMOUNT, account1.address, 0))
+        .to.revertedWith("Asset address provided should not be zero address")
+      })
+      it("Should revert with a 0 amount", async function() {
+        const { mockAavePool, tokenA,account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.connect(account1).supply(tokenA.address, 0, account1.address, 0))
+        .to.revertedWith("Amount to supply should be > 0")
+      })
+      it("Should revert with a 0 onBehalf address", async function() {
+        const { mockAavePool, tokenA,account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect( mockAavePool.connect(account1).supply(tokenA.address, Constant.TOKENA_DEPOSIT_AMOUNT,Constant.ADDRESS_0, 0))
+        .to.revertedWith("Address to use on behalf of should not be zero address")
+      })
+
       it("Should supply token to the pool", async function () {
           const { mockAavePool, tokenA, account1} = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
 
@@ -45,6 +77,23 @@ describe("MockAavePool tests", function () {
     })
 
     describe("withdraw() tests", function () {
+
+      it("Should revert with a 0 address for token", async function() {
+        const { mockAavePool, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.connect(account1).withdraw(Constant.ADDRESS_0, Constant.TOKENA_DEPOSIT_AMOUNT, account1.address))
+        .to.revertedWith("Asset address provided should not be zero address")
+      })
+      it("Should revert with a 0 amount", async function() {
+        const { mockAavePool, tokenA,account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.connect(account1).withdraw(tokenA.address, 0, account1.address))
+        .to.revertedWith("Amount to supply should be > 0")
+      })
+      it("Should revert with a 0 onBehalf address", async function() {
+        const { mockAavePool, tokenA,account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect( mockAavePool.connect(account1).withdraw(tokenA.address, Constant.TOKENA_DEPOSIT_AMOUNT,Constant.ADDRESS_0))
+        .to.revertedWith("Target address should not be zero address")
+      })
+
       it("Should withdraw token to the pool", async function () {
         const { mockAavePool,owner,  tokenA, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
 
@@ -75,7 +124,7 @@ describe("MockAavePool tests", function () {
         mockERC20ATokenA = MockERC20ATokenA.attach(aTokenAddress)
         //console.log("mockERC20ATokenA.address : ", mockERC20ATokenA.address)
         
-        //console.log("MockATockenA account1 balance: ", await(mockERC20ATokenA.balanceOf(account1.address)))
+        //console.log("MockATokenA account1 balance: ", await(mockERC20ATokenA.balanceOf(account1.address)))
         //console.log("allowance account1 => : mockAavePool", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
         await(mockERC20ATokenA.connect(account1).approve(mockAavePool.address,Constant.TOKENA_WITHDRAW_AMOUNT))
         //console.log("allowance account1 => mockAavePool : ", await(mockERC20ATokenA.allowance(account1.address,mockAavePool.address)))
@@ -92,6 +141,44 @@ describe("MockAavePool tests", function () {
     })
   })
   describe ("Non Mock function tests", function (){
+
+    describe ("getAtoken() tests", function (){
+      it("Should revert with a 0 address", async function() {
+        const { mockAavePool } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect(mockAavePool.getAToken(Constant.ADDRESS_0)).to.revertedWith("Asset should not be a 0 address")
+      })
+    })
+
+
+    describe ("createAToken() tests", function (){
+      it("Should revert with a 0 address", async function() {
+        const { mockAavePool, tokenA } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+        await expect( mockAavePool.createAToken(Constant.ADDRESS_0)).to.revertedWith("Asset should not be a 0 address")
+      })
+
+      it("Should create aToken for given token", async function() {
+        const { mockAavePool, tokenA } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+
+        expect (await mockAavePool.getAToken(tokenA.address)).to.be.equals(Constant.ADDRESS_0);
+        await mockAavePool.createAToken(tokenA.address);
+        expect (await mockAavePool.getAToken(tokenA.address)).to.be.not.equals(Constant.ADDRESS_0);
+      })
+
+      it("Should keep same aToken if call twice", async function() {
+        const { mockAavePool, tokenA } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
+
+        expect (await mockAavePool.getAToken(tokenA.address)).to.be.equals(Constant.ADDRESS_0);
+        await mockAavePool.createAToken(tokenA.address);
+        address1 = await mockAavePool.getAToken(tokenA.address);
+        await mockAavePool.createAToken(tokenA.address);
+        address2 = await mockAavePool.getAToken(tokenA.address);
+        expect(address1).to.be.equals(address2)
+
+      })
+
+    })
+
+
     it("Should revert if calling a non monck function", async function () {
       const { mockAavePool, tokenA, account1 } = await loadFixture(deployMockAAVEPoolAddressesProvider_Fixture);
 
