@@ -7,6 +7,9 @@ module.exports = Object.freeze({
     MCKB_NAME : 'Mock Token B',
     MCKB_SYMBOL : 'MCKB',
     BAD_PAIR_ID : new BigNumber.from('01010101010'),
+    BAD_CONFIG_ID : new BigNumber.from('01010101010'),
+    BAD_TOKEN_ADRESS : '0x0101000000000000000000000000000000000000',
+    
     
     //token pair constante
     TOKEN_PAIR_SEGMENT_SIZE : 2500000000,

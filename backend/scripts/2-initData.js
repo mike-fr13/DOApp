@@ -154,8 +154,6 @@ async function main() {
     Constant.DCA_CONFIG_1_SCALING_FACTOR,
     Constant.DCA_CONFIG_1_DELAY
     )
-
-
 }
 
 main().catch((error) => {

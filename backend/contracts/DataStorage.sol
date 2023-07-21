@@ -26,6 +26,12 @@ contract DataStorage is IDataStorage, Ownable{
     uint16 constant DCA_CONFIG_MAX_SEGMENT = 1000;
     uint constant MULT_FACTOR = 1*10**8;
 
+    // This parameter is introduced as a safeguard to restrict the number of segment entries, 
+    // thereby mitigating the potential for Denial of Service (DOS) attacks.
+    // While this is not an optimal solution, it serves as a temporary measure allowing us 
+    // to maintain security until a more robust solution can be developed and implemented.
+    uint constant MAX_SEGMENT_ENTRIES = 1000;
+
     // tokenPairs contains all available token pairs for DCA
     mapping(uint256 => TokenPair) private tokenPairs;
 
@@ -62,6 +68,13 @@ contract DataStorage is IDataStorage, Ownable{
         uint indexed _pairId, 
         uint _configId
         );
+    
+    event DCAConfigDeletion(
+        address indexed _sender, 
+        uint indexed _pairId, 
+        uint _configId,
+        bool isDeletedUser
+        ); 
 
 
     error DCAConfigError(string _errorMessage);
@@ -150,7 +163,7 @@ contract DataStorage is IDataStorage, Ownable{
               
 
    /**
-     * @notice  Add a new DCA configuration pour a specific pairID
+     * @notice  Add a new DCA configuration for a specific pairID
      * @param   _pairId The token pair ID for this DCA configuration
      * @param   _isBuyTokenASellTokenB if true Buy token A sell token B, else sell token A, buy token B
      * @param   _min  minimum price for Token A to buy DCA 
@@ -188,7 +201,8 @@ contract DataStorage is IDataStorage, Ownable{
                 _scalingFactor, 
                 uint32(block.timestamp),
                 _dcaDelay,
-                0
+                0,
+                msg.sender
             );
         configId = getDCAConfigHash(dcaConfig);
         dcaConfig.dcaConfigId = configId;
@@ -203,13 +217,47 @@ contract DataStorage is IDataStorage, Ownable{
 
         createSegments(dcaConfig, _segmentNumber, tokenPair.tokenPairSegmentSize);
 
-        emit DCAConfigCreation(msg.sender,_pairId, configId);
+        emit DCAConfigCreation(msg.sender, _pairId, configId);
         return (configId);
     }
 
-    function getDCAConfig (uint _dcaConfigId) external view returns(DCAConfig memory) {
+    /**
+     * @notice  Get a DCA config base on config Id
+     * @param   _dcaConfigId  ID of DCA config to retrieve
+     */
+    function getDCAConfig (uint _dcaConfigId) public view returns(DCAConfig memory) {
         return dcaConfigHashMap[_dcaConfigId];
     }
+
+   /**
+     * @notice  Delete a  DCA configuration
+     * @param   _dcaConfigId The DCA configuration Id to delete
+     */
+    function deleteDCAConfig(uint _dcaConfigId) external returns (uint ) {
+        DCAConfig memory dcaConfig = getDCAConfig (_dcaConfigId);
+        
+        uint pairId = dcaConfig.pairID;
+        if (dcaConfig.creator == address(0)) {
+            revert("No DCA config found with given id");
+        }
+        if ((msg.sender != address(owner())) && (msg.sender != dcaConfig.creator)) {
+            revert("Only contract owner or DCA config creator can delete a DCA configuration");
+        }
+        TokenPair memory tokenPair = getTokenPair(pairId);
+        deleteSegments(
+            dcaConfig, 
+            getSegmentNumber(dcaConfig.min, dcaConfig.max, tokenPair.tokenPairSegmentSize),
+            tokenPair.tokenPairSegmentSize
+        );
+
+        // delete this new config from mapping
+        delete userDCAConfig[dcaConfig.creator][_dcaConfigId];
+        delete dcaConfigHashMap[_dcaConfigId];
+
+        emit DCAConfigDeletion(msg.sender, pairId, _dcaConfigId, msg.sender == dcaConfig.creator? true: false);
+        return (_dcaConfigId);
+    }
+
 
     /**
      * @notice  this fonction is called by dca process and should only be called by owner 
@@ -288,18 +336,79 @@ contract DataStorage is IDataStorage, Ownable{
                 getDCAAmount(_dcaConfig, segmentStart), 
                 _dcaConfig.dcaConfigId
             );
+            IDataStorage.SegmentDCAEntry[] storage currentArray;
              if (_dcaConfig.isSwapTookenAForTokenB) {
-                IDataStorage.SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0];
+                currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0];
                 currentArray.push(entry);
                 dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0] = currentArray;
              }
              else {
-                IDataStorage.SegmentDCAEntry[] storage currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1];
+               currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1];
                 currentArray.push(entry);
                 dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1] = currentArray;
              }
+             if (currentArray.length == MAX_SEGMENT_ENTRIES) {
+                revert DCAConfigError("No more DCA configuration allowed on this TokenPair for this price");
+             }
         }
     }
+
+    /**
+     * @notice  Delete segmeents for a DCA configuration
+     * @dev     Delete all segments covering the DCA interval
+     * @param   _dcaConfig  DCA configuration to delete segment from
+     * @param   _segmentNumber  Segment number to delete
+     * @param   _pairSegmentSize  Segment size
+     */
+    function deleteSegments(
+        IDataStorage.DCAConfig memory _dcaConfig,
+        uint24 _segmentNumber,
+        uint _pairSegmentSize ) internal {
+        
+        uint pairID = _dcaConfig.pairID;
+
+        for (uint16 i=0; i< _segmentNumber; i++) {
+            uint segmentStart = _dcaConfig.min + i*_pairSegmentSize;
+            console.log("deleteSegments - segmentStart : ", segmentStart);
+
+            IDataStorage.SegmentDCAEntry[] storage currentArray;
+             if (_dcaConfig.isSwapTookenAForTokenB) {
+                currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0];
+                console.log("deleteSegments - currentArray.length : ", currentArray.length );
+
+                for (uint j=0; j< currentArray.length; j++ ){
+                    if (currentArray[j].dcaConfigId == _dcaConfig.dcaConfigId) {
+                        // Move the last element into the place to delete
+                        currentArray[j] = currentArray[currentArray.length - 1];
+                        // Remove the last element
+                        currentArray.pop();
+                        break;
+                    }
+                }
+                dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0] = currentArray;
+                console.log("deleteSegments - dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0].length : ",
+                  dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][0].length );
+             }
+             else {
+                currentArray = dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1];
+                console.log("deleteSegments - currentArray.length : ", currentArray.length );
+
+                for (uint j=0; j< currentArray.length; j++ ){
+                    if (currentArray[j].dcaConfigId == _dcaConfig.dcaConfigId) {
+                        // Move the last element into the place to delete
+                        currentArray[j] = currentArray[currentArray.length - 1];
+                        // Remove the last element
+                        currentArray.pop();
+                        break;
+                    }
+                }
+                //dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1] = currentArray;
+                console.log("deleteSegments - dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1].length : ",
+                  dcaSegmentsMap[pairID][segmentStart][_dcaConfig.dcaDelay][1].length );
+             }
+        }
+    }
+
 
     /**
      * @notice  Create a DCA config hash based on pairId and user address

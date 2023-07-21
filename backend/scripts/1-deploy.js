@@ -67,7 +67,7 @@ async function main() {
   //create aTockens associated to tokens (to get in same configuratio as real AAVE pool)
   await mockAavePool.createAToken(tokenA.address);
   await mockAavePool.createAToken(tokenB.address);
-  await pause(1000);
+  await pause(5000);
   console.log("ATokenA address : ", (await(mockAavePool.getReserveData(tokenA.address))).aTokenAddress);
   console.log("ATokenB address : ", (await(mockAavePool.getReserveData(tokenB.address))).aTokenAddress);
 

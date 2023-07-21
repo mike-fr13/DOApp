@@ -37,6 +37,19 @@ async function getTokenPairs(dataStorage) {
       return pairIds;
   }
 
+async function getDCAConfigs(dataStorage) {
+  const filter = dataStorage.filters.DCAConfigCreation(null, null, null);
+  const events = await dataStorage.queryFilter(filter, 0);
+
+  const dcaConfigs = [];
+
+  events.forEach((event) => {
+    dcaConfigs.push(event.args._configId);
+    });
+
+    return dcaConfigs;
+}
+
 async function getlastPairDCAExecutionResultEvent(_doApp, _pairId) {
   const [owner, account1, account2, account3, account4] = await ethers.getSigners();
 
@@ -68,6 +81,8 @@ async function addTokenPair(
   mockAAVEPoolAddressesProviderAddress,
   mockUniswapISwapRouterAddress
 ) {
+  console.log('addTokenPair - start');
+
   datastorecontract.addTokenPair(
     tokenAAddress,
     tokenPairSegmentSize,
@@ -77,17 +92,22 @@ async function addTokenPair(
     mockAAVEPoolAddressesProviderAddress,
     mockUniswapISwapRouterAddress
   );
+  pair = getTokenPairs(datastorecontract) 
+  console.log(`addTokenPair - Token Pair added : ${pair.configId}`);
 }  
 
 async function mintToken(
   _tokenContract,
   _user, 
   _amount) {
-  await (_tokenContract.mint(_user, _amount))
-  console.log(`${_amount} token ${_tokenContract.address} mint for address ${_user}`)
+    console.log('mintToken - start ');
+    await (_tokenContract.mint(_user, _amount))
+    console.log(`mintToken - ${_amount} token ${_tokenContract.address} mint for address ${_user}`)
 }
 
 async function depositToken(doAPPContract, pairId, _tokenContract, _user, _amount, dataStorage) {
+  console.log('depositToken - start ')
+
   const userSigner = await ethers.provider.getSigner(_user);
   
   await (_tokenContract.connect(userSigner).approve(doAPPContract.address, _amount))
@@ -95,7 +115,7 @@ async function depositToken(doAPPContract, pairId, _tokenContract, _user, _amoun
   console.log(`Balance of ${_user} for token ${_tokenContract.address} : `  ,await ( (_tokenContract.balanceOf(_user))))
   console.log(`Balance of ${doAPPContract.address} for token ${_tokenContract.address} : `  ,await ( (_tokenContract.balanceOf(doAPPContract.address))))
 
-  console.log('account1 doApp tokenA : ', (await doAPPContract.connect(_user).getTokenPairUserBalances(pairId,_user)))
+  console.log('depositToken - account1 doApp tokenA : ', (await doAPPContract.connect(_user).getTokenUserBalances(_tokenContract.address,_user)))
 }
 
 async function addDCAConfig(
@@ -109,6 +129,7 @@ async function addDCAConfig(
   scalingFactor,
   delay
   ) {
+    console;log("addDCAConfig - Starting DCA Config creation")
     const userSigner = await ethers.provider.getSigner(user);
     dataStorage.connect(userSigner).addDCAConfig(
     pairId,
@@ -119,7 +140,7 @@ async function addDCAConfig(
     scalingFactor,
     delay
     )
-    console.log (`DCA config added for pair${pairId} and user ${user}`)
+    console.log (`addDCAConfig - DCA config added for pair${pairId} and user ${user}`)
 }
 
 
@@ -127,6 +148,7 @@ async function addDCAConfig(
 module.exports = {
   pause,
   getTokenPairs,
+  getDCAConfigs,
   getlastPairDCAExecutionResultEvent,
   getAbi,
   addTokenPair,

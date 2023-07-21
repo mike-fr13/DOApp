@@ -1,6 +1,6 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers')
 const Constant = require("./Constants.js")
-const isLogEnable = false;
+const isLogEnable = true;
 
 async function deployDOApp_Fixture() {
   const [owner, account1, account2, account3, account4, account5, account6] = await ethers.getSigners();

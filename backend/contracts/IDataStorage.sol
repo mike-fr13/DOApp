@@ -58,6 +58,9 @@ interface IDataStorage {
 
         //256
         uint lastDCATime;
+
+        //160 
+        address creator;
     }
 
     struct SegmentDCAEntry {
