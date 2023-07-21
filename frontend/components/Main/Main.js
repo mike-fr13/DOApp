@@ -3,9 +3,9 @@ import { Flex, Text, Input, Button } from "@chakra-ui/react"
 import { useAccount } from 'wagmi'
 import { prepareWriteContract, writeContract, readContract } from '@wagmi/core'
 import { useState, useEffect } from 'react'
-import DOAppContract from '../../../backend/artifacts/contracts/DOApp.sol/DOApp.json'
-import DataStorageContract from '../../../backend/artifacts/contracts/DataStorage.sol/DataStorage.json'
-import DataStorageInterface from '../../../backend/artifacts/contracts/IDataStorage.sol/IDataStorage.json'
+import DOAppContract from '../../utils/ABI/DOApp.json'
+import DataStorageContract from '../../utils/ABI/DataStorage.json'
+import DataStorageInterface from '../../utils/ABI/IDataStorage.json'
 
 const Main = () => {
 

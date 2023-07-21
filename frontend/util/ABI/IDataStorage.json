@@ -1,0 +1,386 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IDataStorage",
+  "sourceName": "contracts/IDataStorage.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pairId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "_isBuyTokenASellTokenB",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_min",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_max",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "_scalingFactor",
+          "type": "uint8"
+        },
+        {
+          "internalType": "enum IDataStorage.DCADelayEnum",
+          "name": "_dcaDelay",
+          "type": "uint8"
+        }
+      ],
+      "name": "addDCAConfig",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "configId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_tokenAddressA",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_tokenPairSegmentSize",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "_tokenPairDecimalNumber",
+          "type": "uint8"
+        },
+        {
+          "internalType": "address",
+          "name": "_tokenAddressB",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_chainLinkPriceFetcher",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_aavePoolAddressesProvider",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_uniswapV3SwapRouter",
+          "type": "address"
+        }
+      ],
+      "name": "addTokenPair",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_dcaConfigId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDCAConfig",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "dcaConfigId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "pairID",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isSwapTookenAForTokenB",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "min",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "max",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "scalingFactor",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint32",
+              "name": "creationDate",
+              "type": "uint32"
+            },
+            {
+              "internalType": "enum IDataStorage.DCADelayEnum",
+              "name": "dcaDelay",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastDCATime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct IDataStorage.DCAConfig",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pairId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum IDataStorage.DCADelayEnum",
+          "name": "delay",
+          "type": "uint8"
+        }
+      ],
+      "name": "getDCASegment",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dcaConfigId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IDataStorage.SegmentDCAEntry[][2]",
+          "name": "",
+          "type": "tuple[][2]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pairId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum IDataStorage.DCADelayEnum",
+          "name": "delay",
+          "type": "uint8"
+        },
+        {
+          "internalType": "enum IDataStorage.TokenEnum",
+          "name": "_token",
+          "type": "uint8"
+        }
+      ],
+      "name": "getDCASegmentEntries",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "dcaConfigId",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IDataStorage.SegmentDCAEntry[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_pairId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getTokenPair",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "tokenA",
+              "type": "address"
+            },
+            {
+              "internalType": "uint96",
+              "name": "indexBalanceTokenA",
+              "type": "uint96"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenB",
+              "type": "address"
+            },
+            {
+              "internalType": "uint96",
+              "name": "indexBalanceTokenB",
+              "type": "uint96"
+            },
+            {
+              "internalType": "address",
+              "name": "chainlinkPriceFetcher",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "aavePoolAddressesProvider",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "enabled",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "tokenPairSegmentSize",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "tokenPairDecimalNumber",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "swapRouter",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "pairID",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "aTokenA",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "aTokenB",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct IDataStorage.TokenPair",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_dcaConfigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_lastDCATime",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateDCAConfigLastDCATime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
