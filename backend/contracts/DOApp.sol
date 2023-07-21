@@ -18,12 +18,10 @@ contract DOApp is Ownable {
 
 
 
-    struct TokenPairUserBalance {
+    struct TokenUserBalance {
         //256 * 4
-        uint balanceA;
-        uint indexA;
-        uint balanceB;
-        uint indexB;
+        uint balance;
+        uint index;
     }
     struct ProcessingVars {
         uint roundedTokenPrice;
@@ -54,8 +52,8 @@ contract DOApp is Ownable {
     //uint constant public lockTime = 10 days;
     uint8 public MAX_DCA_SEGMENT_PROCESSED_BY_DCA_EXECUTION_CALL = 2;
 
-    // pairID => User address => staked amount
-    mapping(uint => mapping(address => TokenPairUserBalance)) private tokenPairUserBalances;
+    // Token address => User address => staked amount
+    mapping(address => mapping(address => TokenUserBalance)) private tokenUserBalances;
 
 
     event TokenDeposit(
@@ -116,18 +114,19 @@ contract DOApp is Ownable {
 
 
     /**
-     * @notice  Return token balance of user for a specified Tokenpair
+     * @notice  Return token balance of user for a specified Token
      * @dev     .
-     * @param   _pairId  the token pair of balance 
+     * @param   _token token to get balance 
      * @param   _user  search user
      */
-    function  getTokenPairUserBalances (
-        uint _pairId, 
+    function  getTokenUserBalances (
+        address _token , 
         address _user
         ) external view  
-    returns( TokenPairUserBalance memory){
-        dataStorage.getTokenPair(_pairId);
-        return tokenPairUserBalances[_pairId][_user];
+    returns( TokenUserBalance memory){
+        require (_token != address(0),"Token address should not be 0");
+        require (_user != address(0),"User address should not be 0");
+        return tokenUserBalances[_token][_user];
     }
 
      /**
@@ -156,8 +155,8 @@ contract DOApp is Ownable {
         );
 
         // refresh index balance
-        tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
-        tokenPairUserBalances[_pairId][msg.sender].balanceA += _amount;
+        tokenUserBalances[lPair.tokenA][msg.sender].index = computeBalanceIndex();
+        tokenUserBalances[lPair.tokenA][msg.sender].balance += _amount;
 
         emit TokenDeposit(
             msg.sender,
@@ -180,13 +179,13 @@ contract DOApp is Ownable {
         require(_amount > 0, "Withdraw amount should be > 0");
         require(
             _amount <=
-                tokenPairUserBalances[_pairId][msg.sender].balanceA,
+                tokenUserBalances[lPair.tokenA][msg.sender].balance,
             "Amount to withdraw should be < your account balance"
         );
 
         // refresh index balance
-        tokenPairUserBalances[_pairId][msg.sender].indexA = computeBalanceIndex();
-        tokenPairUserBalances[_pairId][msg.sender].balanceA -= _amount;
+        tokenUserBalances[lPair.tokenA][msg.sender].index = computeBalanceIndex();
+        tokenUserBalances[lPair.tokenA][msg.sender].balance -= _amount;
 
         // withdraw token from Lending popl
         withdrawTokenFromLending(
@@ -233,8 +232,8 @@ contract DOApp is Ownable {
         );
 
         // refresh index balance
-        tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
-        tokenPairUserBalances[_pairId][msg.sender].balanceB += _amount;
+        tokenUserBalances[lPair.tokenB][msg.sender].index = computeBalanceIndex();
+        tokenUserBalances[lPair.tokenB][msg.sender].balance += _amount;
 
         emit TokenDeposit(
             msg.sender,
@@ -256,13 +255,13 @@ contract DOApp is Ownable {
         IDataStorage.TokenPair memory lPair = dataStorage.getTokenPair(_pairId);
         require(_amount > 0, "Withdraw amount should be > 0");
         require(
-            _amount <= tokenPairUserBalances[_pairId][msg.sender].balanceB,
+            _amount <= tokenUserBalances[lPair.tokenB][msg.sender].balance,
             "Amount to withdraw should be < your account balance"
         );
 
         // refresh index balance
-        tokenPairUserBalances[_pairId][msg.sender].indexB = computeBalanceIndex();
-        tokenPairUserBalances[_pairId][msg.sender].balanceB -= _amount;
+        tokenUserBalances[lPair.tokenB][msg.sender].index = computeBalanceIndex();
+        tokenUserBalances[lPair.tokenB][msg.sender].balance -= _amount;
 
         // withdraw token from Lending popl
         withdrawTokenFromLending(
@@ -534,6 +533,8 @@ contract DOApp is Ownable {
         console.log("getNextSegmentEntry - 1 - segmentEntries.length : %s ", segmentEntries.length);
 
         do {
+            IDataStorage.TokenPair memory pair = dataStorage.getTokenPair(_pairId);
+
             //DO the stuff
             // si on est bien ds les temps (last DCA + delay > timestamp)
             console.log("getNextSegmentEntry - 2 In While cpt : %s, timeStamp %s lastDCATime %s ",cpt,timeStamp,
@@ -541,10 +542,10 @@ contract DOApp is Ownable {
             console.log("getNextSegmentEntry - 2 In While segment entry amount %s",segmentEntries[cpt].amount);
             uint balance;
             if (isBuy) {
-                balance = tokenPairUserBalances[_pairId][segmentEntries[cpt].owner].balanceA;
+                balance = tokenUserBalances[pair.tokenA][segmentEntries[cpt].owner].balance;
             }
             else {
-                balance = tokenPairUserBalances[_pairId][segmentEntries[cpt].owner].balanceB;    
+                balance = tokenUserBalances[pair.tokenB][segmentEntries[cpt].owner].balance;    
             }
             console.log("getNextSegmentEntry - 3 Owner balance : %s", balance);
             console.log("getNextSegmentEntry - 3 _delay : %s", uint(_delay));
@@ -788,38 +789,40 @@ contract DOApp is Ownable {
         console.log("OTCOrSwapTransactionToUserBalance - amountIn %s, amountOut %s  ",amountIn, amountOut);
         console.log("OTCOrSwapTransactionToUserBalance - amountForOTC %s, amountForSwap %s  ",amountForOTC, amountForSwap);
 
+        IDataStorage.TokenPair memory pair = dataStorage.getTokenPair(pairId);
+
         for (uint16 i =0; i< _segmentToProcess.segmentBuyEntries.length; i++) {
             if(_segmentToProcess.segmentBuyEntries[i].amount != 0 ) {
 
                 address segOwner = _segmentToProcess.segmentBuyEntries[i].owner;
                 uint amountToDCA = _segmentToProcess.segmentBuyEntries[i].amount;
 
-                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance before - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance before - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance before - Token A %s", tokenUserBalances[pair.tokenA][segOwner].balance);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance before - Token B %s", tokenUserBalances[pair.tokenB][segOwner].balance);
 
                 uint balanceMvtOTC = (amountToDCA * amountForOTC) / amountIn;
                 uint balanceMvtSwap = (amountToDCA * amountForSwap) / amountIn;
-                tokenPairUserBalances[pairId][segOwner].balanceA -= (balanceMvtOTC+balanceMvtSwap);
-                tokenPairUserBalances[pairId][segOwner].balanceB += (balanceMvtOTC+balanceMvtSwap);
+                tokenUserBalances[pair.tokenA][segOwner].balance -= (balanceMvtOTC+balanceMvtSwap);
+                tokenUserBalances[pair.tokenB][segOwner].balance += (balanceMvtOTC+balanceMvtSwap);
 
-                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token A %s", tokenUserBalances[pair.tokenA][segOwner].balance);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token B %s", tokenUserBalances[pair.tokenB][segOwner].balance);
 
             }
             if(_segmentToProcess.segmentSellEntries[i].amount != 0 ) {
                 address segOwner = _segmentToProcess.segmentSellEntries[i].owner;
                 uint amountToDCA = _segmentToProcess.segmentSellEntries[i].amount;
 
-                console.log("OTCOrSwapTransactionToUserBalance - B-> A - Token balance before - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance before - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A - Token balance before - Token A %s", tokenUserBalances[pair.tokenA][segOwner].balance);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance before - Token B %s", tokenUserBalances[pair.tokenB][segOwner].balance);
 
                 uint balanceMvtOTC = (amountToDCA * amountForOTC) / amountOut;
                 uint balanceMvtSwap = (amountToDCA * amountForSwap) / amountOut;
-                tokenPairUserBalances[pairId][segOwner].balanceB -= (balanceMvtOTC+balanceMvtSwap);
-                tokenPairUserBalances[pairId][segOwner].balanceA += (balanceMvtOTC+balanceMvtSwap);
+                tokenUserBalances[pair.tokenB][segOwner].balance -= (balanceMvtOTC+balanceMvtSwap);
+                tokenUserBalances[pair.tokenA][segOwner].balance += (balanceMvtOTC+balanceMvtSwap);
 
-                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token A %s", tokenUserBalances[pair.tokenA][segOwner].balance);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token B %s", tokenUserBalances[pair.tokenB][segOwner].balance);
 
             }
         }
