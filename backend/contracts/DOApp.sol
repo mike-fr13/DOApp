@@ -829,16 +829,25 @@ contract DOApp is Ownable {
 
     }
 
+    // MAY BE next time : this function should get total balance from AAVE and calculate 
+    // an index corresponding to ratio of  
+    //              total balance (ie total deposit + accrued interest)
+    //      ratio = ---------------------------------------------------
+    //                          deposit
+    // this should be the base for a partial redistrubution of intereste to clients
+    // we should keep 
+    //      1 - a ratio for the main contract 
+    //      2 - a ratio for each user account token balance
+    // each time a user made a move on his account (deposit, withdraw or a dca) 
+    // we update his balance by comparing the global ratio  and his personal ratio
+    // @TODO later
+    /**
+     * @notice  an un-implemented feature  :(
+     * @dev     .
+     * @return  uint  .
+     */
     function computeBalanceIndex() internal returns (uint) {
         // @TODO
     }
 
-    /**
-     * @notice  .
-     * @dev     .
-     * @param   _dcaConfigId  .
-     */
-    function deleteDCAConfig(uint _dcaConfigId) external {
-        //@ TODO
-    }
 }
