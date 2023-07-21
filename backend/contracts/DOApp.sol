@@ -690,8 +690,6 @@ contract DOApp is Ownable {
 
         uint amountIn;
         uint amountOut;
-        uint amountInExecutorFees;
-        uint amountOutExecutorFees;
         uint swapAmountReturned;
         address tokenToSwap;
         address tokenOut;
@@ -708,9 +706,17 @@ contract DOApp is Ownable {
         console.log("computeDCA - amountForOTC : %s, amountForSwap : %s", amountForOTC, amountForSwap);
 
 
-        if (amountForOTC > 0 ) {
-            OTCTransaction(_pairId,amountIn, amountOut, amountForOTC,_segmentToProcess);
-        }
+        /*
+        compute and transfer fees for DCA Executor
+        @TODO if we have time
+        uint amountInExecutorFees;
+        uint amountOutExecutorFees;
+        amountInExecutorFees =  amountIn - (amountIn * DCA_EXECUTOR_FEES)/1000000;
+        amountOutExecutorFees = amountOut - (amountOut*DCA_EXECUTOR_FEES)/1000000;
+        payDOAppExecutor(_pairId, amountInExecutorFees, amountOutExecutorFees);
+        */
+
+
         if(amountForSwap > 0) {
             IDataStorage.TokenPair memory tokenPair = dataStorage.getTokenPair(_pairId);
              if(amountIn > amountOut) {
@@ -738,54 +744,15 @@ contract DOApp is Ownable {
 
         }
 
-        //compute and transfer fees for DCA Executor
-        // @TODO eventuel
-        // payDOAppExecutor(_pairId, amountIn, amountOut);
-
-        amountInExecutorFees =  amountIn - (amountIn * DCA_EXECUTOR_FEES)/1000000;
-        amountOutExecutorFees = amountOut - (amountOut*DCA_EXECUTOR_FEES)/1000000;
-
-        //compute and transfer fees for DCA Executor
-        payDCAExecutor(
-            _pairId,
-            amountInExecutorFees,
-            amountOutExecutorFees
-            );
-
         // Update user Balance afetr OTC and SWAP transaction
-        updateUserBalance(
-            _segmentToProcess,
-            amountIn - amountInExecutorFees,
-            amountOut - amountOutExecutorFees,
-            swapAmountReturned
-        );
+        processOTCAndSwapTransactionToUserBalance(_pairId,amountIn, amountOut, amountForOTC, swapAmountReturned,_segmentToProcess);
 
         //update DCA config to fix lastDCATimestamp
         updateDCAConfigProcessed(_segmentToProcess);
 
-
     }
 
-    function payDCAExecutor(
-        uint _pairId,
-        uint amountInExecutorFees,
-        uint amountOutExecutorFees
-        ) internal {
-            console.log("payDCAExecutor - amountInExecutorFees % , amountOutExecutorFees %s ",amountInExecutorFees,amountOutExecutorFees);
-        }
-
-    // Update user Balance afetr OTC and SWAP transaction
-    function updateUserBalance(
-        IDataStorage.SegmentDCAToProcess memory _segmentToProcess,
-        uint amounIn,
-        uint amountOut,
-        uint swapAmountReturned
-    ) internal{
-            console.log("updateUserBalance - amounIn % , amountOut %s ",amounIn,amountOut);
-        }
-
-    
-    /**
+     /**
      * @notice  update DCA config to set lastDCATimestamp to block.timeStamp according to segments processed
      * @dev     .
      * @param   _segmentToProcess  .
@@ -801,16 +768,25 @@ contract DOApp is Ownable {
 
 
     /**
-     * @notice  Make an OTC transaction between users without a need to swap 
+     * @notice  Manage user balance for OTC and Swap transactions 
      * @dev     .
      * @param   pairId  current token Pair
      * @param   amountIn  total amout In
      * @param   amountOut  total amout In
-     * @param   amountForOTC  total amout for OTC
+     * @param   amountForOTC  total amout for OTC 
+     * @param   amountForSwap  total amout for Swap
      * @param   _segmentToProcess  DCA segments associated to theses mvts
      */
-    function OTCTransaction(uint pairId, uint amountIn, uint amountOut, uint amountForOTC,IDataStorage.SegmentDCAToProcess memory _segmentToProcess) internal {
-        console.log("OTCTransaction - amountForOTC %  ",amountForOTC);
+    function processOTCAndSwapTransactionToUserBalance(
+        uint pairId, 
+        uint amountIn, 
+        uint amountOut, 
+        uint amountForOTC, 
+        uint amountForSwap,
+        IDataStorage.SegmentDCAToProcess memory _segmentToProcess) 
+    internal {
+        console.log("OTCOrSwapTransactionToUserBalance - amountIn %s, amountOut %s  ",amountIn, amountOut);
+        console.log("OTCOrSwapTransactionToUserBalance - amountForOTC %s, amountForSwap %s  ",amountForOTC, amountForSwap);
 
         for (uint16 i =0; i< _segmentToProcess.segmentBuyEntries.length; i++) {
             if(_segmentToProcess.segmentBuyEntries[i].amount != 0 ) {
@@ -818,30 +794,32 @@ contract DOApp is Ownable {
                 address segOwner = _segmentToProcess.segmentBuyEntries[i].owner;
                 uint amountToDCA = _segmentToProcess.segmentBuyEntries[i].amount;
 
-                console.log("OTCTransaction - A-> B - Token balance before - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCTransaction - A-> B Token balance before - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance before - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance before - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
 
-                uint balanceMvt = (amountToDCA * amountForOTC) / amountIn;
-                tokenPairUserBalances[pairId][segOwner].balanceA -= balanceMvt;
-                tokenPairUserBalances[pairId][segOwner].balanceB += balanceMvt;
+                uint balanceMvtOTC = (amountToDCA * amountForOTC) / amountIn;
+                uint balanceMvtSwap = (amountToDCA * amountForSwap) / amountIn;
+                tokenPairUserBalances[pairId][segOwner].balanceA -= (balanceMvtOTC+balanceMvtSwap);
+                tokenPairUserBalances[pairId][segOwner].balanceB += (balanceMvtOTC+balanceMvtSwap);
 
-                console.log("OTCTransaction - A-> B Token balance after - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCTransaction - A-> B Token balance after - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
+                console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
 
             }
             if(_segmentToProcess.segmentSellEntries[i].amount != 0 ) {
-                address segOwner = _segmentToProcess.segmentBuyEntries[i].owner;
-                uint amountToDCA = _segmentToProcess.segmentBuyEntries[i].amount;
+                address segOwner = _segmentToProcess.segmentSellEntries[i].owner;
+                uint amountToDCA = _segmentToProcess.segmentSellEntries[i].amount;
 
-                console.log("OTCTransaction - B-> A - Token balance before - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCTransaction - B-> A Token balance before - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A - Token balance before - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance before - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
 
-                uint balanceMvt = (amountToDCA * amountForOTC) / amountOut;
-                tokenPairUserBalances[pairId][segOwner].balanceB -= balanceMvt;
-                tokenPairUserBalances[pairId][segOwner].balanceA += balanceMvt;
+                uint balanceMvtOTC = (amountToDCA * amountForOTC) / amountOut;
+                uint balanceMvtSwap = (amountToDCA * amountForSwap) / amountOut;
+                tokenPairUserBalances[pairId][segOwner].balanceB -= (balanceMvtOTC+balanceMvtSwap);
+                tokenPairUserBalances[pairId][segOwner].balanceA += (balanceMvtOTC+balanceMvtSwap);
 
-                console.log("OTCTransaction - B-> A Token balance after - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
-                console.log("OTCTransaction - B-> A Token balance after - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token A %s", tokenPairUserBalances[pairId][segOwner].balanceA);
+                console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token B %s", tokenPairUserBalances[pairId][segOwner].balanceB);
 
             }
         }
