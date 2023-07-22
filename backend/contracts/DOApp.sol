@@ -23,6 +23,8 @@ contract DOApp is Ownable {
         uint balance;
         uint index;
     }
+
+    // used to avoid stack too deep during DCA computation
     struct ProcessingVars {
         uint roundedTokenPrice;
         IDataStorage.SegmentDCAEntry[][2] waitingSegmentEntries;
@@ -31,6 +33,14 @@ contract DOApp is Ownable {
         uint16 cptBuy;
         uint16 cptSell;
         bool isBuy;
+    }
+
+    // used during DCA finalisation 
+    struct AmountStruct {
+        uint amountIn;
+        uint amountOut;
+        uint amountForOTC;
+        uint amountForSwap;
     }
 
     // boolean to check if production mode
@@ -55,7 +65,7 @@ contract DOApp is Ownable {
     // Token address => User address => staked amount
     mapping(address => mapping(address => TokenUserBalance)) private tokenUserBalances;
 
-
+    // event when user deposit token
     event TokenDeposit(
         address _sender,
         uint indexed _pairId,
@@ -64,6 +74,7 @@ contract DOApp is Ownable {
         uint _timestamp
     );
 
+    // event when user withdraw token
     event TokenWithdrawal(
         address _sender,
         uint indexed _pairId,
@@ -72,34 +83,28 @@ contract DOApp is Ownable {
         uint _timestamp
     );
 
-    event DCAExecution(
-        address _account,
-        uint indexed _pairId,
-        address _tokenInput,
-        uint _tokenInputPrice,
-        IERC20 _tokenOutput,
-        uint _amount,
-        uint _timeStamp
-    );
-
     event PairDCAExecutionResult(
         uint indexed _pairId,
         uint _amountIn,
         uint _amountOut,
+        uint _amountOTC,
+        uint _amountSwap,
         uint _timeStamp,
         bool hasRemainingJobs
     );
 
-     constructor(
+    // the datastore well be set at constructor
+    constructor(
         bool _isProductionMode,
         IDataStorage _dataStorage
     ) payable Ownable() {
         isProductionMode = _isProductionMode;
         dataStorage = _dataStorage;
     }
-    /*
-    receive() external payable {}
 
+    /* No real need at the moment
+
+    receive() external payable {}
     fallback() external payable {}
     */
 
@@ -282,6 +287,15 @@ contract DOApp is Ownable {
         );
     }
 
+
+    /**
+     * @notice  this function execute DCA operations
+     * @dev     .The segmeent array for a specific entry price will be scanned and 
+     *          Jobs waiting for DCA will be executed (depending on interval since last execution )
+     *          and user balance level )
+     * @param   _pairId  .
+     * @return  hasRemainingDCAJobs  .
+     */
     function executeDCA(uint _pairId) external returns (bool hasRemainingDCAJobs) {
         uint16 cptTotalBuy;
         uint16 cptTotalSell;
@@ -350,24 +364,28 @@ contract DOApp is Ownable {
             hasRemainingDCAJobs =false;
         }
 
-        // process segment
-        computeDCA(_pairId, segmentDCAToProcess);
+        AmountStruct memory amounts = computeDCA(_pairId, segmentDCAToProcess);
+  
+        emit PairDCAExecutionResult(
+                _pairId,
+                amounts.amountIn,
+                amounts.amountOut,
+                amounts.amountForOTC,
+                amounts.amountForSwap, 
+                block.timestamp,
+                hasRemainingDCAJobs
+                );
 
         console.log("hasRemainingDCAJobs %s", hasRemainingDCAJobs);
-        emit PairDCAExecutionResult(
-        _pairId,
-        0,  //@TODO
-        0, //@TODO
-        block.timestamp,
-        hasRemainingDCAJobs
-        );
-  
         return hasRemainingDCAJobs;
-
-        //emit DCAExecution(account,pairId, tokenInput, tokenInputPrice, tokenOutput, amount, block.timestamp);
     }
 
 
+    /**
+     * @notice  get a rounded price to match with DCA segments
+     * @dev     .
+     * @param   _pair  .
+     */
     function getRoundedOraclePrice(IDataStorage.TokenPair memory _pair) internal view returns(uint){
         // get Token price
         (, int256 oracleTokenAPrice, , , ) = AggregatorV3Interface(
@@ -377,6 +395,18 @@ contract DOApp is Ownable {
     }
 
 
+    /**
+     * @notice  .this function will search for a specific segments if there are entries to process DCA
+     * @dev     .
+     * @param   _pair  Token pair to search
+     * @param   _delay  DCA delay (hourly, daily, weekly)
+     * @param   segmentDCAToProcess  (an array of all entries for the specfic price entry on this token pair)
+     * @param   cptTotalBuy  a counter representing all previously segment to process on the buy side
+     * @param   cptTotalSell  a counter representing all previously segment to process on the sell side.
+     * @return  IDataStorage.SegmentDCAToProcess  .
+     * @return  outCptTotalBuy  update of the previous counter at function exit
+     * @return  outCptTotalSell  update of the previous counter at function exit
+     */
     function getDCAEntriesToProcess(
         IDataStorage.TokenPair memory _pair,
         IDataStorage.DCADelayEnum _delay,
@@ -501,6 +531,12 @@ contract DOApp is Ownable {
         return (segmentDCAToProcess, cptTotalBuy, cptTotalSell);
     }
 
+    /**
+     * @notice  returned the dca delay in seconds
+     * @dev     .
+     * @param   _delay  .
+     * @return  delayInSecond  .
+     */
     function getDelayInSecond(IDataStorage.DCADelayEnum _delay) internal pure returns (uint delayInSecond) {
         if (_delay == IDataStorage.DCADelayEnum.Hourly ) {
             delayInSecond = 3600;
@@ -515,6 +551,20 @@ contract DOApp is Ownable {
 
     }
 
+    
+    /**
+     * @notice  Check the next elligible segment entry for DCA  in courant segment array
+     * @dev     .
+     * @param   _pairId  current token pair
+     * @param   segmentEntries  array of segments waiting DCA (but some of them could have 
+     *          allready been fullfilled and others one does'nt have sufficient balance)
+     * @param   _delay  DCA delay
+     * @param   cpt  counter to bypass allready processed entries
+     * @param   timeStamp  timestamp used to check elligibility to DCA
+     * @param   isBuy  buy er Sell side
+     * @return  foundSegEntry  segment entry found (or none)
+     * @return  nextCpt  update of cpt counter at function exit
+     */
     function getNextSegmentEntry(
         uint _pairId,
         IDataStorage.SegmentDCAEntry[] memory segmentEntries,
@@ -687,24 +737,29 @@ contract DOApp is Ownable {
      * @param   _pairId  current TokenPair
      * @param   _segmentToProcess  Segments Array to process
      */
-    function computeDCA(uint _pairId, IDataStorage.SegmentDCAToProcess memory _segmentToProcess) private {
+    function computeDCA(
+        uint _pairId, 
+        IDataStorage.SegmentDCAToProcess memory _segmentToProcess
+    ) private returns (
+        AmountStruct memory){
 
-        uint amountIn;
-        uint amountOut;
+        AmountStruct memory amounts;
+
         uint swapAmountReturned;
         address tokenToSwap;
         address tokenOut;
 
         // sum amount in and amount out
         for( uint16 i=0; i <_segmentToProcess.segmentBuyEntries.length; i++ ) {
-            amountIn = amountIn + _segmentToProcess.segmentBuyEntries[i].amount;
-            amountOut = amountOut + _segmentToProcess.segmentSellEntries[i].amount;
+            amounts.amountIn = amounts.amountIn + _segmentToProcess.segmentBuyEntries[i].amount;
+            amounts.amountOut = amounts.amountOut + _segmentToProcess.segmentSellEntries[i].amount;
         }
 
-        console.log("computeDCA - amoutIn : %s, amountOut : %s", amountIn, amountOut);
-        uint amountForOTC = amountIn < amountOut ? amountIn : amountOut;
-        uint amountForSwap = amountIn < amountOut ? (amountOut - amountForOTC) : (amountIn - amountForOTC) ; 
-        console.log("computeDCA - amountForOTC : %s, amountForSwap : %s", amountForOTC, amountForSwap);
+        console.log("computeDCA - amoutIn : %s, amountOut : %s", amounts.amountIn, amounts.amountOut);
+        amounts.amountForOTC = amounts.amountIn < amounts.amountOut ? amounts.amountIn : amounts.amountOut;
+        amounts.amountForSwap = amounts.amountIn < amounts.amountOut ? 
+            (amounts.amountOut - amounts.amountForOTC) : (amounts.amountIn - amounts.amountForOTC) ; 
+        console.log("computeDCA - amountForOTC : %s, amountForSwap : %s", amounts.amountForOTC, amounts.amountForSwap);
 
 
         /*
@@ -718,9 +773,9 @@ contract DOApp is Ownable {
         */
 
 
-        if(amountForSwap > 0) {
+        if(amounts.amountForSwap > 0) {
             IDataStorage.TokenPair memory tokenPair = dataStorage.getTokenPair(_pairId);
-             if(amountIn > amountOut) {
+             if(amounts.amountIn > amounts.amountOut) {
                 tokenToSwap = tokenPair.tokenA;
                 tokenOut = tokenPair.tokenB;
              } else {
@@ -730,15 +785,15 @@ contract DOApp is Ownable {
             
 
             address atokenToSwap;
-            atokenToSwap = amountIn > amountOut ? tokenPair.aTokenA : tokenPair.aTokenB;
+            atokenToSwap = amounts.amountIn > amounts.amountOut ? tokenPair.aTokenA : tokenPair.aTokenB;
             console.log("computeDCA - atoken balance msg.sender : ", IERC20(atokenToSwap).balanceOf(msg.sender));
             console.log("computeDCA - atoken balance this(address) : ", IERC20(atokenToSwap).balanceOf(address(this)));
 
             // withdraw token from AAVE to contract
-            withdrawTokenFromLending(IPoolAddressesProvider(tokenPair.aavePoolAddressesProvider),tokenToSwap,amountForSwap);
+            withdrawTokenFromLending(IPoolAddressesProvider(tokenPair.aavePoolAddressesProvider),tokenToSwap,amounts.amountForSwap);
 
             //swap with uniswap
-            swapAmountReturned = swap(_pairId,amountForSwap,amountIn > amountOut ? true : false);
+            swapAmountReturned = swap(_pairId,amounts.amountForSwap,amounts.amountIn > amounts.amountOut ? true : false);
 
             //suppply back to aave
             supplyTokenAsLending(IPoolAddressesProvider(tokenPair.aavePoolAddressesProvider),tokenOut, swapAmountReturned );
@@ -746,10 +801,13 @@ contract DOApp is Ownable {
         }
 
         // Update user Balance afetr OTC and SWAP transaction
-        processOTCAndSwapTransactionToUserBalance(_pairId,amountIn, amountOut, amountForOTC, swapAmountReturned,_segmentToProcess);
+        processOTCAndSwapTransactionToUserBalance(_pairId,amounts.amountIn, amounts.amountOut, amounts.amountForOTC, swapAmountReturned,_segmentToProcess);
 
         //update DCA config to fix lastDCATimestamp
         updateDCAConfigProcessed(_segmentToProcess);
+
+    
+        return(amounts);
 
     }
 
@@ -788,6 +846,8 @@ contract DOApp is Ownable {
     internal {
         console.log("OTCOrSwapTransactionToUserBalance - amountIn %s, amountOut %s  ",amountIn, amountOut);
         console.log("OTCOrSwapTransactionToUserBalance - amountForOTC %s, amountForSwap %s  ",amountForOTC, amountForSwap);
+
+        
 
         IDataStorage.TokenPair memory pair = dataStorage.getTokenPair(pairId);
 
