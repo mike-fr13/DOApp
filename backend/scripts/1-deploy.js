@@ -19,8 +19,19 @@ async function main() {
     console.log (`Deployment on network : ${network}`);
   }
   
+  // create an ERC20 Mock: TokenA
+  const TokenA = await hre.ethers.getContractFactory("MockERC20");
+  const tokenA = await TokenA.deploy(Constant.MCKA_NAME, Constant.MCKA_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
+  await tokenA.deployed();
+  console.log(`TokenA deployed to ${tokenA.address}`);
 
-  // deploy DOApp main contract
+  // create an ERC20 Mock: TokenB
+  const TokenB = await hre.ethers.getContractFactory("MockERC20");
+  const tokenB = await TokenB.deploy(Constant.MCKB_NAME, Constant.MCKB_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
+  await tokenB.deployed();
+  console.log(`TokenB deployed to ${tokenB.address}`);
+
+    // deploy DOApp main contract
   const DataStorage = await hre.ethers.getContractFactory('DataStorage');
   const dataStorage = await DataStorage.deploy();
   await dataStorage.deployed();
@@ -35,18 +46,6 @@ async function main() {
   const mockChainLinkAggregatorV3 = await MockChainLinkAggregatorV3.deploy(Constant.ADDRESS_0, true);
   await mockChainLinkAggregatorV3.deployed();
   console.log(`MockChainLinkAggregatorV3 deployed to ${mockChainLinkAggregatorV3.address}`);
-
-  // create an ERC20 Mock: TokenA
-  const TokenA = await hre.ethers.getContractFactory("MockERC20");
-  const tokenA = await TokenA.deploy(Constant.MCKA_NAME, Constant.MCKA_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
-  await tokenA.deployed();
-  console.log(`TokenA deployed to ${tokenA.address}`);
-
-  // create an ERC20 Mock: TokenB
-  const TokenB = await hre.ethers.getContractFactory("MockERC20");
-  const tokenB = await TokenB.deploy(Constant.MCKB_NAME, Constant.MCKB_SYMBOL, Constant.TOKEN_INITIAL_SUPPLY);
-  await tokenB.deployed();
-  console.log(`TokenB deployed to ${tokenB.address}`);
 
   // create AAVEPoolAddressProvider Mock
   const MockAAVEPoolAddressesProvider = await hre.ethers.getContractFactory("MockAAVEPoolAddressesProvider");
