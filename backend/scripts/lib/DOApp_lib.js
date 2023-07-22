@@ -25,7 +25,7 @@ const getAbi = (contractName, folder) => {
 async function getTokenPairs(dataStorage) {
     const [owner, account1, account2, account3, account4] = await ethers.getSigners();
     //const ABI = getDoAppAbi();
-    const filter = dataStorage.filters.TokenPAirAdded(null);
+    const filter = dataStorage.filters.TokenPAirAdded();
     const events = await dataStorage.queryFilter(filter, 0);
 
     const pairIds = [];
@@ -90,8 +90,9 @@ async function addTokenPair(
     mockAAVEPoolAddressesProviderAddress,
     mockUniswapISwapRouterAddress
   );
-  pair = getTokenPairs(datastorecontract) 
-  console.log(`addTokenPair - Token Pair added : ${pair.configId}`);
+  //pause(5000);
+  //pairs = await getTokenPairs(datastorecontract) 
+  //console.log(`addTokenPair - Token Pair added : ${pairs[(pairs.length)-1]}`);
 }  
 
 async function mintToken(
