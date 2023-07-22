@@ -76,7 +76,6 @@ async function addTokenPair(
   tokenAAddress,
   tokenBAddress,
   tokenPairSegmentSize,
-  tokenPairDecimalsNumber,
   mockChainLinkAggregatorV3Address,
   mockAAVEPoolAddressesProviderAddress,
   mockUniswapISwapRouterAddress
@@ -86,7 +85,6 @@ async function addTokenPair(
   datastorecontract.addTokenPair(
     tokenAAddress,
     tokenPairSegmentSize,
-    tokenPairDecimalsNumber,
     tokenBAddress,
     mockChainLinkAggregatorV3Address,
     mockAAVEPoolAddressesProviderAddress,

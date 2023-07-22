@@ -19,7 +19,7 @@ export const EthProvider = ({ children }) => {
   const [account, setAccount] = useState("");
   const [chainId, setChainId] = useState("");
   const [isOwner, setIsOwner] = useState(false);
-  const [isVoter, setIsVoter] = useState(false);
+  
   const toast = useToast();
 
   const { ethereum } = (typeof window !== "undefined" ? window : {});
@@ -31,8 +31,8 @@ export const EthProvider = ({ children }) => {
   console.log("Provider : ", provider)
   console.log('EthProvider  - process.env.VOTING_CONTRACT_ADDRESS : ',doAppContractAddress);
   console.log('EthProvider  - process.env.NEXT_PUBLIC_DATASTORE_CONTRACT_ADDRESS : ',dataStoreContractAddress);
-  console.log('EthProvider  -  DoAPPJson.abi : ', DoAPPJson.abi);
-  console.log('EthProvider  - DataStorageJson.abi : ',DataStorageJson.abi);
+  //console.log('EthProvider  -  DoAPPJson.abi : ', DoAPPJson.abi);
+  //console.log('EthProvider  - DataStorageJson.abi : ',DataStorageJson.abi);
   const doAppContract = new ethers.Contract(
     doAppContractAddress,
     DoAPPJson.abi,
@@ -167,13 +167,12 @@ export const EthProvider = ({ children }) => {
   return (
     <EthContext.Provider
       value={{
+        ethers,
         provider,
         account,
         chainId,
         connectWallet,
         isOwner,
-        setIsVoter,
-        isVoter,
         doAppContractWithSigner,
         dataStoreContractWithSigner,
         doAppContract,

@@ -8,7 +8,7 @@ export const Header = () => {
   return (
     <Flex width={"100%"} mb={10}>
       <Text ml={10} fontSize={28} fontWeight={"bold"}>
-        🗳️ DOApp Dapp
+        DOApp Dapp
       </Text>
       <Spacer />
       <Stack direction={"row"} alignItems={"center"}>
