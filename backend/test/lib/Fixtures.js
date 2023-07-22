@@ -76,7 +76,6 @@ async function deploy_AddATokenPair_Fixture() {
   await dataStorage.addTokenPair(
     tokenA.address,
     Constant.TOKEN_PAIR_SEGMENT_SIZE,
-    Constant.TOKEN_PAIR_DECIMAL_NUMBER,
     tokenB.address,
     mockChainLinkAggregatorV3.address,
     mockAAVEPoolAddressesProvider.address,

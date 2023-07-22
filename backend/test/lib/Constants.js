@@ -13,15 +13,15 @@ module.exports = Object.freeze({
     
     //token pair constante
     TOKEN_PAIR_SEGMENT_SIZE : 2500000000,
-    TOKEN_PAIR_DECIMAL_NUMBER : 8,
+    
     
     //TOKEN amount constants
-    TOKEN_INITIAL_SUPPLY : new BigNumber.from(100000000000),
-    TOKENA_DEPOSIT_AMOUNT : new BigNumber.from(50000000000),
-    TOKENA_WITHDRAW_AMOUNT : new BigNumber.from(30000000000),
-    TOKENB_DEPOSIT_AMOUNT : new BigNumber.from(25000000000),
-    TOKENB_WITHDRAW_AMOUNT : new BigNumber.from(25000000000),
-    TOKEN_AMOUNT_ABOVE_BALANCE : new BigNumber.from(999900000000),
+    TOKEN_INITIAL_SUPPLY : new BigNumber.from("100000000000000000000000"),
+    TOKENA_DEPOSIT_AMOUNT : new BigNumber.from  ("500000000000000000000"),
+    TOKENA_WITHDRAW_AMOUNT : new BigNumber.from  ("30000000000000000000"),
+    TOKENB_DEPOSIT_AMOUNT : new BigNumber.from  ("250000000000000000000"),
+    TOKENB_WITHDRAW_AMOUNT : new BigNumber.from ("250000000000000000000"),
+    TOKEN_AMOUNT_ABOVE_BALANCE : new BigNumber.from("9999999999999999999999999"),
 
     //DCA config constants
     //ex  WETH/USDC => swap USDC for WETH
