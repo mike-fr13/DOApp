@@ -1,14 +1,25 @@
+/** @type {import('next').NextConfig} */
 module.exports = {
-    webpack: (config, { isServer }) => {
-        if (!isServer) {
-            // don't resolve 'fs' module on the client to prevent this error on build --> Error: Can't resolve 'fs'
-            config.resolve.fallback = {
-                fs: false,
-                net: false,
-                tls: false
-            }
-        }
 
-        return config;
-    }
-}
+    // Can be safely removed in newer versions of Next.js
+    future: {
+  
+      // by default, if you customize webpack config, they switch back to version 4.
+      // Looks like backward compatibility approach.
+      webpack5: true,   
+    },
+  
+    webpack(config) {
+      config.resolve.fallback = {
+  
+        // if you miss it, all the other options in fallback, specified
+        // by next.js will be dropped.
+        ...config.resolve.fallback,  
+  
+        fs: false, // the solution
+        child_process: false
+      };
+      
+      return config;
+    },
+  };
