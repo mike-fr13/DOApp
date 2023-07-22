@@ -3,6 +3,7 @@ const Constant = require("./Constants.js")
 const isLogEnable = true;
 
 async function deployDOApp_Fixture() {
+  const isLogEnable = false
   const [owner, account1, account2, account3, account4, account5, account6] = await ethers.getSigners();
   isLogEnable ? console.log(`owner : ${owner.address}`):{}
   isLogEnable ? console.log(`account1 : ${account1.address}`):{}
