@@ -39,52 +39,51 @@ contract DataStorage is IDataStorage, Ownable{
     // pairID => segment Start price => DCADelay (1h, 1 day, 1 week)  => DCA entry ([0] token A => B [1] token B => A)
     mapping (uint pairID => mapping (uint segmentStart => mapping(DCADelayEnum => SegmentDCAEntry[][2]))) private dcaSegmentsMap;
 
+    // map to check if a DCA config belongs to a user
     //user address => DCAConfig hash => bool
     mapping(address => mapping(uint => bool)) private userDCAConfig;
 
-    //dca config hash
+    // amp of all DCA configuration
+    //dca config hash => DCA config
     mapping(uint => IDataStorage.DCAConfig) private dcaConfigHashMap;
+
 
     //maximum penalty for an early withdraw in % ()
     //uint constant public maxEarlyWithdrawPenality = 10;
-    // eraly withdraw delay (10 days for example : 10*24*3600)
-    //uint constant public EarlyWithdrawInterval = 864000;
-    // @TODO manage penalty on early withdraw 
+    //TODO
 
+    // early withdraw delay (10 days for example : 10*24*3600)
+    //uint constant public EarlyWithdrawInterval = 864000;
+    //TODO    
  
+    // token pair creation event
     event TokenPAirAdded(
             uint _pairId
             );
 
+    // DCA confirguration creation event
     event DCAConfigCreation(
         address indexed _sender, 
         uint indexed _pairId, 
         uint _configId
         );
     
+    //DCA configuration deletion event
     event DCAConfigDeletion(
         address indexed _sender, 
         uint indexed _pairId, 
         uint _configId,
-        bool _isDeletedUser
+        bool _isDeletedUser    
         ); 
 
-
+    // configuration Error
     error DCAConfigError(string _errorMessage);
 
-    // check if a token Pair already exists
+    // modifier to check if a token Pair already exists
     modifier tokenPairExists(uint _pairID) {
         require(tokenPairs[_pairID].tokenA != address(0) ,"Token Pair not Found");
         _;
     }
-
-    function getTokenPair(uint _pairId) public view returns (TokenPair memory) {
-        TokenPair memory lPair = tokenPairs[_pairId];
-        require(lPair.tokenA != address(0) ,"Token Pair not Found");
-        return (lPair);
-    }  
-
- 
 
   /**
      * @notice  Add a token pair to DOapp application, to enable DCA on this pair
@@ -205,14 +204,6 @@ contract DataStorage is IDataStorage, Ownable{
         return (configId);
     }
 
-    /**
-     * @notice  Get a DCA config base on config Id
-     * @param   _dcaConfigId  ID of DCA config to retrieve
-     */
-    function getDCAConfig (uint _dcaConfigId) public view returns(DCAConfig memory) {
-        return dcaConfigHashMap[_dcaConfigId];
-    }
-
    /**
      * @notice  Delete a  DCA configuration
      * @param   _dcaConfigId The DCA configuration Id to delete
@@ -262,16 +253,6 @@ contract DataStorage is IDataStorage, Ownable{
         dcaConfigHashMap[_dcaConfigId].lastDCATime = _lastDCATime;
     }
 
-    /**
-     * @notice  Get segments for a specific Pair, price, delay  for Both Token A and Token B
-     * @dev     .
-     * @param   _pairId  .
-     * @param   price  .
-     * @param   delay  .
-     */
-    function getDCASegment(uint _pairId, uint price, IDataStorage.DCADelayEnum delay) public view returns(SegmentDCAEntry[][2] memory){
-        return dcaSegmentsMap[_pairId][price][delay];
-    }
 
     /**
      * @notice  Get segments for a specific Pair, price, delay and token(A or B)
@@ -293,7 +274,36 @@ contract DataStorage is IDataStorage, Ownable{
 
     }
 
+    /**
+     * @notice  Get segments for a specific Pair, price, delay  for Both Token A and Token B
+     * @dev     .
+     * @param   _pairId  .
+     * @param   price  .
+     * @param   delay  .
+     */
+    function getDCASegment(uint _pairId, uint price, IDataStorage.DCADelayEnum delay) public view returns(SegmentDCAEntry[][2] memory){
+        return dcaSegmentsMap[_pairId][price][delay];
+    }
 
+    /**
+     * @notice  Get a DCA config base on config Id
+     * @param   _dcaConfigId  ID of DCA config to retrieve
+     */
+    function getDCAConfig (uint _dcaConfigId) public view returns(DCAConfig memory) {
+        return dcaConfigHashMap[_dcaConfigId];
+    }
+
+    /**
+     * @notice  get a token Pair base on the given id
+     * @dev     .
+     * @param   _pairId  id of token pair de retrieve
+     * @return  TokenPair  .
+     */
+    function getTokenPair(uint _pairId) public view returns (TokenPair memory) {
+        TokenPair memory lPair = tokenPairs[_pairId];
+        require(lPair.tokenA != address(0) ,"Token Pair not Found");
+        return (lPair);
+    }  
 
     /**
      * @notice  Create segmeents for a DCA configuration
