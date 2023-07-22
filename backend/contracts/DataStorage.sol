@@ -53,14 +53,7 @@ contract DataStorage is IDataStorage, Ownable{
 
  
     event TokenPAirAdded(
-            uint _pairId, 
-            address _tokenAddressA,
-            address _tokenAddressB,
-            uint _tokenPairSegmentSize, 
-            uint8 _tokenPairDecimalNumber,
-            address _chainLinkPriceFetcher, 
-            address _aavePoolAddressesProvider,
-            address _uniswapV3SwapRouter
+            uint _pairId
             );
 
     event DCAConfigCreation(
@@ -106,7 +99,6 @@ contract DataStorage is IDataStorage, Ownable{
     function addTokenPair(
         address _tokenAddressA, 
         uint _tokenPairSegmentSize,
-        uint8 _tokenPairDecimalNumber,  
         address _tokenAddressB, 
         address _chainLinkPriceFetcher,
         address _aavePoolAddressesProvider,
@@ -139,7 +131,6 @@ contract DataStorage is IDataStorage, Ownable{
             _aavePoolAddressesProvider,
             false, 
             _tokenPairSegmentSize,
-            _tokenPairDecimalNumber,
             _uniswapV3SwapRouter,
             hash,
             IPool(IPoolAddressesProvider(_aavePoolAddressesProvider).getPool()).getReserveData(_tokenAddressA).aTokenAddress,
@@ -148,14 +139,7 @@ contract DataStorage is IDataStorage, Ownable{
 
 
         emit TokenPAirAdded(
-            hash, 
-            _tokenAddressA, 
-            _tokenAddressB, 
-            _tokenPairSegmentSize,
-            _tokenPairDecimalNumber,
-            _chainLinkPriceFetcher,
-            _aavePoolAddressesProvider,
-            _uniswapV3SwapRouter
+            hash
             );
 
         return(hash);

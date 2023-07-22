@@ -21,11 +21,10 @@ interface IDataStorage {
         //160
         address chainlinkPriceFetcher;
 
-        //160 + 8 + 16 + 8 =192
+        //160 + 8 + 16 =192
         address aavePoolAddressesProvider;
         bool enabled;
         uint tokenPairSegmentSize;
-        uint8 tokenPairDecimalNumber;
 
         //160
         address swapRouter;
@@ -99,7 +98,6 @@ function getTokenPair(uint _pairId) external view returns (TokenPair memory);
 function addTokenPair(
         address _tokenAddressA, 
         uint _tokenPairSegmentSize,
-        uint8 _tokenPairDecimalNumber,  
         address _tokenAddressB, 
         address _chainLinkPriceFetcher,
         address _aavePoolAddressesProvider,

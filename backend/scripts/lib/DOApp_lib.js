@@ -25,7 +25,7 @@ const getAbi = (contractName, folder) => {
 async function getTokenPairs(dataStorage) {
     const [owner, account1, account2, account3, account4] = await ethers.getSigners();
     //const ABI = getDoAppAbi();
-    const filter = dataStorage.filters.TokenPAirAdded(null, null, null, null, null, null, null, null);
+    const filter = dataStorage.filters.TokenPAirAdded(null);
     const events = await dataStorage.queryFilter(filter, 0);
 
     const pairIds = [];
@@ -34,7 +34,7 @@ async function getTokenPairs(dataStorage) {
         pairIds.push(event.args._pairId);
       });
 
-      return pairIds;
+    return pairIds;
   }
 
 async function getDCAConfigs(dataStorage) {
@@ -76,7 +76,6 @@ async function addTokenPair(
   tokenAAddress,
   tokenBAddress,
   tokenPairSegmentSize,
-  tokenPairDecimalsNumber,
   mockChainLinkAggregatorV3Address,
   mockAAVEPoolAddressesProviderAddress,
   mockUniswapISwapRouterAddress
@@ -86,7 +85,6 @@ async function addTokenPair(
   datastorecontract.addTokenPair(
     tokenAAddress,
     tokenPairSegmentSize,
-    tokenPairDecimalsNumber,
     tokenBAddress,
     mockChainLinkAggregatorV3Address,
     mockAAVEPoolAddressesProviderAddress,
@@ -129,7 +127,7 @@ async function addDCAConfig(
   scalingFactor,
   delay
   ) {
-    console;log("addDCAConfig - Starting DCA Config creation")
+    console.log("addDCAConfig - Starting DCA Config creation")
     const userSigner = await ethers.provider.getSigner(user);
     dataStorage.connect(userSigner).addDCAConfig(
     pairId,

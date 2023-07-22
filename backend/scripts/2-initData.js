@@ -22,7 +22,7 @@ async function main() {
     MockChainlinkcontractAddress, 
     MockAAVEPoolcontractAddress, 
     MockUniswapContractAddress, 
-    ADD_owner } = require ("./lib/deployedContractAddresses.js")
+   } = require ("./lib/deployedContractAddresses.js")
 
     console.log("DataStoragecontractAddress", DataStoragecontractAddress)
     console.log ("DOAppcontractAddress : ", DOAppcontractAddress)
@@ -32,6 +32,7 @@ async function main() {
     console.log ("MockUniswapContractAddress : ", MockUniswapContractAddress)
   
 
+  const ADD_owner ="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
   const ADD_account1 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
   const ADD_account2 = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";
   const ADD_account3 = "0x90F79bf6EB2c4f870365E785982E1f101E93b906";
@@ -61,17 +62,27 @@ async function main() {
     TokenAcontractAddress,
     TokenBcontractAddress,
     Constant.TOKEN_PAIR_SEGMENT_SIZE,
-    Constant.TOKEN_PAIR_DECIMAL_NUMBER,
     MockChainlinkcontractAddress,
     MockAAVEPoolcontractAddress,
     MockUniswapContractAddress
   );
   
-  await pause(3000);
+  await pause(5000);
 
   pairIds = await getTokenPairs(dataStorage)
   console.log("pairIds : ", pairIds)
 
+
+  await mintToken(
+    tokenA,
+    ADD_owner,
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
+  await mintToken (
+    tokenA, 
+    ADD_account1, 
+    Constant.TOKENA_DEPOSIT_AMOUNT
+  )
   await mintToken (
     tokenA, 
     ADD_account1, 
@@ -103,6 +114,11 @@ async function main() {
     Constant.TOKENA_DEPOSIT_AMOUNT
   )
 
+  await mintToken(
+    tokenB,
+    ADD_owner,
+    Constant.TOKENB_DEPOSIT_AMOUNT
+  )
   await mintToken (
     tokenB, 
     ADD_account1, 
