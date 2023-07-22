@@ -66,7 +66,7 @@ contract DataStorage is IDataStorage, Ownable{
         address indexed _sender, 
         uint indexed _pairId, 
         uint _configId,
-        bool isDeletedUser
+        bool _isDeletedUser
         ); 
 
 
