@@ -93,9 +93,21 @@ interface IDataStorage {
         Weekly
     }
 
-function getTokenPair(uint _pairId) external view returns (TokenPair memory);
 
-function addTokenPair(
+    /// @notice Retrieves the token pair configuration for a given pair ID
+    /// @param _pairId The ID of the token pair
+    /// @return The token pair configuration
+    function getTokenPair(uint _pairId) external view returns (TokenPair memory);
+
+    /// @notice Adds a new token pair configuration
+    /// @param _tokenAddressA The address of token A
+    /// @param _tokenPairSegmentSize The segment size for the token pair
+    /// @param _tokenAddressB The address of token B
+    /// @param _chainLinkPriceFetcher The address of the Chainlink price fetcher
+    /// @param _aavePoolAddressesProvider The address of the Aave pool addresses provider
+    /// @param _uniswapV3SwapRouter The address of the Uniswap V3 swap router
+    /// @return The ID of the newly added token pair
+    function addTokenPair(
         address _tokenAddressA, 
         uint _tokenPairSegmentSize,
         address _tokenAddressB, 
@@ -103,8 +115,16 @@ function addTokenPair(
         address _aavePoolAddressesProvider,
         address _uniswapV3SwapRouter) external returns (uint256);
 
-
-function addDCAConfig( 
+    /// @notice Adds a new DCA configuration
+    /// @param _pairId The ID of the token pair
+    /// @param _isBuyTokenASellTokenB Flag indicating whether to buy token A and sell token B
+    /// @param _min The minimum amount for the DCA
+    /// @param _max The maximum amount for the DCA
+    /// @param _amount The amount for the DCA
+    /// @param _scalingFactor The scaling factor for the DCA
+    /// @param _dcaDelay The delay for the DCA
+    /// @return The ID of the newly added DCA configuration
+    function addDCAConfig( 
         uint _pairId,
         bool _isBuyTokenASellTokenB, 
         uint _min, 
@@ -112,33 +132,35 @@ function addDCAConfig(
         uint _amount, 
         uint8 _scalingFactor,
         IDataStorage.DCADelayEnum _dcaDelay
-    ) external returns (uint configId);
+    ) external returns (uint );
 
-function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory);
+    /// @notice Retrieves the DCA configuration for a given DCA config ID
+    /// @param _dcaConfigId The ID of the DCA configuration
+    /// @return The DCA configuration
+    function getDCAConfig (uint _dcaConfigId) external returns(DCAConfig memory);
 
-function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external;
+    /// @notice Updates the last DCA time for a given DCA config ID
+    /// @param _dcaConfigId The ID of the DCA configuration
+    /// @param _lastDCATime The new last DCA time
+    function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external;
 
-
-function getDCASegment(
+    /// @notice Retrieves the DCA segment for a given pair ID, price, and delay
+    /// @param _pairId The ID of the token pair
+    /// @param price The price for the DCA
+    /// @param delay The delay for the DCA
+    /// @return The DCA segment
+    function getDCASegment(
         uint _pairId, 
         uint price, 
         IDataStorage.DCADelayEnum delay
     ) external view returns(SegmentDCAEntry[][2] memory);
 
-/*
-    function  getTokenPairUserBalances (
-        uint _pairId, 
-        address _user
-        ) external view returns( TokenPairUserBalance memory);
-
-    /*
-    function  setTokenPairUserBalances (
-        uint _pairId, 
-        address _user, 
-        TokenPairUserBalance memory _userBalance
-        ) external;
-    */
-
+    /// @notice Retrieves the DCA segment entries for a given pair ID, price, delay, and token
+    /// @param _pairId The ID of the token pair
+    /// @param _price The price for the DCA
+    /// @param delay The delay for the DCA
+    /// @param _token The token for the DCA
+    /// @return The DCA segment entries
     function getDCASegmentEntries (
         uint _pairId,
         uint _price, 
@@ -146,3 +168,4 @@ function getDCASegment(
         IDataStorage.TokenEnum _token
         ) external view returns (IDataStorage.SegmentDCAEntry[] memory);
 }
+
