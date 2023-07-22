@@ -22,6 +22,7 @@ export const EventProvider = ({ children }) => {
     isVoter,
   } = useContext(EthContext);
 
+  /*
   useEffect(() => {
     if (!account) return;
     const isVoter = votersAddress.find(
@@ -164,15 +165,16 @@ export const EventProvider = ({ children }) => {
       doAppContract.removeAllListeners("WorkflowStatusChange");
     };
   }, []);
+  */
 
   return (
     <EventContext.Provider
       value={{
-        proposals,
-        votes,
-        currentWorkflowStatus,
-        votersAddress,
-        winningProposalId,
+//        proposals,
+//        votes,
+//        currentWorkflowStatus,
+//        votersAddress,
+//        winningProposalId,
       }}
     >
       {children}

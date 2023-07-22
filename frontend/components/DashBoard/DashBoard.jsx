@@ -12,7 +12,7 @@ export const DashBoard = () => {
     <CardBody>
       <Text>MAX : </Text>
       <Text>Balance : </Text>      
-      <Button onclick=""> SET </Button>
+      <Button onClick=""> SET </Button>
       <Text>View a summary of all your customers over the last month.</Text>
     </CardBody>
     <CardFooter>

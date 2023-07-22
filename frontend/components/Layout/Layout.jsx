@@ -7,7 +7,7 @@ export const Layout = ({ children }) => {
     return (
         <Flex direction="column" minHeight="100vh">
             <Header />
-                <Flex flexGrow="1" p="2rem">
+                <Flex flexGrow="1" p="2rem" direction="column">
                     {children}
                 </Flex>
             <Footer />

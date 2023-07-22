@@ -1,7 +1,8 @@
 "use client";
 import React, { createContext, useEffect, useState } from "react";
 import { Contract, ContractInterface, ethers } from "ethers";
-import votingABI from "@/utils/abi"
+import DoAPPJson from "../utils/ABI/DOApp.json"
+import DataStorageJson from "../utils/ABI/DataStorage.json"
 import { useToast } from "@chakra-ui/react";
 
 
@@ -27,20 +28,22 @@ export const EthProvider = ({ children }) => {
     ? ((window).ethereum) : null;
   const provider = new ethers.providers.Web3Provider(ethereumWindow);
 
+  console.log("Provider : ", provider)
   console.log('EthProvider  - process.env.VOTING_CONTRACT_ADDRESS : ',doAppContractAddress);
   console.log('EthProvider  - process.env.NEXT_PUBLIC_DATASTORE_CONTRACT_ADDRESS : ',dataStoreContractAddress);
+  console.log('EthProvider  -  DoAPPJson.abi : ', DoAPPJson.abi);
+  console.log('EthProvider  - DataStorageJson.abi : ',DataStorageJson.abi);
   const doAppContract = new ethers.Contract(
     doAppContractAddress,
-    votingABI,
+    DoAPPJson.abi,
     provider
   );
 
   const dataStoreContract = new ethers.Contract(
     dataStoreContractAddress,
-    votingABI,
+    DataStorageJson.abi,
     provider
   );
-
 
   const doAppContractWithSigner = doAppContract.connect(provider.getSigner());
   const dataStoreContractWithSigner = dataStoreContract.connect(provider.getSigner());
@@ -82,7 +85,6 @@ export const EthProvider = ({ children }) => {
   function connectWallet() {
     console.log("ETHContext - connectWallet")
     if (checkEthereumExists()) {
-      contract;
       ethereum
         .request({ method: "eth_requestAccounts" })
         .then((accounts) => {
@@ -136,15 +138,17 @@ export const EthProvider = ({ children }) => {
     };
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { 
     const getOwner = async () => {
-      console.log(doAppContract, "contract");
-      const ownerAddress = await doAppContract.owner();
-      return ownerAddress;
+        console.log("getOwner() contract : ", doAppContract.address);
+        const ownerAddress = await doAppContractWithSigner.owner();
+        console.log("getOwner() ownerAddress : ", ownerAddress);
+        return ownerAddress;
     };
 
     if (account) {
-      getOwner().then((ownerAddress) => {
+      try {
+        getOwner().then((ownerAddress) => {
         console.log("useEffect[account] - ownerAddress : ", ownerAddress);
         if (
           ethers.utils.getAddress(ownerAddress) === account
@@ -153,7 +157,10 @@ export const EthProvider = ({ children }) => {
         } else {
           setIsOwner(false);
         }
-      });
+        });
+      } catch (error) {
+        console.error("An error occurred while getting the owner: ", error);
+      }
     }
   }, [account]);
 
