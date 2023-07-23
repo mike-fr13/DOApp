@@ -70,7 +70,6 @@ export const EventProvider = ({ children }) => {
       dataStoreContractWithSigner.getTokenPair(tokenPairId).then((tokenPair) => {
         console.log("RECEPTION EVENT TokenPAirAdded : serialisation ")
         const newTokenPair = {
-          tokenPairId: ids[index],
           tokenA: tokenPair.tokenA,
           indexBalanceTokenA: tokenPair.indexBalanceTokenA,
           tokenB: tokenPair.tokenB,
@@ -137,7 +136,8 @@ export const EventProvider = ({ children }) => {
             console.log("found  token - ", symbol, '-', name)
 
             // add to token list
-            _tokenList.push({ name, symbol, tokenAddress });
+            let pairID = tokenPair.pairID
+            _tokenList.push({ name, symbol, tokenAddress , pairID});
           } catch (error) {
             console.error(`Failed to fetch name or symbol for token at address ${tokenAddress}`, error);
           }

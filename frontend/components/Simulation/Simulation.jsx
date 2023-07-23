@@ -6,7 +6,7 @@ export const Simulation = () => {
   return (
     <Alert status='warning'>
         <AlertIcon />
-        Simulation !!!!
+        Work in progress  !!!!
     </Alert>
   )
 }

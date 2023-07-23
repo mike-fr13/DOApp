@@ -7,7 +7,7 @@ import { useEffect, useState, useContext } from "react"
 import { EthContext } from "@/context/EthContext";
 import { EventContext } from "../../context/EventContext"
 import ERC20 from "../../utils/ABI/ERC20.json"
-import { getTokenSymbolFromList } from "../../utils/tools"
+import { getTokenSymbolFromList,findTokenPosition } from "../../utils/tools"
 
 
 export const DashBoard = () => {
@@ -35,10 +35,12 @@ export const DashBoard = () => {
   const [depositToken, setDepositToken] = useState(0)
   const [depositPair, setDepositPair] = useState(0)
 
-  const [WithdrawAmount, setWithdrawAmount] = useState(0)
+  const [withdrawAmount, setWithdrawAmount] = useState(0)
   const [withdrawToken, setWithdrawToken] = useState(0)
+  const [withdrawPair, setWithdrawPair] = useState(0)
 
-  const [selectedPairTokens, setSelectedPairTokens] = useState([]);
+  const [selectedDepositPairTokens, setSelectedDepositPairTokens] = useState([]);
+  const [selectedWithdrawPairTokens, setSelectedWithdrawPairTokens] = useState([]);
 
 
   useEffect(() => {
@@ -47,20 +49,36 @@ export const DashBoard = () => {
       if (selectedPair) {
         const tokenA = tokenList.find(token => token.tokenAddress === selectedPair.tokenA);
         const tokenB = tokenList.find(token => token.tokenAddress === selectedPair.tokenB);
-        setSelectedPairTokens([tokenA, tokenB]);
+        setSelectedDepositPairTokens([tokenA, tokenB]);
       }
     } else {
-      setSelectedPairTokens([]);
+      setSelectedDepositPairTokens([]);
     }
   }, [depositPair]);
 
+  useEffect(() => {
+    if (withdrawPair !== null && withdrawPair !== undefined && withdrawPair !== "") {
+      const selectedPair = tokenPairs[withdrawPair];
+      if (selectedPair) {
+        const tokenA = tokenList.find(token => token.tokenAddress === selectedPair.tokenA);
+        const tokenB = tokenList.find(token => token.tokenAddress === selectedPair.tokenB);
+        setSelectedWithdrawPairTokens([tokenA, tokenB]);
+      }
+    } else {
+      setSelectedWithdrawPairTokens([]);
+    }
+  }, [withdrawPair]);
+
+
   const deposit = async () => {
     try {
-      console.log("start - deposit")
+      console.log("deposit- start ")
 
       // Use the selected token's address
       const selectedToken = tokenList[depositToken];
       const selectedTokenAddress = selectedToken.tokenAddress;
+      console.log('deposit- selectedToken : ', selectedToken)
+      console.log('deposit- selectedTokenAddress : ', selectedTokenAddress)
 
       const ERC20Contract = new ethers.Contract(
         selectedTokenAddress,
@@ -75,10 +93,12 @@ export const DashBoard = () => {
       )
 
       // Determine if the selected token is Token A or Token B
-      const tokenPosition = findTokenPosition(selectedToken.pairID, selectedTokenAddress);
+      const tokenPosition = findTokenPosition(tokenPairs, depositPair, selectedTokenAddress);
+      console.log('deposit - tokenPosition : ', tokenPosition)
 
       // Call either depositTokenA or depositTokenB accordingly
       if (tokenPosition === 0) {
+        console.log(`deposit - selectedToken.PairID : ${selectedToken.PairID}, depositAmount  ${depositAmount}`)
         await doAppContractWithSigner.depositTokenA(
           selectedToken.pairID,
           depositAmount
@@ -90,34 +110,88 @@ export const DashBoard = () => {
         )
       } else {
         // Handle error case (tokenPosition === -1)
-        console.error("Error: selected token is neither Token A nor Token B.");
+        console.error("deposit- Error: selected token is neither Token A nor Token B.");
         return;
       }
 
       await getBalances()
-      console.log("end - deposit")
+      console.log("deposit - end")
     } catch (err) {
       console.log(err.message)
     }
   }
 
 
+  const withdraw = async () => {
+    try {
+      console.log("withdraw - start")
+
+      // Use the selected token's address
+      const selectedToken = tokenList[withdrawToken];
+      const selectedTokenAddress = selectedToken.tokenAddress;
+      console.log('withdraw - selectedToken : ', selectedToken)
+      console.log('withdraw- selectedTokenAddress : ', selectedTokenAddress)
+
+      const ERC20Contract = new ethers.Contract(
+        selectedTokenAddress,
+        ERC20.abi,
+        provider
+      );
+      const ERC20ContractWithSigner = ERC20Contract.connect(provider.getSigner());
+
+      await ERC20ContractWithSigner.approve(
+        doAppContract.address,
+        withdrawAmount
+      )
+
+      // Determine if the selected token is Token A or Token B
+      const tokenPosition = findTokenPosition(tokenPairs, withdrawPair, selectedTokenAddress);
+      console.log('withdraw - tokenPosition : ', tokenPosition)
+
+      // Call either depositTokenA or depositTokenB accordingly
+      if (tokenPosition === 0) {
+        console.log(`withdraw -  selectedToken.PairID : ${selectedToken.PairID}, withdrawAmount  ${withdrawAmount}`)
+        await doAppContractWithSigner.withdrawTokenA(
+          selectedToken.pairID,
+          withdrawAmount
+        )
+      } else if (tokenPosition === 1) {
+        await doAppContractWithSigner.withdrawTokenB(
+          selectedToken.pairID,
+          withdrawAmount
+        )
+      } else {
+        // Handle error case (tokenPosition === -1)
+        console.error("withdraw - Error: selected token is neither Token A nor Token B.");
+        return;
+      }
+
+      await getBalances()
+      console.log("withdraw - end")
+    } catch (err) {
+      console.log(err.message)
+    }
+  }
+
+
+
   const getBalances = async () => {
     try {
-      console.log("start - GetBalances");
+      console.log("getBalances - start");
       let balances = [];
 
       for (let token of tokenList) {
+        console.log('getBalances - token : ', token)
         let bal = await doAppContract.getTokenUserBalances(
           token.tokenAddress,
           account
         )
-        console.log('balance :', (bal.balance).toString(), ' index ', bal.index.toString());
+        console.log('getBalances - balance :', (bal.balance).toString(), ' index ', bal.index.toString());
         balances.push({ name: token.name, symbol: token.symbol, balance: bal.balance.toString(), index: bal.index.toString() });
       }
 
       setBalance(balances);
-      console.log("end - GetBalances");
+      console.log("getBalances - end");
     } catch (err) {
       console.log(err.message);
     }
@@ -179,7 +253,7 @@ export const DashBoard = () => {
               onChange={e => setDepositToken(e.target.value)}
               value={depositToken}
             >
-              {selectedPairTokens.map((token, index) => (
+              {selectedDepositPairTokens.map((token, index) => (
                 <option key={index} value={index}>{token.symbol} - {token.name}</option>
               ))}
             </Select>
@@ -199,22 +273,37 @@ export const DashBoard = () => {
         </CardHeader>
         <CardBody>
           <FormControl>
+              <FormLabel>Token Pair</FormLabel>
+              <Select
+                placeholder='Select token pair'
+                onChange={e => setWithdrawPair(e.target.value)}
+                value={withdrawPair}
+              >
+                {tokenPairs?.map((pair, index) => (
+                  <option key={index} value={index}>
+                    {getTokenSymbolFromList(pair.tokenA, tokenList)} - {getTokenSymbolFromList(pair.tokenB, tokenList)}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+
+          <FormControl mt={4}>
             <FormLabel>Token</FormLabel>
             <Select
               placeholder='Select token to withdraw'
               onChange={e => setWithdrawToken(e.target.value)}
               value={withdrawToken}
             >
-              {tokenList?.map((token, index) => (
+              {selectedWithdrawPairTokens.map((token, index) => (
                 <option key={index} value={index}>{token.symbol} - {token.name}</option>
               ))}
             </Select>
           </FormControl>
           <Flex direction="column">
-            <Text>Amount : </Text>
-            <Input onChange={e => setWithdrawAmount(e.target.value)} placeholder="Amount to withdraw" value={WithdrawAmount} />
+            <Text mt={4}>Amount : </Text>
+            <Input onChange={e => setWithdrawAmount(e.target.value)} placeholder="Amount to withdraw" value={withdrawAmount} />
           </Flex>
-          <Button onClick={() => withdraw()}>withdraw</Button>
+          <Button mt={4} onClick={() => withdraw()}>withdraw</Button>
         </CardBody>
         <CardFooter>
         </CardFooter>
