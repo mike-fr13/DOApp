@@ -161,7 +161,7 @@ async function main() {
 
   await addDCAConfig(
     dataStorage,
-    ADD_account1,
+    ADD_owner,
     pairIds[0],
     Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
     Constant.DCA_CONFIG_1_MIN,
@@ -170,7 +170,118 @@ async function main() {
     Constant.DCA_CONFIG_1_SCALING_FACTOR,
     Constant.DCA_CONFIG_1_DELAY
     )
-}
+    
+    await addDCAConfig(
+      dataStorage,
+      ADD_account1,
+      pairIds[0],
+      Constant.DCA_CONFIG_1_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_1_MIN,
+      Constant.DCA_CONFIG_1_MAX,
+      Constant.DCA_CONFIG_1_AMOUNT,
+      Constant.DCA_CONFIG_1_SCALING_FACTOR,
+      Constant.DCA_CONFIG_1_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account1,
+      pairIds[0],
+      Constant.DCA_CONFIG_2_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_2_MIN,
+      Constant.DCA_CONFIG_2_MAX,
+      Constant.DCA_CONFIG_2_AMOUNT,
+      Constant.DCA_CONFIG_2_SCALING_FACTOR,
+      Constant.DCA_CONFIG_2_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account2,
+      pairIds[0],
+      Constant.DCA_CONFIG_3_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_3_MIN,
+      Constant.DCA_CONFIG_3_MAX,
+      Constant.DCA_CONFIG_3_AMOUNT,
+      Constant.DCA_CONFIG_3_SCALING_FACTOR,
+      Constant.DCA_CONFIG_3_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account2,
+      pairIds[0],
+      Constant.DCA_CONFIG_4_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_4_MIN,
+      Constant.DCA_CONFIG_4_MAX,
+      Constant.DCA_CONFIG_4_AMOUNT,
+      Constant.DCA_CONFIG_4_SCALING_FACTOR,
+      Constant.DCA_CONFIG_4_DELAY
+    )
+      await addDCAConfig(
+      dataStorage,
+      ADD_account3,
+      pairIds[0],
+      Constant.DCA_CONFIG_5_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_5_MIN,
+      Constant.DCA_CONFIG_5_MAX,
+      Constant.DCA_CONFIG_5_AMOUNT,
+      Constant.DCA_CONFIG_5_SCALING_FACTOR,
+      Constant.DCA_CONFIG_5_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account3,
+      pairIds[0],
+      Constant.DCA_CONFIG_6_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_6_MIN,
+      Constant.DCA_CONFIG_6_MAX,
+      Constant.DCA_CONFIG_6_AMOUNT,
+      Constant.DCA_CONFIG_6_SCALING_FACTOR,
+      Constant.DCA_CONFIG_6_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account4,
+      pairIds[0],
+      Constant.DCA_CONFIG_7_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_7_MIN,
+      Constant.DCA_CONFIG_7_MAX,
+      Constant.DCA_CONFIG_7_AMOUNT,
+      Constant.DCA_CONFIG_7_SCALING_FACTOR,
+      Constant.DCA_CONFIG_7_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account4,
+      pairIds[0],
+      Constant.DCA_CONFIG_8_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_8_MIN,
+      Constant.DCA_CONFIG_8_MAX,
+      Constant.DCA_CONFIG_8_AMOUNT,
+      Constant.DCA_CONFIG_8_SCALING_FACTOR,
+      Constant.DCA_CONFIG_8_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account5,
+      pairIds[0],
+      Constant.DCA_CONFIG_9_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_9_MIN,
+      Constant.DCA_CONFIG_9_MAX,
+      Constant.DCA_CONFIG_9_AMOUNT,
+      Constant.DCA_CONFIG_9_SCALING_FACTOR,
+      Constant.DCA_CONFIG_9_DELAY
+    )
+    await addDCAConfig(
+      dataStorage,
+      ADD_account6,
+      pairIds[0],
+      Constant.DCA_CONFIG_10_IS_SWAP_TOKEN_A_FOR_TOKEN_B,
+      Constant.DCA_CONFIG_10_MIN,
+      Constant.DCA_CONFIG_10_MAX,
+      Constant.DCA_CONFIG_10_AMOUNT,
+      Constant.DCA_CONFIG_10_SCALING_FACTOR,
+      Constant.DCA_CONFIG_10_DELAY
+    )
+  }
 
 main().catch((error) => {
   console.error(error);
