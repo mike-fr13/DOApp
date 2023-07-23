@@ -1,16 +1,23 @@
 import {
   Card, CardBody, CardHeader, Text, Heading, Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useDisclosure,
-  Box, FormControl, FormLabel, Input,SimpleGrid
+  Box, FormControl, FormLabel, Input,SimpleGrid,FormErrorMessage
 } from "@chakra-ui/react"
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { EventContext } from "@/context/EventContext";
+import { EthContext } from "@/context/EthContext";
 import {dataStoreContractWithSigner} from "@/context/EthContext"
 import { getTokenSymbolFromList } from "../../utils/tools"
 import { ethers } from "ethers";
 import { useToast } from "@chakra-ui/react";
 
 export const TokenPairList = () => {
+  const {
+    dataStoreContractWithSigner,
+    ethers
+  } = useContext(EthContext);
+
+
   const [selectedPair, setSelectedPair] = useState(null);
   const { tokenPairs, tokenList } = useContext(EventContext);
 
@@ -31,50 +38,83 @@ export const TokenPairList = () => {
   const [swapRouter, setSwapRouter] = useState("");
   const [firstAToken, setFirstAToken] = useState("");
   const [secondAToken, setSecondAToken] = useState("");
-
-
   const toast = useToast();  
+
+  const [formErrors, setFormErrors] = useState({});
+
+
+  const validateForm = () => {
+    console.log ("validateForm");
+    let errors = {};
+
+    if (firstToken === undefined || firstToken === null || firstToken === '') errors.firstToken = 'Min is required';
+    if (secondToken === undefined || secondToken === null || secondToken === '') errors.secondToken = 'Min is required';
+    if (chainLinkPriceFetcher === undefined || chainLinkPriceFetcher === null || chainLinkPriceFetcher === '') errors.chainLinkPriceFetcher = 'Min is required';
+    if (aavePoolAddressProvider === undefined || aavePoolAddressProvider === null || aavePoolAddressProvider === '') errors.aavePoolAddressProvider = 'Min is required';
+    if (segmentSize === undefined || segmentSize === null || segmentSize === '') errors.segmentSize = 'Min is required';
+    if (swapRouter === undefined || swapRouter === null || swapRouter === '') errors.swapRouter = 'Min is required';
+
+    setFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      console.log ("validateForm return false");
+      console.log ("validateForm : ", errors);
+      return false;
+    }
+  
+    console.log ("validateForm return true");
+    return true;
+
+  };
+
+  useEffect(() => {
+    validateForm();
+  }, [firstToken,  secondToken, chainLinkPriceFetcher, aavePoolAddressProvider,segmentSize,swapRouter]);
+  
 
   const addTokenPair = async () => {
     try {
-      console.log("addTokenPair - start")
-/*
-      const _pairId = ethers.BigNumber.from(firstToken);
-      const _isBuyTokenASellTokenB = tokenPairEnabled === "true";
-      const _min = ethers.BigNumber.from(firstTokenIndexBalance);
-      const _max = ethers.BigNumber.from(secondTokenIndexBalance);
-      const _amount = ethers.BigNumber.from(chainLinkPriceFetcher);
-      const _scalingFactor = Number(decimalNumber);
-      const _dcaDelay = ethers.BigNumber.from();
+      if (validateForm()) {      
+        console.log("addTokenPair - start")
 
-      address _tokenAddressA, 
-      uint _tokenPairSegmentSize,
-      address _tokenAddressB, 
-      address _chainLinkPriceFetcher,
-      address _aavePoolAddressesProvider,
-      address _uniswapV3SwapRouter) external returns (uint256);
-*/
+        const _tokenAddressA = firstToken
+        const _tokenPairSegmentSize = ethers.BigNumber.from(segmentSize);
+        const _tokenAddressB = secondToken
+        const _chainLinkPriceFetcher = chainLinkPriceFetcher
+        const _aavePoolAddressesProvider = aavePoolAddressProvider
+        const _uniswapV3SwapRouter = swapRouter
 
-      console.log("addTokenPair - just before transaction")
-      try {
+
+        console.log("addTokenPair - just before transaction")
         const result = await dataStoreContractWithSigner.addTokenPair(
-          _pairId,
-          _isBuyTokenASellTokenB,
-          _min,
-          _max,
-          _amount,
-          _scalingFactor,
-          _dcaDelay
-        );
-        console.log(`addTokenPair - result : ${result}`);
-      } catch (error) {
-        console.error(`addTokenPair - error : ${error}`);
-      }
+            _tokenAddressA, 
+          _tokenPairSegmentSize,
+          _tokenAddressB, 
+          _chainLinkPriceFetcher,
+          _aavePoolAddressesProvider,
+          _uniswapV3SwapRouter)
 
-      await getBalances()
-      console.log("addTokenPair - end")
-    } catch (err) {
-      console.log(err.message)
+        console.log(`addTokenPair - result : ${result}`);
+        console.log("addTokenPair - end")
+
+        toast({
+          title: "Success",
+          description: "Token Pair added successfully",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });        
+      } 
+    }
+    catch (err) {
+      toast({
+        title: "Error",
+        description: "An error occurred while adding Token Pair",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error(`addTokenPair - error : ${err}`);
     }
   }
 
@@ -151,65 +191,42 @@ export const TokenPairList = () => {
 
 
           <ModalBody>
-            <FormControl mb={0} mt={0}>
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.firstToken}>
               <FormLabel fontSize="sm" mb={0} mt={0}>1st Token</FormLabel>
               <Input size="sm" placeholder="Enter 1st Token" value={firstToken} onChange={e => setFirstToken(e.target.value)} />
+              <FormErrorMessage>{formErrors.firstToken}</FormErrorMessage>
             </FormControl>
 
-            <FormControl mb={0} mt={0}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>1st Token Index Balance</FormLabel>
-              <Input size="sm" placeholder="Enter 1st Token Index Balance" value={firstTokenIndexBalance} onChange={e => setFirstTokenIndexBalance(e.target.value)} />
-            </FormControl>
-
-            <FormControl mb={0} mt={0}>
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.secondToken}>
               <FormLabel fontSize="sm" mb={0} mt={0}>2nd Token</FormLabel>
               <Input size="sm" placeholder="Enter 2nd Token" value={secondToken} onChange={e => setSecondToken(e.target.value)} />
+              <FormErrorMessage>{formErrors.secondToken}</FormErrorMessage>
             </FormControl>
 
-            <FormControl mb={0} mt={0}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>2nd Token Index Balance</FormLabel>
-              <Input size="sm" placeholder="Enter 2nd Token Index Balance" value={secondTokenIndexBalance} onChange={e => setSecondTokenIndexBalance(e.target.value)} />
-            </FormControl>
-
-            <FormControl mb={0} mt={0}>
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.chainLinkPriceFetcher}>
               <FormLabel fontSize="sm" mb={0} mt={0}>ChainLink Price Fetcher</FormLabel>
               <Input size="sm" placeholder="Enter ChainLink Price Fetcher" value={chainLinkPriceFetcher} onChange={e => setChainLinkPriceFetcher(e.target.value)} />
+              <FormErrorMessage>{formErrors.chainLinkPriceFetcher}</FormErrorMessage>
             </FormControl>
 
-            <FormControl mb={0} mt={0}>
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.aavePoolAddressProvider}>
               <FormLabel fontSize="sm" mb={0} mt={0}>AAve Pool Address Provider</FormLabel>
               <Input size="sm" placeholder="Enter AAve Pool Address Provider" value={aavePoolAddressProvider} onChange={e => setAavePoolAddressProvider(e.target.value)} />
+              <FormErrorMessage>{formErrors.aavePoolAddressProvider}</FormErrorMessage>
             </FormControl>
 
-            <FormControl mb={0} mt={0}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>Token Pair Enabled</FormLabel>
-              <Input size="sm" placeholder="Enter Token Pair Enabled" value={tokenPairEnabled} onChange={e => setTokenPairEnabled(e.target.value)} />
-            </FormControl>
-
-            <FormControl mb={0} mt={0}>
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.segmentSize}>
               <FormLabel fontSize="sm" mb={0} mt={0}>Segment Size</FormLabel>
               <Input size="sm" placeholder="Enter Segment Size" value={segmentSize} onChange={e => setSegmentSize(e.target.value)} />
+              <FormErrorMessage>{formErrors.segmentSize}</FormErrorMessage>
             </FormControl>
 
-            <FormControl mb={0} mt={0}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>Decimal Number</FormLabel>
-              <Input size="sm" placeholder="Enter Decimal Number" value={decimalNumber} onChange={e => setDecimalNumber(e.target.value)} />
-            </FormControl>
-
-            <FormControl mb={0} mt={0}>
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.swapRouter}>
               <FormLabel fontSize="sm" mb={0} mt={0}>SwapRouter</FormLabel>
               <Input size="sm" placeholder="Enter SwapRouter" value={swapRouter} onChange={e => setSwapRouter(e.target.value)} />
+              <FormErrorMessage>{formErrors.swapRouter}</FormErrorMessage>
             </FormControl>
 
-            <FormControl mb={0} mt={0}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>1st AToken</FormLabel>
-              <Input size="sm" placeholder="Enter 1st AToken" value={firstAToken} onChange={e => setFirstAToken(e.target.value)} />
-            </FormControl>
-
-            <FormControl mb={0} mt={0}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>2nd AToken</FormLabel>
-              <Input size="sm" placeholder="Enter 2nd AToken" value={secondAToken} onChange={e => setSecondAToken(e.target.value)} />
-            </FormControl>
           </ModalBody>
 
           <ModalFooter>

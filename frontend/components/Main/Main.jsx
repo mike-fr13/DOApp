@@ -14,7 +14,7 @@ export const Main = () => {
     const { account} = useContext(EthContext);
 
     return (
-        <Flex p="2rem" width="100%" height="85vh" justifyContent="center" alignItems="center" 
+        <Flex p="1rem" width="100%" height="85vh" justifyContent="center" alignItems="center" 
             backgroundPosition="center"
             backgroundRepeat="no-repeat"
             bgSize="100%"            

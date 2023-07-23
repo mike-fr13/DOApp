@@ -116,8 +116,22 @@ export const DashBoard = () => {
 
       await getBalances()
       console.log("deposit - end")
+      toast({
+        title: "Success",
+        description: "Deposit successfully",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (err) {
       console.log(err.message)
+      toast({
+        title: "Error",
+        description: "An error occurred while trying to Deposit",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   }
 
@@ -168,8 +182,23 @@ export const DashBoard = () => {
 
       await getBalances()
       console.log("withdraw - end")
+      toast({
+        title: "Success",
+        description: "Withdraw successfull",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (err) {
       console.log(err.message)
+      toast({
+        title: "Error",
+        description: "An error occurred while withdrawing",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+
     }
   }
 
@@ -192,8 +221,17 @@ export const DashBoard = () => {
 
       setBalance(balances);
       console.log("getBalances - end");
+      
     } catch (err) {
       console.log(err.message);
+      toast({
+        title: "Error",
+        description: "An error occurred while refereshing balance",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+
     }
   }
 
@@ -202,7 +240,7 @@ export const DashBoard = () => {
     if (account) {
       getBalances()
     }
-  }, [account, tokenPairs, tokenList])
+  }, [account])
 
   return (
     <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(300px, 1fr))'>

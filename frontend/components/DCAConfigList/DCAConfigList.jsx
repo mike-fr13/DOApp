@@ -2,7 +2,7 @@
 import {
   Card, CardBody, CardHeader, Text, Heading, Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useDisclosure,
-  Box, FormControl, FormLabel, Input, CardFooter, SimpleGrid, Switch, RadioGroup, Radio, Stack
+  Box, FormControl, FormLabel, Input, CardFooter, SimpleGrid, Switch, RadioGroup, Radio, Stack,FormErrorMessage
 } from "@chakra-ui/react"
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { EventContext } from "@/context/EventContext";
@@ -198,36 +198,42 @@ export const DCAConfigList = () => {
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.pairID}>
               <TokenPairSelect label="select a token pair" value={pairID} onChange={handleSelectPairChange} />
+              <FormErrorMessage>{formErrors.pairID}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.isSwapTookenAForTokenB}>
               <FormLabel fontSize="sm" mb={0} mt={0}>Sell A to Buy B</FormLabel>
               <Switch size="md" isChecked={isSwapTookenAForTokenB} onChange={handleToggle} />
+              <FormErrorMessage>{formErrors.isSwapTookenAForTokenB}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.min}>
               <FormLabel fontSize="sm" mb={0} mt={0}>Min</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={min} onChange={e => setMin(e.target.value)} />
+              <FormErrorMessage>{formErrors.range}{formErrors.min}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.max}>
               <FormLabel fontSize="sm" mb={0} mt={0}>Max</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={max} onChange={e => setMax(e.target.value)} />
+              <FormErrorMessage>{formErrors.range} {formErrors.max}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.amount}>
               <FormLabel fontSize="sm" mb={0} mt={0}>Amount</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={amount} onChange={e => setAmount(e.target.value)} />
+              <FormErrorMessage>{formErrors.amount}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.scalingFactor}>
               <FormLabel fontSize="sm" mb={0} mt={0}>ScalingFactor</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={scalingFactor} onChange={e => setScalingFactor(e.target.value)} />
+              <FormErrorMessage>{formErrors.scalingFactor}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
@@ -240,6 +246,7 @@ export const DCAConfigList = () => {
                   <Radio value='2'>Weekly</Radio>
                 </Stack>
               </RadioGroup>
+              <FormErrorMessage>{formErrors.dcaDelay}</FormErrorMessage>
             </FormControl>
           </ModalBody>
 
