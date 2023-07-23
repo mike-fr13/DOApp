@@ -45,7 +45,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "configId",
+          "name": "",
           "type": "uint256"
         }
       ],
