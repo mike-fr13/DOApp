@@ -93,6 +93,16 @@ contract DOApp is Ownable {
         bool hasRemainingJobs
     );
 
+    event UserDCAExecutionResult(
+        uint indexed _pairId,
+        address indexed _user,
+        uint _amountOTC,
+        uint _amountSwap,
+        uint _timeStamp
+    );
+
+
+
     // the datastore well be set at constructor
     constructor(
         bool _isProductionMode,
@@ -868,6 +878,8 @@ contract DOApp is Ownable {
                 console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token A %s", tokenUserBalances[pair.tokenA][segOwner].balance);
                 console.log("OTCOrSwapTransactionToUserBalance - A-> B Token balance after - Token B %s", tokenUserBalances[pair.tokenB][segOwner].balance);
 
+                emit UserDCAExecutionResult(pairId, segOwner, balanceMvtOTC, balanceMvtSwap, block.timestamp);
+
             }
             if(_segmentToProcess.segmentSellEntries[i].amount != 0 ) {
                 address segOwner = _segmentToProcess.segmentSellEntries[i].owner;
@@ -884,6 +896,7 @@ contract DOApp is Ownable {
                 console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token A %s", tokenUserBalances[pair.tokenA][segOwner].balance);
                 console.log("OTCOrSwapTransactionToUserBalance - B-> A Token balance after - Token B %s", tokenUserBalances[pair.tokenB][segOwner].balance);
 
+                emit UserDCAExecutionResult(pairId, segOwner, balanceMvtOTC, balanceMvtSwap, block.timestamp);
             }
         }
 
