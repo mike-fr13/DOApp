@@ -7,13 +7,9 @@ import ERC20 from "../utils/ABI/ERC20.json"
 export const EventContext = createContext(null);
 
 export const EventProvider = ({ children }) => {
+  const [dcaConfigs, setDcaConfigs] = useState([]);
   const [tokenPairs, setTokenPairs] = useState([]);
   const [tokenList, setTokenList] = useState([]);
-
-  const [votersAddress, setVotersAddress] = useState([]);
-  const [votes, setVotes] = useState(new Map());
-  const [currentWorkflowStatus, setCurrentWorkflowStatus] = useState();
-  const [winningProposalId, setWinningProposalId] = useState(null);
 
   const {
     provider,
@@ -23,6 +19,88 @@ export const EventProvider = ({ children }) => {
     doAppContract,
     dataStoreContract,
   } = useContext(EthContext);
+
+  useEffect(() => {
+    
+    const dcaConfigsFilter = dataStoreContract.filters.DCAConfigCreation();
+    const dcaConfigsID = dataStoreContract
+      .queryFilter(dcaConfigsFilter)
+      .then((events) => {
+        return events.map((event) => event.args._configId);
+      });
+
+
+      dcaConfigsID.then((ids) => {
+      console.log("PARCOURS EVENTS DCAConfigCreation found : ", ids)
+      Promise.all(ids.map((id) => dataStoreContractWithSigner.getDCAConfig(id)))
+        .then((dcaConfig) => {
+          console.log("PARCOURS EVENTS DCAConfigCreation : we found a DCA config : ", dcaConfig)
+          const dcaConfigWithId = dcaConfig.map(
+            (dcaConfig, index) => ({
+              dcaConfigId: dcaConfig.dcaConfigId,
+              pairID: dcaConfig.pairID,
+              isSwapTookenAForTokenB: dcaConfig.isSwapTookenAForTokenB,
+              min: dcaConfig.min,
+              max: dcaConfig.max,
+              amount: dcaConfig.amount,
+              scalingFactor: dcaConfig.scalingFactor,
+              creationDate: dcaConfig.creationDate,
+              dcaDelay: dcaConfig.dcaDelay,
+              lastDCATime: dcaConfig.lastDCATime,
+              creator: dcaConfig.creator
+            })
+          );
+          console.log("PARCOURS EVENTS DCAConfigCreation : tokenPairsWithId : ", dcaConfigWithId)
+          setDcaConfigs(dcaConfigWithId);
+        })
+        .catch((err) => console.log(err))
+    }
+    );
+
+    dataStoreContract.on("DCAConfigCreation", (_sender,_pairId,_configId) => {
+
+      console.log("RECEPTION EVENT DCAConfigCreation : ", _configId)
+      dataStoreContractWithSigner.getDCAConfig(_configId).then((dcaConfig) => {
+        console.log("RECEPTION EVENT DCAConfigCreation : serialisation ")
+        const newDcaConfig = {
+          dcaConfigId: dcaConfig.dcaConfigId,
+          pairID: dcaConfig.pairID,
+          isSwapTookenAForTokenB: dcaConfig.isSwapTookenAForTokenB,
+          min: dcaConfig.min,
+          max: dcaConfig.max,
+          amount: dcaConfig.amount,
+          scalingFactor: dcaConfig.scalingFactor,
+          creationDate: dcaConfig.creationDate,
+          dcaDelay: dcaConfig.dcaDelay,
+          lastDCATime: dcaConfig.lastDCATime,
+          creator: dcaConfig.creator
+        };
+        setDcaConfigs((prevState) => {
+          if (
+            !!prevState.find(
+              (dcaConfig) =>
+              dcaConfig.dcaConfigId.toString() ===
+              newDcaConfig.dcaConfigId.toString()
+            )
+          ) {
+            console.log("RECEPTION EVENT DCAConfigCreation : token deja existant ")
+            return prevState;
+          } else {
+            console.log("RECEPTION EVENT DCAConfigCreation : token deja existant ")
+            return [...prevState, newDcaConfig];
+          }
+        });
+      });
+
+
+    });
+
+    return () => {
+      dataStoreContract.removeAllListeners("TokenPAirAdded");
+    };
+    
+  }, [account]);
+
 
   useEffect(() => {
     const tokenPairsFilter = dataStoreContract.filters.TokenPAirAdded();
@@ -88,8 +166,8 @@ export const EventProvider = ({ children }) => {
           if (
             !!prevState.find(
               (tokenPair) =>
-                tokenPair.tokenPairId.toNumber() ===
-                newTokenPair.tokenPairId.toNumber()
+                tokenPair.tokenPairId.toString() ===
+                newTokenPair.tokenPairId.toString()
             )
           ) {
             console.log("RECEPTION EVENT TokenPAirAdded : token deja existant ")
@@ -237,6 +315,7 @@ export const EventProvider = ({ children }) => {
   return (
     <EventContext.Provider
       value={{
+        dcaConfigs,
         tokenPairs,
         tokenList
         //        proposals,

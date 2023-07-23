@@ -1,20 +1,22 @@
 import {
   Card, CardBody, CardHeader, Text, Heading, Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useDisclosure,
-  Box, FormControl, FormLabel, Input
+  Box, FormControl, FormLabel, Input,SimpleGrid
 } from "@chakra-ui/react"
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { EventContext } from "@/context/EventContext";
+import {dataStoreContractWithSigner} from "@/context/EthContext"
 import { getTokenSymbolFromList } from "../../utils/tools"
+import { ethers } from "ethers";
+import { useToast } from "@chakra-ui/react";
 
 export const TokenPairList = () => {
   const [selectedPair, setSelectedPair] = useState(null);
   const { tokenPairs, tokenList } = useContext(EventContext);
 
-const { isOpen: isOpen1, onOpen: onOpen1, onClose: onClose1 } = useDisclosure();
-const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
 
-
+  const { isOpen: isOpen1, onOpen: onOpen1, onClose: onClose1 } = useDisclosure();
+  const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
 
 
   const [firstToken, setFirstToken] = useState("");
@@ -29,6 +31,53 @@ const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
   const [swapRouter, setSwapRouter] = useState("");
   const [firstAToken, setFirstAToken] = useState("");
   const [secondAToken, setSecondAToken] = useState("");
+
+
+  const toast = useToast();  
+
+  const addTokenPair = async () => {
+    try {
+      console.log("addTokenPair - start")
+/*
+      const _pairId = ethers.BigNumber.from(firstToken);
+      const _isBuyTokenASellTokenB = tokenPairEnabled === "true";
+      const _min = ethers.BigNumber.from(firstTokenIndexBalance);
+      const _max = ethers.BigNumber.from(secondTokenIndexBalance);
+      const _amount = ethers.BigNumber.from(chainLinkPriceFetcher);
+      const _scalingFactor = Number(decimalNumber);
+      const _dcaDelay = ethers.BigNumber.from();
+
+      address _tokenAddressA, 
+      uint _tokenPairSegmentSize,
+      address _tokenAddressB, 
+      address _chainLinkPriceFetcher,
+      address _aavePoolAddressesProvider,
+      address _uniswapV3SwapRouter) external returns (uint256);
+*/
+
+      console.log("addTokenPair - just before transaction")
+      try {
+        const result = await dataStoreContractWithSigner.addTokenPair(
+          _pairId,
+          _isBuyTokenASellTokenB,
+          _min,
+          _max,
+          _amount,
+          _scalingFactor,
+          _dcaDelay
+        );
+        console.log(`addTokenPair - result : ${result}`);
+      } catch (error) {
+        console.error(`addTokenPair - error : ${error}`);
+      }
+
+      await getBalances()
+      console.log("addTokenPair - end")
+    } catch (err) {
+      console.log(err.message)
+    }
+  }
+
 
 
 
@@ -68,18 +117,7 @@ const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
 
 
   return (
-    <>
-      {tokenPairs?.map((pair, index) => (
-        <Card key={index} onClick={() => handleCardClick(pair)} border="2px" borderColor="gray.200">
-          <CardHeader>
-            <Heading size='md'>Pair: {index + 1}</Heading>
-          </CardHeader>
-          <CardBody>
-            <Text>Token A: {getTokenSymbolFromList(pair.tokenA, tokenList)}</Text>
-            <Text>Token B: {getTokenSymbolFromList(pair.tokenB, tokenList)}</Text>
-          </CardBody>
-        </Card>
-      ))}
+    <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(300px, 1fr))'>
       {/* New Card component with a "+" button */}
       <Card border="2px" borderColor="gray.200">
         <CardHeader>
@@ -91,6 +129,19 @@ const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
           </Box>
         </CardBody>
       </Card>
+
+      {/* Token pair list*/}
+      {tokenPairs?.map((pair, index) => (
+        <Card key={index} onClick={() => handleCardClick(pair)} border="2px" borderColor="gray.200">
+          <CardHeader>
+            <Heading size='md'>Pair: {index + 1}</Heading>
+          </CardHeader>
+          <CardBody>
+            <Text>Token A: {getTokenSymbolFromList(pair.tokenA, tokenList)}</Text>
+            <Text>Token B: {getTokenSymbolFromList(pair.tokenB, tokenList)}</Text>
+          </CardBody>
+        </Card>
+      ))}
       {/* Modal for adding a new pair */}
       <Modal isOpen={isOpen2} onClose={onClose2}>
         <ModalOverlay />
@@ -162,7 +213,7 @@ const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose2}>
+            <Button colorScheme="blue" mr={3} onClick={addTokenPair}>
               Save
             </Button>
             <Button variant="ghost" onClick={onClose2}>Cancel</Button>
@@ -173,6 +224,6 @@ const { isOpen: isOpen2, onOpen: onOpen2, onClose: onClose2 } = useDisclosure();
 
 
       {selectedPair && renderPairModal()}
-    </>
+      </SimpleGrid>
   );
 }
