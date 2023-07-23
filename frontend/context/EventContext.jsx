@@ -21,8 +21,8 @@ export const EventProvider = ({ children }) => {
   } = useContext(EthContext);
 
   useEffect(() => {
-    
-    const dcaConfigsFilter = dataStoreContract.filters.DCAConfigCreation();
+    if (account) {
+    const dcaConfigsFilter = dataStoreContract.filters.DCAConfigCreation(account);
     const dcaConfigsID = dataStoreContract
       .queryFilter(dcaConfigsFilter)
       .then((events) => {
@@ -98,7 +98,7 @@ export const EventProvider = ({ children }) => {
     return () => {
       dataStoreContract.removeAllListeners("TokenPAirAdded");
     };
-    
+  }
   }, [account]);
 
 

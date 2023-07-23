@@ -8,7 +8,7 @@ import { EthContext } from "@/context/EthContext";
 import { EventContext } from "../../context/EventContext"
 import ERC20 from "../../utils/ABI/ERC20.json"
 import { getTokenSymbolFromList,findTokenPosition } from "../../utils/tools"
-
+import { useToast } from "@chakra-ui/react";
 
 export const DashBoard = () => {
   const {
