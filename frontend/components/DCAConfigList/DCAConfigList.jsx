@@ -19,7 +19,7 @@ export const DCAConfigList = () => {
     ethers
   } = useContext(EthContext);
 
-  const toast = useToast();  // <- ajoutez ceci
+  const toast = useToast();  
 
   const [selectedConfig, setSelectedConfig] = useState(null);
   const { dcaConfigs } = useContext(EventContext);

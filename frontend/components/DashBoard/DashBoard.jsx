@@ -25,7 +25,7 @@ export const DashBoard = () => {
   } = useContext(EventContext);
 
 
-
+  const toast = useToast();  
   const TOKENA_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
   const PAIR_ID = "39913520734075264574753032560315884887767475056922141184524271681014526542945"
 
