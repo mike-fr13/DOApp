@@ -10,6 +10,13 @@ DOoAPP is a decentralized application developed as part of the Blockchain Develo
 
 You can find a video demonstration of the DApp at this link: 
 
+https://drive.google.com/drive/folders/1dkVT9MyWHcPlld373rmoOWRJqRxM9SZc?usp=sharing
+
+=> Il y a 2 vidéos , un eréalisée avec zoom : l'odinateur rame telment que lestests plantent 
+=> une autre avec uniquement la video, pas de son et pas d'incrustation : les tests fonctionnnent
+
+
+
 # Overview
 
 DOApp is an application designed to enable efficient investment using the dollar-cost averaging method, but in a decentralized setting. This investment approach helps you mitigate the impact of price volatility when purchasing assets, by dividing the total sum to be invested into equal amounts spread across regular intervals. DOApp leverages the power of blockchain technology to offer this investment method in a decentralized way, making investment more transparent, secure, and democratic.
