@@ -38,6 +38,16 @@ This repository contains the backend code for the DOApp project. The backend is 
 
     `npx hardhat run scripts/deploy.js --network goerli`
 
+# Key Concepts and Overarching Philosophy of DOApp
+
+1 - DDApp employs segment definitions to pinpoint users who are interested in DCA. For instance, if a user wishes to invest between $1000 and $1500, given the segment size defined by the admin (let's say 50), 10 segments will be created (1000 - 1049, 1050-1099, ... 1450-1499). These segments enable DOApp to precisely identify users who are looking to buy or sell within these boundaries, simplifying the search for eligible DCA users at the expense of a slight overhead during creation.
+
+2 - DOApp aims to maximize Over-The-Counter (OTC) transactions as opposed to using swaps like Uniswap. With these segments, OTC exchanges are facilitated for people who may have contrary orders (one buying, one selling). Each time a DCA is initiated, DOApp strives to maximize this aspect by alternating between buyer and seller lists. In the end, after grouping orders, if X is the buyer's amount and Y is the seller's amount, min(x,y) will be traded OTC, and only |x-y| will be swapped.
+
+3 - DOApp utilizes a scaling factor for DCA. This implies that if a user desires to invest in a range of $1000 to $1500, and they choose a base amount of $10 with a factor of 3, then when the price reaches $1500, DOApp will invest $10, but if it drops to $1000, DOApp will invest $103. The computed amount linearly scales between $1500 to $1000.
+
+4 - All tokens deposited into DOApp are supplied to AAVE, implying a careful selection of tokens is made. This action allows DOApp to simultaneously contribute to the liquidity of AAVE ;) while facilitating the user's DCA investment.
+
 
 # Testing Strategy for the Voting Contract
 ## General Organization
