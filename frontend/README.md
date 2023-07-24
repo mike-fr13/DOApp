@@ -1,34 +1,75 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# VotingDapp Frontend
 
-## Getting Started
+This repository houses the frontend codebase for the DOApp project. The project takes shape as a Decentralized Application (DApp), employing the power of blockchain technology to facilitate users in executing Dollar Cost Averaging (DCA) investments.
 
-First, run the development server:
+## Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+Before running the frontend application, make sure you have the following dependencies installed:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Node.js
+- npm (Node Package Manager)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Installation
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+1. Clone this repository to your local machine.
+2. Navigate to the project directory.
+3. Run the following command to install the required dependencies:
 
-## Learn More
+`npm install`
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Configuration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+1. Create a `.env.local` file in the project root directory.
+2. Set the following environment variables in the `.env.local` file:
 
-## Deploy on Vercel
+`NEXT_PUBLIC_DOAPP_CONTRACT_ADDRESS=<DOApp_contract_address>`
+`NEXT_PUBLIC_DATASTORE_CONTRACT_ADDRESS=<DataStorage_contract_addres>`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Replace `<DOApp_contract_address>` with the address of the deployed DOApp contract on the Ethereum network.
+Replace `<DataStorage_contract_addres>` with the address of the deployed DataStorage contract on the Ethereum network.
+
+
+## Usage
+
+To start the frontend application, run the following command:
+
+`npm run dev`
+
+
+The application will be accessible at `http://localhost:3000`.
+
+## Folder Structure
+
+The important directories and files in the project are as follows:
+
+- `components`: Contains reusable UI components used throughout the application.
+- `context`: Contains context providers and hooks for sharing data between components.
+- `pages`: Contains the main application pages.
+- `utils`: Contains utility functions and contracts ABIs.
+
+## Technologies Used
+
+- React: JavaScript library for building user interfaces.
+- Next.js: React framework for server-side rendering and routing.
+- Chakra UI: Component library for building accessible and responsive UI.
+- ethers.js: Ethereum library for interacting with smart contracts.
+
+## Contributing
+
+Contributions to the project are welcome. If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Acknowledgements
+
+The development of this project was inspired by the Ethereum blockchain and Mean Finance project
+
+---
+
+Thank you for your interest in the DOApp frontend project. If you have any further questions, feel free to reach out. Happy DCA!
+
+
