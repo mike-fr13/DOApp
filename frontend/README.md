@@ -1,4 +1,4 @@
-# VotingDapp Frontend
+# DOApp Frontend
 
 This repository houses the frontend codebase for the DOApp project. The project takes shape as a Decentralized Application (DApp), employing the power of blockchain technology to facilitate users in executing Dollar Cost Averaging (DCA) investments.
 
