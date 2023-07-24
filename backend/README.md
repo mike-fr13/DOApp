@@ -47,7 +47,7 @@ The test file is divided into multiple sections, each corresponding to a specifi
 Several fixture functions are defined at the beginning of the file to deploy the voting contract and prepare it for various test scenarios:
 
 ## Test Sections
-
+```
 
   DOApp Contract tests
     Deployment
@@ -220,7 +220,7 @@ File                                |  % Stmts | % Branch |  % Funcs |  % Lines 
 All files                           |    96.41 |    88.75 |    93.81 |    96.45 |                |
 ------------------------------------|----------|----------|----------|----------|----------------|
 
-
+```
 
 # License
 
