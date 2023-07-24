@@ -5,7 +5,7 @@
     The code provided in this repository is intended for development and learning purposes only. It is not suitable for production use without proper review, testing, and security considerations. The code may contain bugs, vulnerabilities, or other issues that could result in unexpected behavior or compromise the security of the system.
 
 
-# Backend Description of VotingDapp
+# Backend Description of DOApp
 
 This repository contains the backend code for the DOApp project. The backend is developed using Hardhat, a development environment for Ethereum. It includes the smart contract code and test cases.
 
