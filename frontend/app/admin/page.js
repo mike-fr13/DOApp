@@ -1,34 +1,23 @@
 "use client";
 import React from "react";
-import { Button, Text,  Box, Stack  } from "@chakra-ui/react";
+import { Button, Text, Box, Stack, Flex } from "@chakra-ui/react";
 import { EthContext } from "@/context/EthContext";
 import { useContext } from "react";
 import { EventContext, useEvents } from "@/context/EventContext";
+import { MainAdmin } from "../../components/MainAdmin/MainAdmin"
 import Link from "next/link";
 
 const admin = () => {
   const { isOwner } = useContext(EthContext);
-  const {} = useContext(EventContext);
+  const { } = useContext(EventContext);
   return isOwner ? (
-    <Box
-      minHeight="100vh"
-      w="100%"
-      p="5"
-      display="flex"
-      flexDirection="column"
-      alignItems={"center"}
-    >
-      <Stack
-        flexDirection={"column"}
-        justifyContent={"center"}
-        align={"center"}
-        gap={10}
-        m={20}
-        maxWidth={890}
+      <Flex p="2rem" width="100%" height="85vh" justifyContent="center" alignItems="center"
+        backgroundPosition="center"
+        backgroundRepeat="no-repeat"
+        bgSize="100%"
       >
-
-      </Stack>
-    </Box>
+        <MainAdmin />
+      </Flex>
   ) : (
     <Stack height={"80vh"} alignItems={"center"} justifyContent={"center"}>
       <Text fontWeight={"bold"}>
