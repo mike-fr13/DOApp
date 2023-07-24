@@ -67,6 +67,17 @@ else {
   const tokenB = new ethers.Contract(TokenBcontractAddress, mockERC20ABI, owner);
 
   
+  await addTokenPair(
+    dataStorage,
+    TokenAcontractAddress,
+    TokenBcontractAddress,
+    Constant.TOKEN_PAIR_SEGMENT_SIZE,
+    MockChainlinkcontractAddress,
+    MockAAVEPoolcontractAddress,
+    MockUniswapContractAddress
+  );
+  
+  await pause(5000);
  
   pairIds = await getTokenPairs(dataStorage)
   console.log("pairIds : ", pairIds)
