@@ -243,8 +243,8 @@ export const EventProvider = ({ children }) => {
           if (
             !!prevState.find(
               (tokenPair) =>
-                tokenPair.tokenPairId.toString() ===
-                newTokenPair.tokenPairId.toString()
+                tokenPair.tokenPairId?.toString() ===
+                newTokenPair.tokenPairId?.toString()
             )
           ) {
             console.log("RECEPTION EVENT TokenPAirAdded : token deja existant ")
