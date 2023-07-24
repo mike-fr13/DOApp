@@ -47,12 +47,12 @@ export const TokenPairList = () => {
     console.log ("validateForm");
     let errors = {};
 
-    if (firstToken === undefined || firstToken === null || firstToken === '') errors.firstToken = 'Min is required';
-    if (secondToken === undefined || secondToken === null || secondToken === '') errors.secondToken = 'Min is required';
-    if (chainLinkPriceFetcher === undefined || chainLinkPriceFetcher === null || chainLinkPriceFetcher === '') errors.chainLinkPriceFetcher = 'Min is required';
-    if (aavePoolAddressProvider === undefined || aavePoolAddressProvider === null || aavePoolAddressProvider === '') errors.aavePoolAddressProvider = 'Min is required';
-    if (segmentSize === undefined || segmentSize === null || segmentSize === '') errors.segmentSize = 'Min is required';
-    if (swapRouter === undefined || swapRouter === null || swapRouter === '') errors.swapRouter = 'Min is required';
+    if (firstToken === undefined || firstToken === null || firstToken === '') errors.firstToken = 'First token is required';
+    if (secondToken === undefined || secondToken === null || secondToken === '') errors.secondToken = 'Second token is required';
+    if (segmentSize === undefined || segmentSize === null || segmentSize === '') errors.segmentSize = 'Segment size is required';
+    if (aavePoolAddressProvider === undefined || aavePoolAddressProvider === null || aavePoolAddressProvider === '') errors.aavePoolAddressProvider = 'AAVE pool provider is required';
+    if (chainLinkPriceFetcher === undefined || chainLinkPriceFetcher === null || chainLinkPriceFetcher === '') errors.chainLinkPriceFetcher = 'Chainlink price fetcher is required';
+    if (swapRouter === undefined || swapRouter === null || swapRouter === '') errors.swapRouter = 'Uniswap router is required';
 
     setFormErrors(errors);
 
@@ -203,6 +203,12 @@ export const TokenPairList = () => {
               <FormErrorMessage>{formErrors.secondToken}</FormErrorMessage>
             </FormControl>
 
+            <FormControl mb={0} mt={0} isInvalid={!!formErrors.segmentSize}>
+              <FormLabel fontSize="sm" mb={0} mt={0}>Segment Size</FormLabel>
+              <Input size="sm" placeholder="Enter Segment Size" value={segmentSize} onChange={e => setSegmentSize(e.target.value)} />
+              <FormErrorMessage>{formErrors.segmentSize}</FormErrorMessage>
+            </FormControl>
+
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.chainLinkPriceFetcher}>
               <FormLabel fontSize="sm" mb={0} mt={0}>ChainLink Price Fetcher</FormLabel>
               <Input size="sm" placeholder="Enter ChainLink Price Fetcher" value={chainLinkPriceFetcher} onChange={e => setChainLinkPriceFetcher(e.target.value)} />
@@ -213,12 +219,6 @@ export const TokenPairList = () => {
               <FormLabel fontSize="sm" mb={0} mt={0}>AAve Pool Address Provider</FormLabel>
               <Input size="sm" placeholder="Enter AAve Pool Address Provider" value={aavePoolAddressProvider} onChange={e => setAavePoolAddressProvider(e.target.value)} />
               <FormErrorMessage>{formErrors.aavePoolAddressProvider}</FormErrorMessage>
-            </FormControl>
-
-            <FormControl mb={0} mt={0} isInvalid={!!formErrors.segmentSize}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>Segment Size</FormLabel>
-              <Input size="sm" placeholder="Enter Segment Size" value={segmentSize} onChange={e => setSegmentSize(e.target.value)} />
-              <FormErrorMessage>{formErrors.segmentSize}</FormErrorMessage>
             </FormControl>
 
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.swapRouter}>

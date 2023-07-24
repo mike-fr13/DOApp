@@ -210,21 +210,21 @@ export const DCAConfigList = () => {
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.min}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>Min</FormLabel>
+              <FormLabel fontSize="sm" mb={0} mt={0}>Mininum Price</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={min} onChange={e => setMin(e.target.value)} />
               <FormErrorMessage>{formErrors.range}{formErrors.min}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.max}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>Max</FormLabel>
+              <FormLabel fontSize="sm" mb={0} mt={0}>Maximum Price</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={max} onChange={e => setMax(e.target.value)} />
               <FormErrorMessage>{formErrors.range} {formErrors.max}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalBody>
             <FormControl mb={0} mt={0} isInvalid={!!formErrors.amount}>
-              <FormLabel fontSize="sm" mb={0} mt={0}>Amount</FormLabel>
+              <FormLabel fontSize="sm" mb={0} mt={0}>Amount to DCA</FormLabel>
               <Input size="sm" placeholder="Enter pair token to use" value={amount} onChange={e => setAmount(e.target.value)} />
               <FormErrorMessage>{formErrors.amount}</FormErrorMessage>
             </FormControl>

@@ -26,8 +26,6 @@ export const DashBoard = () => {
 
 
   const toast = useToast();  
-  const TOKENA_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
-  const PAIR_ID = "39913520734075264574753032560315884887767475056922141184524271681014526542945"
 
   const [balanceState, setBalance] = useState([])
 
@@ -247,14 +245,13 @@ export const DashBoard = () => {
 
       <Card>
         <CardHeader>
-          <Heading size='md'> User token balances</Heading>
+          <Heading size='md'> DOApp User balances</Heading>
         </CardHeader>
         <CardBody>
           {balanceState.map((tokenBalance, index) => (
             <Box key={index} p={2} borderWidth={1} borderRadius="md">
               <Heading size="sm">{tokenBalance.name} ({tokenBalance.symbol})</Heading>
               <Text>Balance: {tokenBalance.balance}</Text>
-              <Text>Index: {tokenBalance.index}</Text>
             </Box>
           ))}
           <Button mt={3} onClick={() => getBalances()}>Refresh</Button>

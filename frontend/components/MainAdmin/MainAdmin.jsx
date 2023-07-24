@@ -1,44 +1,40 @@
 "use client"
-import { Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Text } from "@chakra-ui/react"
-import { DashBoard } from "../DashBoard/DashBoard"
-import { DCAConfigList } from "../DCAConfigList/DCAConfigList"
-import { DCAHistory } from "../DCAHistory/DCAHistory"
-import { Simulation } from "../Simulation/Simulation"
+import { Flex, Tab, TabList, TabPanel, TabPanels, Tabs, Text ,Heading} from "@chakra-ui/react"
+import { AdminDashBoard } from "../AdminDashBoard/AdminDashBoard"
+import { TokenPairList } from "../TokenPairList/TokenPairList"
+import {AdminDCAHistory} from "../AdminDCAHistory/AdminDCAHistory"
 import { EthContext } from '@/context/EthContext';
 
 import { useState, useEffect, useContext } from 'react'
 
 
-export const Main = () => { 
+export const MainAdmin = () => { 
     const { account} = useContext(EthContext);
 
     return (
-        <Flex p="1rem" width="100%" height="85vh" justifyContent="center" alignItems="center" 
+        <Flex p="1" width="100%" height="85vh" justifyContent="center" alignItems="center" 
             backgroundPosition="center"
             backgroundRepeat="no-repeat"
             bgSize="100%"            
             >
             {account ? (
-                <Flex direction="column" width="100%" height="700px">
+                <Flex direction="column" width="100%" height="700px" alignItems="start">
+                    <Heading color="red">Administration page</Heading>
                     <Tabs variant='enclosed' width="100%">
                     <TabList>
                         <Tab>DashBoard</Tab>
-                        <Tab>DCA configurations</Tab>
-                        <Tab>DCA History</Tab>
-                        <Tab>Simulation</Tab>
+                        <Tab>Token Pair</Tab>
+                        <Tab>DCA history</Tab>
                     </TabList>
                     <TabPanels>
                         <TabPanel>
-                            <DashBoard/>
+                            <AdminDashBoard/>
                         </TabPanel>
                         <TabPanel>
-                            <DCAConfigList />
+                            <TokenPairList />
                         </TabPanel>
                         <TabPanel>
-                            <DCAHistory />
-                        </TabPanel>
-                        <TabPanel>
-                            <Simulation />
+                            <AdminDCAHistory />
                         </TabPanel>
                     </TabPanels>
                     </Tabs>
