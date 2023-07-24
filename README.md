@@ -2,7 +2,7 @@
 
 DOoAPP is a decentralized application developed as part of the Blockchain Developer certification module at Alyra (Buterin batch, May-July 2023).
 
-## Developers:
+## Developpers:
 
     Yannick Tison
 
