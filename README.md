@@ -12,7 +12,7 @@ You can find a video demonstration of the DApp at this link:
 
 https://drive.google.com/drive/folders/1dkVT9MyWHcPlld373rmoOWRJqRxM9SZc?usp=sharing
 
-=> Il y a 2 vidéos , un eréalisée avec zoom : l'odinateur rame telment que lestests plantent 
+=> Il y a 2 vidéos , une réalisée avec zoom : l'odinateur rame tellement que les tests plantent 
 => une autre avec uniquement la video, pas de son et pas d'incrustation : les tests fonctionnnent
 
 
