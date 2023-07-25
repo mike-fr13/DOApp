@@ -16,6 +16,16 @@ https://drive.google.com/drive/folders/1dkVT9MyWHcPlld373rmoOWRJqRxM9SZc?usp=sha
 => une autre avec uniquement la video, pas de son et pas d'incrustation : les tests fonctionnnent
 
 
+Ce projet n'est pas finalisé, certains elements n'ont pas pu etre developpés :
+    - appel de la function exactOutputSingle(ExactOutputSingleParams calldata ) en cas de vente de B -> A (ou lieu inputSingle)
+    - un point de sécurité non corrigé car je n'ai pas encore trouvé comment le faire : 
+        => apel externe sur la function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external;
+        => j'avais testé un require sur l'adresse du contrat appelant pour limiter à DOAPP mais ca ne fonctionne pas
+    - j'ai laissé l'ensemble des traces (console.log ds le contrats)
+    - gestion des decimales pour les montants envoyés / reçus  / swappé
+    - fonction OTC qui prend en compte le rapport de valeur reelle des token A et B (acuellement 1 A = 1 B)
+
+J'étais persudé de l'avoir indiqué lors du dernier commit mais je n'ai pas retrouvé ces infos
 
 # Overview
 
