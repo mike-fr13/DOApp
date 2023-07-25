@@ -9,6 +9,7 @@ import { EventContext } from "@/context/EventContext";
 import { EthContext } from "@/context/EthContext";
 import { TokenPairSelect } from "../TokenPairSelect/TokenPairSelect";
 import { useToast } from "@chakra-ui/react";
+import { ReadOnlyInputWithCopy } from "../ReadOnlyInputWithCopy/ReadOnlyInputWithCopy"
 
 
 
@@ -145,18 +146,21 @@ export const DCAConfigList = () => {
     <Modal border="2px" borderColor="gray.200" isOpen={isOpen1} onClose={onClose1}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Pair Details</ModalHeader>
+        <ModalHeader>DCA configuration Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Text>pairID: {selectedConfig.pairID?.toString()}</Text>
-          <Text>isSwapTookenAForTokenB: {selectedConfig.isSwapTookenAForTokenB}</Text>
-          <Text>min: {selectedConfig.min?.toString()}</Text>
-          <Text>max: {selectedConfig.max?.toString()}</Text>
-          <Text>amount: {selectedConfig.amount?.toString()}</Text>
+          <ReadOnlyInputWithCopy label="PairId:" value={selectedConfig.pairID?.toString()} />
+          <ReadOnlyInputWithCopy label="Swap token A to B :" value={selectedConfig.isSwapTookenAForTokenB?.toString()} />
+          <ReadOnlyInputWithCopy label="Min:" value={selectedConfig.min?.toString()} />
+          <ReadOnlyInputWithCopy label="Max:" value={selectedConfig.max?.toString()} />
+          <ReadOnlyInputWithCopy label="Amount:" value={selectedConfig.amount?.toString()} />
+          <ReadOnlyInputWithCopy label="Factor:" value={selectedConfig.scalingFactor?.toString()} />
+          <ReadOnlyInputWithCopy label="Delay:" value={selectedConfig.dcaDelay?.toString()} />
+          
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose1}>Close</Button>
-        </ModalFooter>dcaConfigs
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );
@@ -177,7 +181,7 @@ export const DCAConfigList = () => {
       {dcaConfigs?.map((dcaConfig, index) => (
         <Card key={index} onClick={() => handleCardClick(dcaConfig)} border="2px" borderColor="gray.200">
           <CardHeader>
-            <Heading size='md'>Config: {index + 1}</Heading>
+            <Heading size='md'>DCA configuration</Heading>
           </CardHeader>
           <CardBody>
             <Text>pairID: {dcaConfig.pairID?.toString()}</Text>
@@ -185,6 +189,8 @@ export const DCAConfigList = () => {
             <Text>min: {dcaConfig.min?.toString()}</Text>
             <Text>max: {dcaConfig.max?.toString()}</Text>
             <Text>amount: {dcaConfig.amount?.toString()}</Text>
+            <Text>factor: {dcaConfig.factor?.toString()}</Text>
+            <Text>delay : {dcaConfig.dcaDelay?.toString()}</Text>
           </CardBody >
         </Card >
       ))}

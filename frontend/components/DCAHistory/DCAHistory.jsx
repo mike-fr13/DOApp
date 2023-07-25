@@ -16,6 +16,7 @@ export const DCAHistory = () => {
   const [UserDCAExecutionResults, setUserDCAExecutionResults] = useState([]);
 
   useEffect(() => {
+    setUserDCAExecutionResults([]);
     if (account) {
       // Créez le filtre pour l'événement spécifique
       console.log('DCAHistory - ', account)
@@ -46,7 +47,14 @@ export const DCAHistory = () => {
                     userDcaExecutionResult.timestamp.toString() === newUserDcaExecutionResult.timestamp.toString()
                 )
               ) {
-                return [...prevState, newUserDcaExecutionResult];
+                  console.log(`DCAHistory - ${account}`)
+                  console.log(`DCAHistory - ${newUserDcaExecutionResult.user}`)
+                if (ethers.utils.getAddress(account) != ethers.utils.getAddress(newUserDcaExecutionResult.user))   {
+                  return [...prevState, newUserDcaExecutionResult];
+                }
+                else {
+                  return prevState;
+                }
               } else {
                 return prevState;
               }
@@ -64,6 +72,8 @@ export const DCAHistory = () => {
           amountSwap: _amountSwap,
           timestamp: _timeStamp
         };
+        console.log(`DCAHistory - ${account}`)
+        console.log(`DCAHistory - ${newUserDcaExecutionResult.user}`)
 
         setUserDCAExecutionResults((prevState) => {
           if (
@@ -71,10 +81,15 @@ export const DCAHistory = () => {
               (userDcaExecutionResult) =>
                 userDcaExecutionResult.pairID.toString() === newUserDcaExecutionResult.pairID.toString() &&
                 userDcaExecutionResult.user.toString() === newUserDcaExecutionResult.user.toString() &&
-                userDcaExecutionResult.timestamp.toString() === newUserDcaExecutionResult.timestamp.toString()
+                userDcaExecutionResult.timestamp.toString() === newUserDcaExecutionResult.timestamp.toString() 
             )
           ) {
-            return [...prevState, newUserDcaExecutionResult];
+            if (ethers.utils.getAddress(account) != ethers.utils.getAddress(newUserDcaExecutionResult.user))   {
+                return [...prevState, newUserDcaExecutionResult];
+              }
+              else {
+                return prevState;
+              }
           } else {
             return prevState;
           }

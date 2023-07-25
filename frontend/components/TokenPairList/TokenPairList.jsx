@@ -1,15 +1,16 @@
 import {
   Card, CardBody, CardHeader, Text, Heading, Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button, useDisclosure,
-  Box, FormControl, FormLabel, Input,SimpleGrid,FormErrorMessage
+  Box, FormControl, FormLabel, Input, SimpleGrid, FormErrorMessage
 } from "@chakra-ui/react"
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { EventContext } from "@/context/EventContext";
 import { EthContext } from "@/context/EthContext";
-import {dataStoreContractWithSigner} from "@/context/EthContext"
+import { dataStoreContractWithSigner } from "@/context/EthContext"
 import { getTokenSymbolFromList } from "../../utils/tools"
 import { ethers } from "ethers";
 import { useToast } from "@chakra-ui/react";
+import { ReadOnlyInputWithCopy } from "../ReadOnlyInputWithCopy/ReadOnlyInputWithCopy"
 
 export const TokenPairList = () => {
   const {
@@ -38,13 +39,13 @@ export const TokenPairList = () => {
   const [swapRouter, setSwapRouter] = useState("");
   const [firstAToken, setFirstAToken] = useState("");
   const [secondAToken, setSecondAToken] = useState("");
-  const toast = useToast();  
+  const toast = useToast();
 
   const [formErrors, setFormErrors] = useState({});
 
 
   const validateForm = () => {
-    console.log ("validateForm");
+    console.log("validateForm");
     let errors = {};
 
     if (firstToken === undefined || firstToken === null || firstToken === '') errors.firstToken = 'First token is required';
@@ -57,24 +58,24 @@ export const TokenPairList = () => {
     setFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      console.log ("validateForm return false");
-      console.log ("validateForm : ", errors);
+      console.log("validateForm return false");
+      console.log("validateForm : ", errors);
       return false;
     }
-  
-    console.log ("validateForm return true");
+
+    console.log("validateForm return true");
     return true;
 
   };
 
   useEffect(() => {
     validateForm();
-  }, [firstToken,  secondToken, chainLinkPriceFetcher, aavePoolAddressProvider,segmentSize,swapRouter]);
-  
+  }, [firstToken, secondToken, chainLinkPriceFetcher, aavePoolAddressProvider, segmentSize, swapRouter]);
+
 
   const addTokenPair = async () => {
     try {
-      if (validateForm()) {      
+      if (validateForm()) {
         console.log("addTokenPair - start")
 
         const _tokenAddressA = firstToken
@@ -87,9 +88,9 @@ export const TokenPairList = () => {
 
         console.log("addTokenPair - just before transaction")
         const result = await dataStoreContractWithSigner.addTokenPair(
-            _tokenAddressA, 
+          _tokenAddressA,
           _tokenPairSegmentSize,
-          _tokenAddressB, 
+          _tokenAddressB,
           _chainLinkPriceFetcher,
           _aavePoolAddressesProvider,
           _uniswapV3SwapRouter)
@@ -103,8 +104,8 @@ export const TokenPairList = () => {
           status: "success",
           duration: 5000,
           isClosable: true,
-        });        
-      } 
+        });
+      }
     }
     catch (err) {
       toast({
@@ -133,20 +134,17 @@ export const TokenPairList = () => {
         <ModalHeader>Pair Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <Text>ID : {selectedPair.tokenPairId?.toString()}</Text>
-          <Text>PairId : {selectedPair.pairID?.toString()}</Text>
-          <Text>1st Token : {getTokenSymbolFromList(selectedPair.tokenA, tokenList)}</Text>
-          <Text>1st token index balance : {selectedPair.indexBalanceTokenA?.toString()}</Text>
-          <Text>2nd Token : {getTokenSymbolFromList(selectedPair.tokenB, tokenList)}</Text>
-          <Text>2nd token index balance : {selectedPair.indexBalanceTokenB?.toString()}</Text>
-          <Text>ChainLink Price Fetcher : {selectedPair.chainlinkPriceFetcher}</Text>
-          <Text>AAve pool address provider : {selectedPair.aavePoolAddressesProvider}</Text>
-          <Text>Token Pair enabled : {selectedPair.enabled.toString()}</Text>
-          <Text>Segment size : {selectedPair.tokenPairSegmentSize?.toString()}</Text>
-          <Text>Decimal number : {selectedPair.tokenPairDecimalNumber}</Text>
-          <Text>SwapRouter : {selectedPair.swapRouter}</Text>
-          <Text>1st AToken : {selectedPair.aTokenA}</Text>
-          <Text>2nd AToken : {selectedPair.aTokenB}</Text>
+          <Box p={1}>
+            <ReadOnlyInputWithCopy label="PairId:" value={selectedPair.pairID?.toString()} />
+            <ReadOnlyInputWithCopy label="1st Token:" value={selectedPair.tokenA?.toString()} />
+            <ReadOnlyInputWithCopy label="2nd Token:" value={selectedPair.tokenB?.toString()} />
+            <ReadOnlyInputWithCopy label="chainlink Price Fetcher:" value={selectedPair.chainlinkPriceFetcher?.toString()} />
+            <ReadOnlyInputWithCopy label="AAve pool address provider:" value={selectedPair.aavePoolAddressesProvider?.toString()} />
+            <ReadOnlyInputWithCopy label="Segment size:" value={selectedPair.tokenPairSegmentSize?.toString()} />
+            <ReadOnlyInputWithCopy label="SwapRouter:" value={selectedPair.swapRouter?.toString()} />
+            <ReadOnlyInputWithCopy label="1st AToken:" value={selectedPair.aTokenA?.toString()} />
+            <ReadOnlyInputWithCopy label="2nd AToken:" value={selectedPair.aTokenB?.toString()} />
+          </Box>
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose1}>Close</Button>
@@ -241,6 +239,6 @@ export const TokenPairList = () => {
 
 
       {selectedPair && renderPairModal()}
-      </SimpleGrid>
+    </SimpleGrid>
   );
 }

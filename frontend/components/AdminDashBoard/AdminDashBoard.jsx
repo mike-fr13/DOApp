@@ -1,6 +1,6 @@
 "use client"
 import {
-  SimpleGrid, Card, CardHeader, CardBody, CardFooter, Heading, Button,
+  SimpleGrid, Card, CardHeader, CardBody, CardFooter, Heading, Button,Spacer,
   Text, Input, Flex, Box, FormControl, FormLabel, Select, FormErrorMessage
 } from "@chakra-ui/react"
 import { useEffect, useState, useContext } from "react"
@@ -147,6 +147,37 @@ export const AdminDashBoard = () => {
     }
   }
 
+  const getChainLinkMockPrice = async () => {
+    try {
+      console.log("getChainLinkMockPrice- start ")
+
+      console.log("getChainLinkMockPrice - chainLinkMockAddress : ",chainLinkMockAddress)
+      console.log("getChainLinkMockPrice - chainLinkMockPrice : ",chainLinkMockPrice)
+      console.log("getChainLinkMockPrice - ChainLink.abi : ",ChainLink.abi)
+      const ChainLinkContract = new ethers.Contract(
+        chainLinkMockAddress,
+        ChainLink.abi,
+        provider
+      );
+      const ChainLinkContractWithSigner = ChainLinkContract.connect(provider.getSigner());
+      const { roundId, answer, startedAt, updatedAt, answeredInRound }  = await ChainLinkContractWithSigner.latestRoundData()
+
+      setChainLinkMockPrice(answer.toString());
+      
+
+      console.log("getChainLinkMockPrice - end")
+    } catch (err) {
+      console.log(err.message)
+      toast({
+        title: "Error",
+        description: "An error occurred while fetching price",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
+
 
   const handleSelectPairChange = (value) => {
     setPairID(value);
@@ -201,7 +232,11 @@ export const AdminDashBoard = () => {
           </FormControl>
         </CardBody>
         <CardFooter>
-        <Button mt={4} onClick={() => updateChainLinkMockPrice()}>Update</Button>
+          <Flex w="100%">
+          <Button mt={4} onClick={() => getChainLinkMockPrice()}>Get price</Button>
+            <Spacer />
+          <Button mt={4} onClick={() => updateChainLinkMockPrice()}>Update</Button>
+          </Flex>
         </CardFooter>
       </Card>
 

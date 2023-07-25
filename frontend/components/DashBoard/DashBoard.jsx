@@ -27,7 +27,8 @@ export const DashBoard = () => {
 
   const toast = useToast();  
 
-  const [balanceState, setBalance] = useState([])
+  const [doAppUserBalances, setDoAppUserBalances] = useState([])
+  const [userBalances, setUserBalances] = useState([])
 
   const [depositAmount, setDepositAmount] = useState(0)
   const [depositToken, setDepositToken] = useState(0)
@@ -112,7 +113,8 @@ export const DashBoard = () => {
         return;
       }
 
-      await getBalances()
+      await getUserBalances()
+      await getDoAppUserBalances()
       console.log("deposit - end")
       toast({
         title: "Success",
@@ -178,7 +180,8 @@ export const DashBoard = () => {
         return;
       }
 
-      await getBalances()
+      await getUserBalances()
+      await getDoAppUserBalances()
       console.log("withdraw - end")
       toast({
         title: "Success",
@@ -200,9 +203,46 @@ export const DashBoard = () => {
     }
   }
 
+  const getUserBalances = async () => {
+    try {
+      console.log("getUserBalances - start");
+      let userBalances = [];
+
+      for (let token of tokenList) {
+        console.log('getUserBalances - token : ', token)
+        
+        const ERC20Contract = new ethers.Contract(
+          token.tokenAddress,
+          ERC20.abi,
+          provider
+        );
+        const ERC20ContractWithSigner = ERC20Contract.connect(provider.getSigner());
+        let bal = await ERC20ContractWithSigner.balanceOf(account)        
+        console.log('getUserBalances balance : ', bal)
+
+        console.log('getBalances - balance :', (bal).toString());
+        userBalances.push({ name: token.name, symbol: token.symbol, balance: bal.toString()});
+      }
+
+      setUserBalances(userBalances);
+      console.log("getBalances - end");
+      
+    } catch (err) {
+      console.log(err.message);
+      toast({
+        title: "Error",
+        description: "An error occurred while refereshing balance",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+
+    }
+  }
 
 
-  const getBalances = async () => {
+
+  const getDoAppUserBalances = async () => {
     try {
       console.log("getBalances - start");
       let balances = [];
@@ -217,7 +257,7 @@ export const DashBoard = () => {
         balances.push({ name: token.name, symbol: token.symbol, balance: bal.balance.toString(), index: bal.index.toString() });
       }
 
-      setBalance(balances);
+      setDoAppUserBalances(balances);
       console.log("getBalances - end");
       
     } catch (err) {
@@ -236,25 +276,43 @@ export const DashBoard = () => {
 
   useEffect(() => {
     if (account) {
-      getBalances()
+      getUserBalances()
+      getDoAppUserBalances()
     }
-  }, [account])
+  }, [account, tokenList])
 
   return (
     <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(300px, 1fr))'>
 
       <Card>
         <CardHeader>
-          <Heading size='md'> DOApp User balances</Heading>
+          <Heading size='md'> User balances</Heading>
         </CardHeader>
         <CardBody>
-          {balanceState.map((tokenBalance, index) => (
+          {userBalances.map((tokenBalance, index) => (
             <Box key={index} p={2} borderWidth={1} borderRadius="md">
               <Heading size="sm">{tokenBalance.name} ({tokenBalance.symbol})</Heading>
               <Text>Balance: {tokenBalance.balance}</Text>
             </Box>
           ))}
-          <Button mt={3} onClick={() => getBalances()}>Refresh</Button>
+          <Button mt={3} onClick={() => getUserBalances()}>Refresh</Button>
+        </CardBody>
+        <CardFooter>
+        </CardFooter>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <Heading size='md'> DOApp User balances</Heading>
+        </CardHeader>
+        <CardBody>
+          {doAppUserBalances.map((tokenBalance, index) => (
+            <Box key={index} p={2} borderWidth={1} borderRadius="md">
+              <Heading size="sm">{tokenBalance.name} ({tokenBalance.symbol})</Heading>
+              <Text>Balance: {tokenBalance.balance}</Text>
+            </Box>
+          ))}
+          <Button mt={3} onClick={() => getDoAppUserBalances()}>Refresh</Button>
         </CardBody>
         <CardFooter>
         </CardFooter>
