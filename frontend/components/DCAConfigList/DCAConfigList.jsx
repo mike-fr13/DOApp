@@ -10,7 +10,7 @@ import { EthContext } from "@/context/EthContext";
 import { TokenPairSelect } from "../TokenPairSelect/TokenPairSelect";
 import { useToast } from "@chakra-ui/react";
 import { ReadOnlyInputWithCopy } from "../ReadOnlyInputWithCopy/ReadOnlyInputWithCopy"
-
+import { getTokenSymbolFromList } from "../../utils/tools"
 
 
 
@@ -150,6 +150,7 @@ export const DCAConfigList = () => {
         <ModalCloseButton />
         <ModalBody>
           <ReadOnlyInputWithCopy label="PairId:" value={selectedConfig.pairID?.toString()} />
+          
           <ReadOnlyInputWithCopy label="Swap token A to B :" value={selectedConfig.isSwapTookenAForTokenB?.toString()} />
           <ReadOnlyInputWithCopy label="Min:" value={selectedConfig.min?.toString()} />
           <ReadOnlyInputWithCopy label="Max:" value={selectedConfig.max?.toString()} />

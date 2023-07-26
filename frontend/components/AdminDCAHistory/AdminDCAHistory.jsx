@@ -1,8 +1,8 @@
 
 "use client"
-import { Box, Flex, List, ListItem, ListIcon, Text, Stat, StatLabel } from '@chakra-ui/react';
-import { MdCheckCircle } from 'react-icons/md';
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { Box,     Text,  SimpleGrid } from '@chakra-ui/react';
+import React, {  useContext } from "react";
+import { ReadOnlyInputWithCopy } from '../ReadOnlyInputWithCopy/ReadOnlyInputWithCopy';
 
 import { EventContext } from "@/context/EventContext";
 
@@ -11,54 +11,22 @@ export const AdminDCAHistory = () => {
       
 
     return (
-    <Box w="100%" p={4}>
-      <Text fontSize="2xl" mb={4}>
-        DCA Execution Results
-      </Text>
-      <List spacing={3}>
+
+      <SimpleGrid spacing={4} templateColumns='repeat(auto-fill, minmax(300px, 1fr))'>
       {DCAExecutionResults.map((result, index) => (
-        <ListItem key={index}>
           <Box p={5} shadow="md" borderWidth="1px">
-            <ListIcon as={MdCheckCircle} color="green.500" />
-            <Flex align="baseline" mt={2}>
-              <Stat>
-                <StatLabel>Pair ID:</StatLabel>
-                <Text>{result.pairID.toString().substring(0, 6)}...{result.pairID.toString().substring(result.pairID.toString().length - 6,result.pairID.toString().length)}</Text>
-              </Stat>
-              <Stat ml={5}>
-                <StatLabel>Amount In:</StatLabel>
-                <Text>{result.amountIn.toString()}</Text>
-              </Stat>
-              <Stat ml={5}>
-                <StatLabel>Amount Out:</StatLabel>
-                <Text>{result.amountOut.toString()}</Text>
-              </Stat>
-            </Flex>
-            <Flex align="baseline" mt={2}>
-              <Stat>
-                <StatLabel>Amount OTC:</StatLabel>
-                <Text>{result.amountOTC.toString()}</Text>
-              </Stat>
-              <Stat ml={5}>
-                <StatLabel>Amount Swap:</StatLabel>
-                <Text>{result.amountSwap.toString()}</Text>
-              </Stat>
-              <Stat ml={5}>
-                <StatLabel>Timestamp:</StatLabel>
-                <Text>{new Date(result.timestamp * 1000).toLocaleString()}</Text>
-              </Stat>
-            </Flex>
-            <Flex align="baseline" mt={2}>
-              <Stat>
-                <StatLabel>Has remaining jobs:</StatLabel>
-                <Text>{result.hasRemainingJobs.toString()}</Text>
-              </Stat>
-            </Flex>
+          <Text align="center" as='b' >DCA execution Result </Text>
+          <ReadOnlyInputWithCopy label="PairId:" value={result.pairID.toString().substring(0, 6)+'...'+result.pairID.toString().substring(result.pairID.toString().length - 6, result.pairID.toString().length)} />
+          <ReadOnlyInputWithCopy label="Amount In:" value={result.amountIn.toString()} />
+          <ReadOnlyInputWithCopy label="Amount Out:" value={result.amountOut.toString()} />
+          <ReadOnlyInputWithCopy label="Amount OTC:" value={result.amountOTC.toString()} />
+          <ReadOnlyInputWithCopy label="Amount Swap:" value={result.amountSwap.toString()} />
+          <ReadOnlyInputWithCopy label="Timestamp:" value={new Date(result.timestamp * 1000).toLocaleString()} />
+          <ReadOnlyInputWithCopy label="Jobs remainings:" value={result.hasRemainingJobs.toString()} />
           </Box>
-        </ListItem>
       ))}
-    </List>
-    </Box>
+  </SimpleGrid>
+
     )
 }
 
