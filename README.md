@@ -10,22 +10,15 @@ DOoAPP is a decentralized application developed as part of the Blockchain Develo
 
 You can find a video demonstration of the DApp at this link: 
 
-https://drive.google.com/drive/folders/1dkVT9MyWHcPlld373rmoOWRJqRxM9SZc?usp=sharing
+- the video demo should to be refreshed
 
-=> Il y a 2 vidéos , une réalisée avec zoom : l'odinateur rame tellement que les tests plantent 
-=> une autre avec uniquement la video, pas de son et pas d'incrustation : les tests fonctionnnent
-
-
-Ce projet n'est pas finalisé, certains elements n'ont pas pu etre developpés :
-    - appel de la function exactOutputSingle(ExactOutputSingleParams calldata ) en cas de vente de B -> A (ou lieu inputSingle)
-    - un point de sécurité non corrigé car je n'ai pas encore trouvé comment le faire : 
-        => apel externe sur la function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external;
-        => j'avais testé un require sur l'adresse du contrat appelant pour limiter à DOAPP mais ca ne fonctionne pas
-    - j'ai laissé l'ensemble des traces (console.log ds le contrats)
-    - gestion des decimales pour les montants envoyés / reçus  / swappé
-    - fonction OTC qui prend en compte le rapport de valeur reelle des token A et B (acuellement 1 A = 1 B)
-
-J'étais persudé de l'avoir indiqué lors du dernier commit mais je n'ai pas retrouvé ces infos
+- this project is still on work, some functions must be developped / finalized :   
+    - a call to function exactOutputSingle(ExactOutputSingleParams calldata ) should be executed when user sell token B to get token A (in place of exactInputSingle)  
+    - a security point should be fixed :   
+        => external call to function updateDCAConfigLastDCATime (uint _dcaConfigId, uint _lastDCATime) external;  
+    - a lot of traces remains in code (console.log)  
+    - decimals need to be managed for send /swap / received token amounts  
+    - OTC funciton must take in account token a and token B value (currently 1 A = 1 B)  
 
 # Overview
 
